@@ -60,7 +60,7 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Which actions can I estimate?',
-    answer: 'Create draft — 10 tokens. Create & Export PDF — 15 tokens. Create & Export DOCX — 15 tokens. Improve with AI — 20 tokens. Send to personal manager — 80 tokens.',
+    answer: `Create draft — ${SERVICE_COSTS.CREATE_DRAFT} tokens. Create & Export PDF — ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF} tokens. Create & Export DOCX — ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_DOCX} tokens. Improve with AI — ${SERVICE_COSTS.AI_IMPROVE} tokens. Send to personal manager — ${SERVICE_COSTS.PERSONAL_MANAGER} tokens.`,
   },
   {
     question: 'How accurate is the estimate?',

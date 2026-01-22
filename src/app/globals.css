@@ -30,7 +30,7 @@
 body {
   color: var(--foreground);
   background: #f8fafc;
-  font-family: var(--font-inter, Arial), Helvetica, sans-serif;
+  font-family: var(--font-plus-jakarta-sans, Arial), Helvetica, sans-serif;
 }
 
 @layer utilities {
@@ -64,7 +64,7 @@ html {
 
 @layer base {
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-manrope, var(--font-inter, Arial)), sans-serif;
+    font-family: var(--font-manrope, var(--font-plus-jakarta-sans, Arial)), sans-serif;
   }
   code, pre {
     font-family: var(--font-jetbrains-mono, 'JetBrains Mono'), Menlo, Consolas, 'Liberation Mono', monospace;

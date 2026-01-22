@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { PolicySection } from '@/types/policy';
 import Card from '@/components/ui/Card';
 
@@ -10,8 +11,16 @@ interface PolicyContentProps {
 export default function PolicyContent({ sections }: PolicyContentProps) {
   return (
     <Card className="p-6" padding="md">
-      {sections.map((s) => (
-        <section key={s.id} id={s.id} className="scroll-mt-24">
+      {sections.map((s, index) => (
+        <motion.section 
+          key={s.id} 
+          id={s.id} 
+          className="scroll-mt-24"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1, duration: 0.4 }}
+          viewport={{ once: true, margin: '-50px' }}
+        >
           <h2 className="text-xl font-semibold mt-6 first:mt-0">{s.title}</h2>
           {s.body && (
             <div className="mt-2 space-y-3 text-slate-700 text-sm">
@@ -41,7 +50,7 @@ export default function PolicyContent({ sections }: PolicyContentProps) {
               })}
             </div>
           )}
-        </section>
+        </motion.section>
       ))}
     </Card>
   );

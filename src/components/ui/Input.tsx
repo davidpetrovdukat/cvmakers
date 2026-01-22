@@ -20,7 +20,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <motion.input
           ref={ref}
-          className={`w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#2563EB]/20 transition-all duration-200 ${className}`}
+          className={`w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-600/20 transition-all duration-200 ${className}`}
           whileFocus={{ scale: 1.01 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
           {...(props as any)}

@@ -3,21 +3,21 @@ import { convertToTokens, formatCurrency } from './currency';
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
-    name: 'Starter',
+    name: 'Quick Start',
     price: formatCurrency(5.00, 'GBP'),
     points: ['Manual token top-up', 'No subscription', 'Preview included'],
     cta: 'Request top-up',
     popular: false,
   },
   {
-    name: 'Pro',
+    name: 'Job Hunter',
     price: formatCurrency(15.00, 'GBP'),
     points: ['Manual token top-up', 'Branding options', 'Priority support'],
     cta: 'Request top-up',
     popular: true,
   },
   {
-    name: 'Business',
+    name: 'Career Boost',
     price: formatCurrency(30.00, 'GBP'),
     points: ['Manual token top-up', 'Team access', 'Integrations roadmap'],
     cta: 'Request top-up',

@@ -1,7 +1,7 @@
 import PricingClient from './pricingClient';
 
 export const metadata = {
-  title: 'Top-Up - Invoicerly',
+  title: 'Top-Up - CV Makers',
   description: 'Top up tokens with transparent VAT estimation (UK/EU).',
 };
 

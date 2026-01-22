@@ -90,9 +90,9 @@ export async function POST(req: Request) {
     }
 
     await resend.emails.send({
-      from: `Invoicerly <${process.env.EMAIL_FROM || "info@invoicerly.co.uk"}>`,
+      from: `CV Makers <${process.env.EMAIL_FROM || "info@cv-makers.co.uk"}>`,
       to: toEmail,
-      subject: `${doc.title} from ${doc.user?.company?.name || "Invoicerly"}`,
+      subject: `${doc.title} from ${doc.user?.company?.name || "CV Makers"}`,
       html: `<p>Please find your document attached.</p>`,
       attachments: [
         {

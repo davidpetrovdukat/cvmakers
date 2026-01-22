@@ -121,11 +121,11 @@ export type Plan = (typeof PRICING_PLANS)[0];
  * Service costs in tokens
  */
 export const SERVICE_COSTS = {
-  CREATE_DRAFT: 10,        // Create CV/resume draft
-  EXPORT_PDF: 5,           // Export to PDF
-  EXPORT_DOCX: 5,          // Export to DOCX
-  AI_IMPROVE: 20,          // Improve with AI
-  PERSONAL_MANAGER: 80,    // Send to personal manager
+  CREATE_DRAFT: 100,        // Create CV/resume draft
+  EXPORT_PDF: 50,           // Export to PDF
+  EXPORT_DOCX: 50,          // Export to DOCX
+  AI_IMPROVE: 200,          // Improve with AI
+  PERSONAL_MANAGER: 800,    // Send to personal manager
 } as const;
 
 /**

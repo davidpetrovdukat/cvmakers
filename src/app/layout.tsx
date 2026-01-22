@@ -1,19 +1,21 @@
-import { Inter, Manrope, JetBrains_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, Manrope, JetBrains_Mono } from 'next/font/google';
 import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AuthProvider from '@/components/providers/AuthProvider';
 
-const inter = Inter({ subsets: ['latin', 'latin-ext', 'cyrillic'], variable: '--font-inter', display: 'swap' });
-const manrope = Manrope({ subsets: ['latin', 'latin-ext', 'cyrillic'], variable: '--font-manrope', display: 'swap' });
-const jetBrainsMono = JetBrains_Mono({ subsets: ['latin', 'latin-ext', 'cyrillic'], variable: '--font-jetbrains-mono', display: 'swap' });
+const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-plus-jakarta-sans', display: 'swap' });
+const manrope = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-manrope', display: 'swap' });
+const jetBrainsMono = JetBrains_Mono({ subsets: ['latin', 'latin-ext'], variable: '--font-jetbrains-mono', display: 'swap' });
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cv-makers.co.uk';
 
 export const metadata: Metadata = {
-  title: 'CVBuilder - Professional CV & Resume Creator',
-  description: 'Create professional CVs and resumes in minutes. Choose from ATS-friendly templates, export to PDF or DOCX. Get hired faster with our modern resume builder.',
-  keywords: 'cv, resume, cv builder, resume creator, ats friendly, professional cv, job application, career',
-  authors: [{ name: 'CVBuilder' }],
+  title: 'CV Makers - Professional CV & Resume Creator',
+  description: 'Create professional CVs and resumes in minutes with CV Makers. Choose from ATS-friendly templates, use AI-powered improvements, and export to PDF or DOCX. Token-based pricing - pay only for what you use. Start building your perfect CV today.',
+  keywords: 'cv, resume, cv builder, resume creator, ats friendly, professional cv, job application, career, cv makers, resume builder uk',
+  authors: [{ name: 'CV Makers' }],
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -30,15 +32,26 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'CVBuilder - Professional CV & Resume Creator',
-    description: 'Create professional CVs and resumes in minutes. Choose from ATS-friendly templates, export to PDF or DOCX. Get hired faster with our modern resume builder.',
+    title: 'CV Makers - Professional CV & Resume Creator',
+    description: 'Create professional CVs and resumes in minutes with CV Makers. Choose from ATS-friendly templates, use AI-powered improvements, and export to PDF or DOCX. Token-based pricing - pay only for what you use.',
     type: 'website',
     locale: 'en_GB',
+    url: appUrl,
+    siteName: 'CV Makers',
+    images: [
+      {
+        url: '/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'CV Makers - Professional CV & Resume Creator',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CVBuilder - Professional CV & Resume Creator',
-    description: 'Create professional CVs and resumes in minutes. Choose from ATS-friendly templates, export to PDF or DOCX. Get hired faster with our modern resume builder.',
+    title: 'CV Makers - Professional CV & Resume Creator',
+    description: 'Create professional CVs and resumes in minutes with CV Makers. Choose from ATS-friendly templates, use AI-powered improvements, and export to PDF or DOCX.',
+    images: ['/logo.png'],
   },
   robots: {
     index: true,
@@ -52,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${manrope.variable} ${jetBrainsMono.variable}`}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${manrope.variable} ${jetBrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <AuthProvider>
           <Header />

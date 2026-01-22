@@ -49,8 +49,10 @@ interface Profile {
   photo: string;
 }
 
-const DEFAULT_AI_COST = 200;
-const DEFAULT_MANAGER_COST = 800;
+import { SERVICE_COSTS } from '@/lib/currency';
+
+const DEFAULT_AI_COST = SERVICE_COSTS.AI_IMPROVE;
+const DEFAULT_MANAGER_COST = SERVICE_COSTS.PERSONAL_MANAGER;
 
 function parseTokenCost(envKey: string, fallback: number): number {
   const raw = process.env[envKey];

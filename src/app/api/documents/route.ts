@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,12 +33,13 @@ export async function POST(req: Request) {
   const actionRaw = typeof body.action === 'string' ? body.action.toLowerCase() : 'draft';
   const allowedActions = new Set(['draft', 'export-pdf', 'export-docx']);
   const action = allowedActions.has(actionRaw) ? actionRaw : 'draft';
-  const draftCharge = Number(process.env.TOKENS_PER_DOCUMENT || 100);
-  const exportCharge = Number(process.env.TOKENS_PER_EXPORT || 150);
+  // Use SERVICE_COSTS from currency.ts, with env override support
+  const draftCharge = Number(process.env.TOKENS_PER_DOCUMENT || SERVICE_COSTS.CREATE_DRAFT);
+  const exportCharge = Number(process.env.TOKENS_PER_EXPORT || SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF);
   const chargeMap: Record<string, number> = {
     draft: draftCharge,
     'export-pdf': exportCharge,
-    'export-docx': exportCharge,
+    'export-docx': SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_DOCX,
   };
   const charge = chargeMap[action] ?? draftCharge;
   const docTypeRaw = typeof body.docType === 'string' ? body.docType.toLowerCase() : 'document';

@@ -36,6 +36,15 @@ model User {
   tokenBalance Int      @default(0)
   currency     Currency @default(GBP)
 
+  // Registration fields
+  firstName    String?
+  lastName     String?
+  dateOfBirth  DateTime?
+  street       String?
+  city         String?
+  country      String?
+  postalCode   String?
+
   company   Company?
   invoices  Invoice[]
   ledger    LedgerEntry[]

@@ -18,7 +18,7 @@ export default function Segmented({ options, value, onChange, className = '' }: 
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`px-3 py-1.5 text-sm rounded-lg ${value === o.value ? 'bg-[#2563EB] text-white' : 'text-[#475569] hover:bg-[#E2E8F0]'}`}
+          className={`px-3 py-1.5 text-sm rounded-lg ${value === o.value ? 'bg-indigo-600 text-white' : 'text-[#475569] hover:bg-[#E2E8F0]'}`}
           type="button"
         >
           {o.label}

@@ -11,7 +11,7 @@ export default function CheckoutClient() {
   const router = useRouter();
   const [checkout, setCheckout] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [polling, setPolling] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // 🧾 Завантаження даних із localStorage
   useEffect(() => {
@@ -45,120 +45,46 @@ export default function CheckoutClient() {
   const formatExpiry = (value: string) =>
     value.replace(/\D/g, "").slice(0, 4).replace(/(\d{2})(?=\d)/, "$1/").trim();
 
-  const pollStatus = async (orderMerchantId: string) => {
-    setPolling(true);
-
-    const interval = setInterval(async () => {
-      const res = await fetch("/api/cardserv/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderMerchantId }),
-      });
-
-      const json = await res.json();
-      const data = json?.data;
-
-      console.log("📡 FRONT STATUS:", data);
-
-      if (data?.redirectUrl) {
-        console.log("➡️ REDIRECT TO:", data.redirectUrl);
-        window.location.href = data.redirectUrl;
-        return;
-      }
-
-      if (data?.state === "APPROVED") {
-        clearInterval(interval);
-        setPolling(false);
-        router.push("/dashboard");
-      }
-
-      if (data?.state === "DECLINED") {
-        clearInterval(interval);
-        setPolling(false);
-        alert("Payment declined");
-      }
-    }, 2000);
-  };
-
   // 💳 Надсилання форми
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       setLoading(true);
       const payload = { ...checkout, card: values };
 
-      const res = await fetch("/api/cardserv/sale", {
+      const res = await fetch("/api/payment/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
 
+      if (!data.ok) {
+        alert(data.error || "Payment failed. Please try again.");
+        return;
+      }
+
+      // Платеж успешно обработан
+      console.log("✅ Payment approved:", data.orderMerchantId);
+      
+      // Сохраняем orderMerchantId для истории
       if (data.orderMerchantId) {
         localStorage.setItem("orderMerchantId", data.orderMerchantId);
       }
 
-      const orderId =
-        data?.orderMerchantId ||
-        data?.data?.orderMerchantId ||
-        data?.raw?.orderMerchantId ||
-        payload?.orderMerchantId;
+      // Показываем сообщение об успехе
+      setSuccess(true);
+      
+      // Очищаем данные checkout
+      localStorage.removeItem("checkoutData");
 
-      if (orderId) {
-        localStorage.setItem("orderMerchantId", orderId);
-        console.log("💾 Saved orderMerchantId:", orderId);
-      }
-
-      if (data?.redirectUrl) {
-        window.location.href = data.redirectUrl;
-        return;
-      }
-
-      const threeDS = data?.threeDS || data?.data?.threeDS || data?.raw?.status?.threeDSAuth;
-      if (threeDS?.acsUrl && (threeDS?.paReq || threeDS?.creq)) {
-        const termUrl = `${window.location.origin}/api/cardserv/result?orderId=${orderId || ""}`;
-
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = threeDS.acsUrl;
-        form.style.display = "none";
-
-        if (threeDS.paReq) {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = "PaReq";
-          input.value = threeDS.paReq;
-          form.appendChild(input);
-        }
-
-        if (threeDS.creq) {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = "creq";
-          input.value = threeDS.creq;
-          form.appendChild(input);
-        }
-
-        const termUrlInput = document.createElement("input");
-        termUrlInput.type = "hidden";
-        termUrlInput.name = "TermUrl";
-        termUrlInput.value = termUrl;
-        form.appendChild(termUrlInput);
-
-        const mdInput = document.createElement("input");
-        mdInput.type = "hidden";
-        mdInput.name = "MD";
-        mdInput.value = orderId || "";
-        form.appendChild(mdInput);
-
-        document.body.appendChild(form);
-        form.submit();
-        return;
-      }
-
-      if (orderId) await pollStatus(orderId);
+      // Редирект на dashboard через 2 секунды
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
     } catch (err) {
       console.error("❌ Payment error:", err);
+      alert("Payment processing failed. Please try again.");
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -253,21 +179,28 @@ export default function CheckoutClient() {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full flex justify-center items-center gap-2 mt-4"
-                  size="lg"
-                  disabled={isSubmitting || loading || polling}
-                >
-                  {loading || polling ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      {polling ? "Awaiting confirmation..." : "Processing..."}
-                    </>
-                  ) : (
-                    <>Pay {checkout.total.toFixed(2)} {checkout.currency}</>
-                  )}
-                </Button>
+                {success ? (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <p className="text-green-800 font-semibold">✅ Payment successful!</p>
+                    <p className="text-green-600 text-sm mt-1">Redirecting to dashboard...</p>
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="w-full flex justify-center items-center gap-2 mt-4"
+                    size="lg"
+                    disabled={isSubmitting || loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>Pay {checkout.total.toFixed(2)} {checkout.currency}</>
+                    )}
+                  </Button>
+                )}
               </Form>
             )}
           </Formik>

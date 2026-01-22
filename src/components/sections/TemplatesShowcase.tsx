@@ -19,7 +19,7 @@ export default function TemplatesShowcase() {
   const data = useMemo(() => (docType === 'resume' ? sampleResumeData : sampleCVData), [docType]);
 
   return (
-    <Section id="templates" className="py-10">
+    <Section id="templates" className="py-10 bg-slate-50">
       <motion.div
         className="text-center mb-6"
         initial={{ opacity: 0, y: 20 }}
@@ -52,9 +52,9 @@ export default function TemplatesShowcase() {
               transition={{ duration: 0.45, delay: reduceMotion ? 0 : index * 0.06 }}
               viewport={{ once: true }}
             >
-              <Card className="p-3 h-full">
+              <Card className="p-3 h-full transition-transform hover:-translate-y-2">
                 <div className="text-sm font-semibold text-slate-700 mb-2">{title}</div>
-                <div className="rounded-lg border border-slate-300 bg-white overflow-hidden p-3">
+                <div className="rounded-lg border border-slate-300 bg-white overflow-hidden p-3 shadow-xl">
                   <ScaledA4>
                     <T data={data} />
                   </ScaledA4>
@@ -87,10 +87,10 @@ export default function TemplatesShowcase() {
 
 function labelForTemplate(k: ResumeTemplateKey) {
   switch (k) {
-    case 'classic': return 'Classic ATS';
-    case 'split': return 'Modern Split';
-    case 'serif': return 'Elegant Serif';
-    case 'tech': return 'Tech Compact';
+    case 'classic': return 'The London';
+    case 'split': return 'The Berlin';
+    case 'serif': return 'The New York';
+    case 'tech': return 'The Silicon Valley';
     default: return k;
   }
 }

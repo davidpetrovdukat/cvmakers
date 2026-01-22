@@ -30,9 +30,9 @@ const STEPS: FeatureItem[] = [
   {
     title: 'Create quality documents in minutes',
     description: 'Modern templates that read well for hiring teams and pass applicant tracking systems.',
-    iconBg: 'bg-blue-100',
+    iconBg: 'bg-indigo-100',
     icon: (
-      <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
@@ -146,10 +146,10 @@ const TRUST_ITEMS = [
 ];
 
 const COMPANY_DETAILS = [
-  'EVERFINA LTD',
-  'Company number: 15645711',
-  '20 Wenlock Road, London, England, N1 7GU',
-  'General enquiries: info@careerzen.co.uk',
+  'WORKING AGENT LTD',
+  'Company number: 15957326',
+  '31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF',
+  'General enquiries: info@cv-makers.co.uk',
 ];
 
 const TEMPLATE_COPY = {
@@ -183,7 +183,7 @@ export default function AboutPageClient() {
             We help people land interviews with better CVs and resumes - faster.
           </h1>
           <p className={`mt-6 text-lg ${THEME.muted}`}>
-            CVBuilder turns your experience into a clear, ATS-friendly document you can create, edit, and export in minutes. Pay only for what you use with simple tokens.
+            CV Makers turns your experience into a clear, ATS-friendly document you can create, edit, and export in minutes. Pay only for what you use with simple tokens.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button href="/create-cv" size="lg">Get started</Button>
@@ -202,18 +202,27 @@ export default function AboutPageClient() {
         >
           <h2 className={`text-3xl font-bold text-center ${THEME.text}`}>What we do</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {STEPS.map((step) => (
-              <Card key={step.title} className="p-6">
-                <div className="flex items-start gap-4">
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${step.iconBg}`}>
-                    {step.icon}
-                  </span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{step.title}</h3>
-                    <p className="mt-2 text-sm text-slate-600">{step.description}</p>
+            {STEPS.map((step, index) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Card className="p-6">
+                  <div className="flex items-start gap-4">
+                    <span className={`flex h-10 w-10 items-center justify-center rounded-full ${step.iconBg}`}>
+                      {step.icon}
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{step.title}</h3>
+                      <p className="mt-2 text-sm text-slate-600">{step.description}</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -234,18 +243,27 @@ export default function AboutPageClient() {
             </p>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {PILLARS.map((pillar) => (
-              <Card key={pillar.title} className="p-6">
-                <div className="flex items-start gap-4">
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${pillar.iconBg}`}>
-                    {pillar.icon}
-                  </span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{pillar.title}</h3>
-                    <p className="mt-2 text-sm text-slate-600">{pillar.description}</p>
+            {PILLARS.map((pillar, index) => (
+              <motion.div
+                key={pillar.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Card className="p-6">
+                  <div className="flex items-start gap-4">
+                    <span className={`flex h-10 w-10 items-center justify-center rounded-full ${pillar.iconBg}`}>
+                      {pillar.icon}
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{pillar.title}</h3>
+                      <p className="mt-2 text-sm text-slate-600">{pillar.description}</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -261,11 +279,20 @@ export default function AboutPageClient() {
         >
           <h2 className={`text-3xl font-bold text-center ${THEME.text}`}>Our principles</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {PRINCIPLES.map((principle) => (
-              <Card key={principle.title} className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900">{principle.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{principle.description}</p>
-              </Card>
+            {PRINCIPLES.map((principle, index) => (
+              <motion.div
+                key={principle.title}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-slate-900">{principle.title}</h3>
+                  <p className="mt-2 text-sm text-slate-600">{principle.description}</p>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -281,11 +308,20 @@ export default function AboutPageClient() {
         >
           <h2 className={`text-3xl font-bold text-center ${THEME.text}`}>Trust & Security</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {TRUST_ITEMS.map((item) => (
-              <Card key={item.title} className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
-              </Card>
+            {TRUST_ITEMS.map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-600">{item.description}</p>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -332,21 +368,30 @@ export default function AboutPageClient() {
                     <p className="text-sm text-slate-600">{group.description}</p>
                   </div>
                   <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {TEMPLATE_KEYS.map((key) => {
+                    {TEMPLATE_KEYS.map((key, index) => {
                       const Template = ResumeTemplates[key];
                       return (
-                        <Card key={`${groupKey}-${key}`} className="border border-slate-200 bg-white p-4">
-                          <div className="text-sm font-semibold text-slate-900">{labelForTemplate(key)}</div>
-                          <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
-                            <ScaledA4>
-                              <Template data={group.data} />
-                            </ScaledA4>
-                          </div>
-                          <div className="mt-3 text-xs text-slate-500">Printable A4 | ATS ready | Multi-language</div>
-                          <div className="mt-3">
-                            <Button href={group.href(key)} variant="outline" className="w-full">Use template</Button>
-                          </div>
-                        </Card>
+                        <motion.div
+                          key={`${groupKey}-${key}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1, duration: 0.4 }}
+                          viewport={{ once: true }}
+                          whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+                        >
+                          <Card className="border border-slate-200 bg-white p-4">
+                            <div className="text-sm font-semibold text-slate-900">{labelForTemplate(key)}</div>
+                            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
+                              <ScaledA4>
+                                <Template data={group.data} />
+                              </ScaledA4>
+                            </div>
+                            <div className="mt-3 text-xs text-slate-500">Printable A4 | ATS ready | Multi-language</div>
+                            <div className="mt-3">
+                              <Button href={group.href(key)} variant="outline" className="w-full">Use template</Button>
+                            </div>
+                          </Card>
+                        </motion.div>
                       );
                     })}
                   </div>

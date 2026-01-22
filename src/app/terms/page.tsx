@@ -1,11 +1,10 @@
 import PolicyPage from '@/components/policy/PolicyPage';
 import { PolicySection } from '@/types/policy';
-import { Currency } from '@/lib/currency';
-import { formatCurrency } from '@/lib/currency';
+import { Currency, formatCurrency, SERVICE_COSTS } from '@/lib/currency';
 
 export const metadata = {
-  title: 'Terms & Conditions - CareerZen',
-  description: 'Terms & Conditions for using CareerZen services.',
+  title: 'Terms & Conditions - CV Makers',
+  description: 'Terms & Conditions for using CV Makers services.',
 };
 
 function getDynamicTermsSections(currency: Currency): PolicySection[] {
@@ -13,7 +12,7 @@ function getDynamicTermsSections(currency: Currency): PolicySection[] {
   {
     id: 'intro',
     title: '1. General provisions',
-    body: `These Terms and Conditions govern the use of the website careerzen.co.uk and the provision of CV/resume creation, improvement, and export services by EVERFINA LTD (Company No. 15645711), registered at 20 Wenlock Road, London, England, N1 7GU (the “Company,” “we,” “us,” “our”).\nBy using our website, creating a draft CV, or purchasing token packages, you agree to these Terms. If you do not agree, please do not use the Service.`
+    body: `These Terms and Conditions govern the use of the website cv-makers.co.uk and the provision of CV/resume creation, improvement, and export services by WORKING AGENT LTD (Company No. 15957326), registered at 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF (the "Company," "we," "us," "our").\nBy using our website, creating a draft CV, or purchasing token packages, you agree to these Terms. If you do not agree, please do not use the Service.`
   },
   {
     id: 'definitions',
@@ -35,11 +34,11 @@ function getDynamicTermsSections(currency: Currency): PolicySection[] {
 • Custom — price by agreement (custom token allocation).
 
 Service costs (in tokens):
-• Create CV/Resume draft — 100 tokens
-• Export to PDF — 150 tokens
-• Export to DOCX — 150 tokens
-• Improve with AI — 200 tokens
-• Send to personal manager — 800 tokens
+• Create CV/Resume draft — ${SERVICE_COSTS.CREATE_DRAFT} tokens
+• Export to PDF — ${SERVICE_COSTS.EXPORT_PDF} tokens
+• Export to DOCX — ${SERVICE_COSTS.EXPORT_DOCX} tokens
+• Improve with AI — ${SERVICE_COSTS.AI_IMPROVE} tokens
+• Send to personal manager — ${SERVICE_COSTS.PERSONAL_MANAGER} tokens
 
 All prices are calculated from GBP (1.00 GBP = 100 tokens). Other currencies are converted at current exchange rates. Payments are made via methods listed on the website. Services are activated only after payment is received.`
   },
@@ -96,7 +95,7 @@ All prices are calculated from GBP (1.00 GBP = 100 tokens). Other currencies are
   {
     id: 'notices',
     title: '15. Notices',
-    body: `All official communications must be sent to:\n📧 info@careerzen.co.uk\n📍 20 Wenlock Road, London, England, N1 7GU`
+    body: `All official communications must be sent to:\n📧 info@cv-makers.co.uk\n📍 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF`
   },
   {
     id: 'law',
@@ -111,7 +110,7 @@ All prices are calculated from GBP (1.00 GBP = 100 tokens). Other currencies are
   {
     id: 'company-details',
     title: 'Company details',
-    body: `EVERFINA LTD\nCompany number: 15645711\nRegistered office: 20 Wenlock Road, London, England, N1 7GU\nEmail: info@careerzen.co.uk`
+    body: `WORKING AGENT LTD\nCompany number: 15957326\nRegistered office: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF\nEmail: info@cv-makers.co.uk`
   },
   ];
 }
@@ -127,7 +126,7 @@ export default function TermsPage() {
       effectiveDate="01.09.2025"
       lastUpdated="18.09.2025"
       version="v1.0.6"
-      helpEmail="info@careerzen.co.uk"
+      helpEmail="info@cv-makers.co.uk"
       showRegionToggle={false}
     />
   );

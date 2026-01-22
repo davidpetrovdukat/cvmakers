@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Section from "@/components/layout/Section";
 import Button from "@/components/ui/Button";
@@ -94,13 +95,23 @@ export default function PricingClient() {
   return (
     <div className="bg-slate-50 min-h-screen">
       <Section className="py-12">
-        <div className="text-center">
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="mt-4 text-3xl sm:text-4xl font-bold">Top-Up</h1>
           <p className="mt-2 text-slate-600">
             Choose a plan and proceed to secure checkout.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <motion.div 
+            className="mt-6 flex flex-wrap items-center justify-center gap-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
             <Segmented
               options={[
                 { label: "GBP", value: "GBP" },
@@ -121,27 +132,44 @@ export default function PricingClient() {
                 </option>
               ))}
             </select>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        <div className="mt-10 grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {PRICING_PLANS.map((plan) => (
-            <PlanCard
+        <motion.div 
+          className="mt-10 grid md:grid-cols-3 lg:grid-cols-4 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
+          {PRICING_PLANS.map((plan, index) => (
+            <motion.div
               key={plan.name}
-              name={plan.name}
-              popular={plan.popular}
-              bullets={plan.points}
-              cta="Choose Plan"
-              amount={parseFloat(plan.price.replace(/[£,]/g, ""))}
-              currency={currency}
-              onAction={() => handlePlanRequest(plan)}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+            >
+              <PlanCard
+                name={plan.name}
+                popular={plan.popular}
+                bullets={plan.points}
+                cta="Choose Plan"
+                amount={parseFloat(plan.price.replace(/[£,]/g, ""))}
+                currency={currency}
+                onAction={() => handlePlanRequest(plan)}
+              />
+            </motion.div>
           ))}
-          <CustomPlanCard
-            currency={currency}
-            onRequest={() => handlePlanRequest({ name: "Custom" })}
-          />
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.4 }}
+          >
+            <CustomPlanCard
+              currency={currency}
+              onRequest={() => handlePlanRequest({ name: "Custom" })}
+            />
+          </motion.div>
+        </motion.div>
       </Section>
     </div>
   );

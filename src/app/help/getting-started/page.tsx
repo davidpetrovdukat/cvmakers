@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 const STEP_CONFIG = [
   {
@@ -82,7 +83,7 @@ const STEP_CONFIG = [
     ],
     cta: 'Create CV or resume',
     ctaLink: '/create-cv',
-    note: 'Creating a PDF or resume deducts 150 tokens from your balance',
+    note: `Creating a PDF or resume deducts ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF} tokens from your balance`,
     icon: '📤'
   }
 ];
@@ -245,10 +246,10 @@ export default function GettingStartedPage() {
 
                   {/* Tips and Notes */}
                   {steps[activeStep].tip && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4">
                       <div className="flex items-start gap-3">
-                        <div className="text-blue-600 font-semibold text-sm">💡 Tip</div>
-                        <p className="text-blue-800 text-sm">{steps[activeStep].tip}</p>
+                        <div className="text-indigo-600 font-semibold text-sm">💡 Tip</div>
+                        <p className="text-indigo-800 text-sm">{steps[activeStep].tip}</p>
                       </div>
                     </div>
                   )}
@@ -324,7 +325,7 @@ export default function GettingStartedPage() {
             {/* Next Steps */}
             {activeStep === steps.length - 1 && (
               <div className="mt-12 text-center">
-                <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-emerald-200">
+                <Card className="bg-gradient-to-r from-emerald-50 to-indigo-50 border-emerald-200">
                   <div className="p-8">
                     <h3 className="text-xl font-semibold text-slate-900 mb-4">
                       рџЋ‰ Congratulations! You're all set

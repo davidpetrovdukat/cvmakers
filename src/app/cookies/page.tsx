@@ -2,15 +2,15 @@ import PolicyPage from '@/components/policy/PolicyPage';
 import { PolicySection } from '@/types/policy';
 
 export const metadata = {
-  title: 'Cookies Policy - CareerZen',
-  description: 'Details on how CareerZen uses cookies and similar technologies.',
+  title: 'Cookies Policy - CV Makers',
+  description: 'Details on how CV Makers uses cookies and similar technologies.',
 };
 
 const sections: PolicySection[] = [
   {
     id: 'overview',
     title: '1. Overview',
-    body: `This Cookies Policy explains how careerzen.co.uk, operated by EVERFINA LTD (Company No. 15645711, registered office: 20 Wenlock Road, London, N1 7GU), uses cookies and similar technologies (for example localStorage, sessionStorage, pixels, and other local identifiers) on our website and services. This Policy complements our Privacy Policy. By using the site or interacting with the cookie banner, you can manage or give consent to non-essential cookies as described below.`
+    body: `This Cookies Policy explains how cv-makers.co.uk, operated by WORKING AGENT LTD (Company No. 15957326, registered office: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF), uses cookies and similar technologies (for example localStorage, sessionStorage, pixels, and other local identifiers) on our website and services. This Policy complements our Privacy Policy. By using the site or interacting with the cookie banner, you can manage or give consent to non-essential cookies as described below.`
   },
   {
     id: 'what-are-cookies',
@@ -72,8 +72,8 @@ campaign_src	Tracks campaign attribution	Marketing	30–90 days`
     id: 'contact',
     title: '10. Contact',
     body: `If you have questions about cookies or this Policy, contact us at:
-📧 info@careerzen.co.uk
-📍 EVERFINA LTD, 20 Wenlock Road, London, England, N1 7GU`
+📧 info@cv-makers.co.uk
+📍 WORKING AGENT LTD, 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF`
   },
 ];
 
@@ -85,7 +85,7 @@ export default function CookiesPage() {
       effectiveDate="01.09.2025"
       lastUpdated="18.09.2025"
       version="v1.0.6"
-      helpEmail="info@careerzen.co.uk"
+      helpEmail="info@cv-makers.co.uk"
       showRegionToggle={false}
     />
   );

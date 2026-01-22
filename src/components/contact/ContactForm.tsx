@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import Card from '@/components/ui/Card';
 import Label from '@/components/ui/Label';
 import Input from '@/components/ui/Input';
@@ -51,10 +52,16 @@ export default function ContactForm() {
   };
 
   return (
-    <Card className="p-6" padding="md">
-      <h2 className="text-lg font-semibold">Send a message</h2>
-      <p className="text-slate-600 text-sm mt-1">Fill the form and we will reply by email.</p>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      viewport={{ once: true }}
+    >
+      <Card className="p-6" padding="md">
+        <h2 className="text-lg font-semibold">Send a message</h2>
+        <p className="text-slate-600 text-sm mt-1">Fill the form and we will reply by email.</p>
+        <form onSubmit={onSubmit} className="mt-4 grid gap-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
@@ -106,11 +113,18 @@ export default function ContactForm() {
           <Alert variant="error">{error}</Alert>
         )}
         {submitted && (
-          <Alert variant="success">
-            Thanks! Your request <b>{submitted.id}</b> has been received. We will reply to <b>{email}</b>.
-          </Alert>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert variant="success">
+              Thanks! Your request <b>{submitted.id}</b> has been received. We will reply to <b>{email}</b>.
+            </Alert>
+          </motion.div>
         )}
       </form>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }

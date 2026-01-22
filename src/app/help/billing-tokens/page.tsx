@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 const TOKENS_PER_CURRENCY_UNIT = 100;
-const TOKENS_PER_DOCUMENT = 150;
+const TOKENS_PER_DOCUMENT = SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF; // Create + Export PDF
 const COST_PER_DOCUMENT = (TOKENS_PER_DOCUMENT / TOKENS_PER_CURRENCY_UNIT).toFixed(2);
 
 const TOKEN_PACKAGES = [
@@ -20,12 +22,12 @@ const TOKEN_PACKAGES = [
 
 const LEDGER_SAMPLE = [
   { date: '2024-01-15', type: 'Top-up', delta: 1000, balance: 1000 },
-  { date: '2024-01-15', type: 'CV', delta: -150, balance: 850 },
-  { date: '2024-01-16', type: 'Resume', delta: -150, balance: 700 },
-  { date: '2024-01-17', type: 'AI Assist', delta: -200, balance: 500 },
-  { date: '2024-01-18', type: 'Top-up', delta: 5000, balance: 5500 },
-  { date: '2024-01-19', type: 'Manager Assist', delta: -800, balance: 4700 },
-  { date: '2024-01-20', type: 'Draft', delta: -100, balance: 4600 },
+  { date: '2024-01-15', type: 'CV', delta: -(SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF), balance: 1000 - (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) },
+  { date: '2024-01-16', type: 'Resume', delta: -(SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF), balance: 1000 - 2 * (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) },
+  { date: '2024-01-17', type: 'AI Assist', delta: -SERVICE_COSTS.AI_IMPROVE, balance: 1000 - 2 * (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) - SERVICE_COSTS.AI_IMPROVE },
+  { date: '2024-01-18', type: 'Top-up', delta: 5000, balance: 1000 - 2 * (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) - SERVICE_COSTS.AI_IMPROVE + 5000 },
+  { date: '2024-01-19', type: 'Manager Assist', delta: -SERVICE_COSTS.PERSONAL_MANAGER, balance: 1000 - 2 * (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) - SERVICE_COSTS.AI_IMPROVE + 5000 - SERVICE_COSTS.PERSONAL_MANAGER },
+  { date: '2024-01-20', type: 'Draft', delta: -SERVICE_COSTS.CREATE_DRAFT, balance: 1000 - 2 * (SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF) - SERVICE_COSTS.AI_IMPROVE + 5000 - SERVICE_COSTS.PERSONAL_MANAGER - SERVICE_COSTS.CREATE_DRAFT },
 ];
 
 export default function BillingTokensPage() {
@@ -60,50 +62,68 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
   return (
     <main className="bg-slate-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="text-center mb-12">
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-4xl font-bold text-slate-900 mb-4">Billing & Tokens</h1>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">
             Understand our pay-as-you-go model, token pricing, and billing system.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">How it works</h2>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">💰</span>
-                    </div>
-                    <h3 className="font-semibold text-slate-900 mb-2">Pay-as-you-go</h3>
-                    <p className="text-sm text-slate-600">No subscriptions or monthly fees</p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">How it works</h2>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {[
+                      { icon: '💰', title: 'Pay-as-you-go', desc: 'No subscriptions or monthly fees', bg: 'bg-emerald-100' },
+                      { icon: '🪙', title: `1 ${selectedCurrency} = 100 tokens`, desc: 'Simple conversion rate', bg: 'bg-indigo-100' },
+                      { icon: '📄', title: `1 document = ${TOKENS_PER_DOCUMENT} tokens`, desc: 'Fixed cost per document', bg: 'bg-purple-100' }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.icon}
+                        className="text-center"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.4 }}
+                        viewport={{ once: true }}
+                        whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                      >
+                        <div className={`w-16 h-16 ${item.bg} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                          <span className="text-2xl">{item.icon}</span>
+                        </div>
+                        <h3 className="font-semibold text-slate-900 mb-2">{item.title}</h3>
+                        <p className="text-sm text-slate-600">{item.desc}</p>
+                      </motion.div>
+                    ))}
                   </div>
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">🪙</span>
-                    </div>
-                    <h3 className="font-semibold text-slate-900 mb-2">1 {selectedCurrency} = 100 tokens</h3>
-                    <p className="text-sm text-slate-600">Simple conversion rate</p>
-                  </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl">📄</span>
-                      </div>
-                      <h3 className="font-semibold text-slate-900 mb-2">1 document = 150 tokens</h3>
-                      <p className="text-sm text-slate-600">Fixed cost per document</p>
-                    </div>
-                </div>
                 <div className="mt-6 p-4 bg-slate-50 rounded-lg">
                   <p className="text-sm text-slate-700">Note - your tokens never expire</p>
                 </div>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Token Calculator</h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Token Calculator</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -146,38 +166,60 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 </div>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">How to top up</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {filteredPackages.map((pkg, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-4 hover:border-emerald-300 transition-colors">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-slate-900 mb-1">
-                          {pkg.currency} {pkg.amount}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">How to top up</h2>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {filteredPackages.map((pkg, index) => (
+                      <motion.div
+                        key={index}
+                        className="border border-slate-200 rounded-lg p-4 hover:border-emerald-300 transition-colors"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.4 }}
+                        viewport={{ once: true }}
+                        whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 mb-1">
+                            {pkg.currency} {pkg.amount}
+                          </div>
+                          <div className="text-sm text-slate-600">
+                            {pkg.tokens.toLocaleString()} tokens
+                          </div>
                         </div>
-                        <div className="text-sm text-slate-600">
-                          {pkg.tokens.toLocaleString()} tokens
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <div className="text-blue-600 font-semibold text-sm">💡 Custom amounts</div>
-                    <p className="text-[#1E40AF] text-sm">
+                    <div className="text-indigo-600 font-semibold text-sm">💡 Custom amounts</div>
+                    <p className="text-indigo-700 text-sm">
                       You can top up any amount from {selectedCurrency}5 to {selectedCurrency}10,000.
                     </p>
                   </div>
                 </div>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Receipts & Records</h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Receipts & Records</h2>
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2">Downloadable receipts</h3>
@@ -200,10 +242,17 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 </div>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Token Ledger Sample</h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Token Ledger Sample</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50">
@@ -222,7 +271,7 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               entry.type === 'Top-up' 
                                 ? 'bg-emerald-100 text-emerald-800' 
-                                : 'bg-blue-100 text-blue-800'
+                                : 'bg-indigo-100 text-indigo-800'
                             }`}>
                               {entry.type}
                             </span>
@@ -240,10 +289,17 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 </div>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Refunds</h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-4">Refunds</h2>
                 <p className="text-slate-700 mb-4">
                   Unused tokens can be refunded within 14 days of purchase. Used tokens (for issued invoices) 
                   are non-refundable. All refunds are processed to the original payment method within 5-10 business days.
@@ -253,10 +309,17 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 </Button>
               </div>
             </Card>
+            </motion.div>
 
-            <Card>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Payment Methods & Limits</h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Payment Methods & Limits</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-3">Accepted Methods</h3>
@@ -288,6 +351,7 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 </div>
               </div>
             </Card>
+            </motion.div>
           </div>
 
           <div className="lg:col-span-1">

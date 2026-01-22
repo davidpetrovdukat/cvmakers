@@ -7,6 +7,12 @@ const nextConfig = {
     return config;
   },
 
+  // Turbopack configuration for Next.js 16
+  turbopack: {},
+
+  // Optimize build performance - moved from experimental in Next.js 15
+  serverExternalPackages: ['@prisma/client'],
+
   images: {
     remotePatterns: [
       {
@@ -15,7 +21,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cdn-icons-png.flaticon.com", // якщо плануєш інші іконки
+        hostname: "cdn-icons-png.flaticon.com",
       },
     ],
   },

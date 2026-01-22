@@ -35,11 +35,11 @@ const SOCIAL_LINKS = [
 ];
 
 const COMPANY_DETAILS = [
-  { text: 'EVERFINA LTD', type: 'text' },
-  { text: 'Company number 15645711', type: 'text' },
-  { text: '20 Wenlock Road, London, England, N1 7GU', type: 'text' },
-  { text: '+44 7833 647923', type: 'tel', href: 'tel:+447833647923' },
-  { text: 'info@careerzen.co.uk', type: 'mailto', href: 'mailto:info@careerzen.co.uk' },
+  { text: 'WORKING AGENT LTD', type: 'text' },
+  { text: 'Company number 15957326', type: 'text' },
+  { text: '31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF', type: 'text' },
+  { text: '+44 7418 601001', type: 'tel', href: 'tel:+447418601001' },
+  { text: 'info@cv-makers.co.uk', type: 'mailto', href: 'mailto:info@cv-makers.co.uk' },
 ];
 
 export default function Footer() {
@@ -64,12 +64,19 @@ export default function Footer() {
           <div>
             <div className="font-semibold text-slate-900">Product</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
-              {PRODUCT_LINKS.map((item) => (
-                <li key={item.label}>
+              {PRODUCT_LINKS.map((item, index) => (
+                <motion.li 
+                  key={item.label}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                >
                   <Link href={item.href} className="hover:underline">
                     {item.label}
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
@@ -77,12 +84,19 @@ export default function Footer() {
           <div>
             <div className="font-semibold text-slate-900">Help</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
-              {HELP_LINKS.map((item) => (
-                <li key={item.label}>
+              {HELP_LINKS.map((item, index) => (
+                <motion.li 
+                  key={item.label}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                >
                   <Link href={item.href} className="hover:underline">
                     {item.label}
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
@@ -90,12 +104,19 @@ export default function Footer() {
           <div>
             <div className="font-semibold text-slate-900">Legal</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
-              {LEGAL_LINKS.map((item) => (
-                <li key={item.label}>
+              {LEGAL_LINKS.map((item, index) => (
+                <motion.li 
+                  key={item.label}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                >
                   <Link href={item.href} className="hover:underline">
                     {item.label}
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
@@ -103,8 +124,15 @@ export default function Footer() {
           <div>
             <div className="font-semibold text-slate-900">Company</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
-              {COMPANY_DETAILS.map((item) => (
-                <li key={item.text}>
+              {COMPANY_DETAILS.map((item, index) => (
+                <motion.li 
+                  key={item.text}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                >
                   {item.type === 'text' ? (
                     item.text
                   ) : (
@@ -112,7 +140,7 @@ export default function Footer() {
                       {item.text}
                     </a>
                   )}
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
@@ -120,12 +148,19 @@ export default function Footer() {
           <div>
             <div className="font-semibold text-slate-900">Socials</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
-              {SOCIAL_LINKS.map((item) => (
-                <li key={item.label}>
+              {SOCIAL_LINKS.map((item, index) => (
+                <motion.li 
+                  key={item.label}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                >
                   <Link href={item.href} className="hover:underline">
                     {item.label}
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
@@ -154,7 +189,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-3 text-xs text-slate-600 sm:flex-row">
-          <div>© {year} EVERFINA LTD. All rights reserved.</div>
+          <div>© {year} WORKING AGENT LTD. All rights reserved.</div>
           <div>Registered in England & Wales</div>
         </div>
       </section>

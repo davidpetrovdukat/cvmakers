@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 type FAQCategory = 'creation' | 'tools' | 'tokens' | 'export' | 'account' | 'troubleshooting';
 type FAQItem = {
@@ -28,14 +29,14 @@ const FAQ_DATA: FAQItem[] = [
   {
     id: 'top-pricing-model',
     question: 'How does pricing work?',
-    answer: 'Pay-as-you-go with tokens. 1.00 GBP or 1.00 EUR equals 100 tokens. Actions: Create - 100, Create & Export PDF - 150, Improve with AI - 200, Send to personal manager - 800.',
+    answer: `Pay-as-you-go with tokens. 1.00 GBP or 1.00 EUR equals 100 tokens. Actions: Create - ${SERVICE_COSTS.CREATE_DRAFT}, Create & Export PDF - ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF}, Improve with AI - ${SERVICE_COSTS.AI_IMPROVE}, Send to personal manager - ${SERVICE_COSTS.PERSONAL_MANAGER}.`,
     category: 'tokens',
     top: true,
   },
   {
     id: 'top-drafting-cost',
     question: 'Is drafting free?',
-    answer: 'Create costs 100 tokens and adds a draft to your Dashboard. You can edit it any time.',
+    answer: `Create costs ${SERVICE_COSTS.CREATE_DRAFT} tokens and adds a draft to your Dashboard. You can edit it any time.`,
     category: 'creation',
     top: true,
   },
@@ -66,13 +67,13 @@ const FAQ_DATA: FAQItem[] = [
   {
     id: 'tools-improve-ai',
     question: 'What does Improve with AI do?',
-    answer: 'It rewrites selected sections like summary, bullets, and skills to be concise and professional. Cost: 200 tokens per run.',
+    answer: `It rewrites selected sections like summary, bullets, and skills to be concise and professional. Cost: ${SERVICE_COSTS.AI_IMPROVE} tokens per run.`,
     category: 'tools',
   },
   {
     id: 'tools-personal-manager',
     question: 'Who is the personal manager and what will I get?',
-    answer: 'A specialist reviews your content and sends personalised edits and comments. Cost: 800 tokens. First response within 3-6 hours.',
+    answer: `A specialist reviews your content and sends personalised edits and comments. Cost: ${SERVICE_COSTS.PERSONAL_MANAGER} tokens. First response within 3-6 hours.`,
     category: 'tools',
   },
   {
@@ -114,7 +115,7 @@ const FAQ_DATA: FAQItem[] = [
   {
     id: 'export-formats',
     question: 'What formats can I export to?',
-    answer: 'PDF (print-ready) and DOCX. Create & Export PDF - 150 tokens generates a final PDF immediately. You can also create first, then export later.',
+    answer: `PDF (print-ready) and DOCX. Create & Export PDF - ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF} tokens generates a final PDF immediately. You can also create first, then export later.`,
     category: 'export',
   },
   {
@@ -168,7 +169,7 @@ const FAQ_DATA: FAQItem[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'creation', label: 'Creating your CV/Resume', color: 'bg-blue-100 text-blue-800' },
+  { id: 'creation', label: 'Creating your CV/Resume', color: 'bg-indigo-100 text-indigo-800' },
   { id: 'tools', label: 'Writing tools, AI & manager', color: 'bg-purple-100 text-purple-800' },
   { id: 'tokens', label: 'Tokens & payments', color: 'bg-emerald-100 text-emerald-800' },
   { id: 'export', label: 'Export & sharing', color: 'bg-amber-100 text-amber-800' },
@@ -326,7 +327,12 @@ function FAQContent() {
     <main className="bg-slate-50 min-h-screen">
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Hero */}
-        <div className="text-center mb-8">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
             Frequently asked questions
           </h1>
@@ -335,7 +341,12 @@ function FAQContent() {
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-6">
+          <motion.div 
+            className="max-w-2xl mx-auto mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
             <Input
               ref={searchInputRef}
               placeholder="Search FAQs (e.g. reverse charge, tokens)"
@@ -343,27 +354,42 @@ function FAQContent() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full text-lg py-3"
             />
-            {searchQuery && (
-              <p className="mt-2 text-sm text-slate-500">
-                Try: 'reverse charge', 'tokens', 'VAT', 'refund'
-              </p>
-            )}
-          </div>
+            <AnimatePresence>
+              {searchQuery && (
+                <motion.p 
+                  className="mt-2 text-sm text-slate-500"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Try: 'reverse charge', 'tokens', 'VAT', 'refund'
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Category Chips */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            <button
+          <motion.div 
+            className="flex flex-wrap justify-center gap-2 mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            <motion.button
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === 'all'
                   ? 'bg-slate-900 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               All
-            </button>
-            {CATEGORIES.map(category => (
-              <button
+            </motion.button>
+            {CATEGORIES.map((category, index) => (
+              <motion.button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -371,60 +397,38 @@ function FAQContent() {
                     ? 'bg-slate-900 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {category.label}
-              </button>
+              </motion.button>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Top Questions */}
         {topQuestions.length > 0 && (
-          <div className="mb-12">
+          <motion.div 
+            className="mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
             <h2 className="text-2xl font-bold text-slate-900 mb-6">Top questions</h2>
             <div className="grid gap-4">
-              {topQuestions.map(item => (
-                <FAQCard
+              {topQuestions.map((item, index) => (
+                <motion.div
                   key={item.id}
-                  item={item}
-                  isExpanded={expandedItems.has(item.id)}
-                  onToggle={() => toggleExpanded(item.id)}
-                  onCopyLink={() => copyLink(item.id)}
-                  onHelpfulVote={(helpful) => handleHelpfulVote(item.id, helpful)}
-                  hasVoted={helpfulVotes.has(item.id)}
-                  showContactForm={showContactForm === item.id}
-                  contactEmail={contactEmail}
-                  contactMessage={contactMessage}
-                  onContactEmailChange={setContactEmail}
-                  onContactMessageChange={setContactMessage}
-                  onSubmitContact={() => submitContactForm(item.id)}
-                  onCloseContact={() => setShowContactForm(null)}
-                  highlightQuery={searchQuery}
-                  highlightText={highlightText}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Categorized FAQs */}
-        {Object.entries(groupedFAQs).map(([categoryId, items]) => {
-          if (items.length === 0) return null;
-          
-          const category = CATEGORIES.find(c => c.id === categoryId);
-          if (!category) return null;
-
-          return (
-            <div key={categoryId} id={categoryId} className="mb-12">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${category.color}`}>
-                  {category.label}
-                </span>
-              </h2>
-              <div className="space-y-4">
-                {items.map(item => (
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.4 }}
+                  viewport={{ once: true }}
+                >
                   <FAQCard
-                    key={item.id}
                     item={item}
                     isExpanded={expandedItems.has(item.id)}
                     onToggle={() => toggleExpanded(item.id)}
@@ -441,15 +445,76 @@ function FAQContent() {
                     highlightQuery={searchQuery}
                     highlightText={highlightText}
                   />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Categorized FAQs */}
+        {Object.entries(groupedFAQs).map(([categoryId, items]) => {
+          if (items.length === 0) return null;
+          
+          const category = CATEGORIES.find(c => c.id === categoryId);
+          if (!category) return null;
+
+          return (
+            <motion.div 
+              key={categoryId} 
+              id={categoryId} 
+              className="mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${category.color}`}>
+                  {category.label}
+                </span>
+              </h2>
+              <div className="space-y-4">
+                {items.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                    viewport={{ once: true }}
+                    whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                  >
+                    <FAQCard
+                      item={item}
+                      isExpanded={expandedItems.has(item.id)}
+                      onToggle={() => toggleExpanded(item.id)}
+                      onCopyLink={() => copyLink(item.id)}
+                      onHelpfulVote={(helpful) => handleHelpfulVote(item.id, helpful)}
+                      hasVoted={helpfulVotes.has(item.id)}
+                      showContactForm={showContactForm === item.id}
+                      contactEmail={contactEmail}
+                      contactMessage={contactMessage}
+                      onContactEmailChange={setContactEmail}
+                      onContactMessageChange={setContactMessage}
+                      onSubmitContact={() => submitContactForm(item.id)}
+                      onCloseContact={() => setShowContactForm(null)}
+                      highlightQuery={searchQuery}
+                      highlightText={highlightText}
+                    />
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           );
         })}
 
         {/* No Results */}
         {filteredFAQs.length === 0 && (
-          <div className="text-center py-12">
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <h3 className="text-xl font-semibold text-slate-900 mb-2">No results found</h3>
             <p className="text-slate-600 mb-6">
               Try different keywords or browse by category
@@ -460,12 +525,22 @@ function FAQContent() {
             }}>
               Clear filters
             </Button>
-          </div>
+          </motion.div>
         )}
 
         {/* CTA */}
-        <div className="mt-16 text-center">
-          <div className="bg-white rounded-xl p-8 border border-slate-200">
+        <motion.div 
+          className="mt-16 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <motion.div 
+            className="bg-white rounded-xl p-8 border border-slate-200"
+            whileHover={{ scale: 1.02, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
             <h3 className="text-xl font-semibold text-slate-900 mb-4">
               Still need help?
             </h3>
@@ -480,8 +555,8 @@ function FAQContent() {
                 Top up tokens
               </Button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </main>
   );
@@ -643,7 +718,7 @@ function FAQCard({
                           placeholder="What can we help you with?"
                           value={contactMessage}
                           onChange={(e) => onContactMessageChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                           rows={3}
                         />
                         <div className="flex gap-2">

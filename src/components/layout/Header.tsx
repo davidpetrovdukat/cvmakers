@@ -119,8 +119,8 @@ export default function Header() {
               className="flex items-center gap-2"
             >
               <Image
-                src="/logo.webp"
-                alt="Skeleton logo"
+                src="/logo.png"
+                alt="CV Makers logo"
                 width={32}
                 height={32}
                 className="h-7 w-auto"
@@ -130,7 +130,7 @@ export default function Header() {
           </Link>
           
           <nav className="hidden sm:flex items-center gap-2 text-sm relative">
-            <a href={signedIn ? '/create-cv' : '/auth/signin?mode=login'} className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-3 py-2 transition-colors">Create my CV</a>
+            <a href={signedIn ? '/create-cv' : '/auth/signin?mode=login'} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 transition-colors">Create my CV</a>
             <a href={signedIn ? '/create-resume' : '/auth/signin?mode=login'} className="rounded-xl border border-[#E2E8F0] hover:bg-[#E2E8F0] px-3 py-2 transition-colors">Create my resume</a>
             {signedIn && (
               <a href="/dashboard" className={`rounded-xl px-3 py-2 transition-colors ${isDashboard ? 'bg-black/5' : 'hover:bg-black/5'}`}>Dashboard</a>
@@ -152,13 +152,13 @@ export default function Header() {
             <>
               <Link
                 href="/auth/signin?mode=login"
-                className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-4 py-2 text-sm transition-colors"
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm transition-colors"
               >
                 Log in
               </Link>
               <Link
                 href="/auth/signin?mode=signup"
-                className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-4 py-2 text-sm transition-colors"
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm transition-colors"
               >
                 Sign up
               </Link>
@@ -168,7 +168,7 @@ export default function Header() {
               <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-slate-700">
                 Tokens: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
               </div>
-              <Link href="/pricing" className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-3 py-1.5 text-sm transition-colors">Top-Up</Link>
+              <Link href="/pricing" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-sm transition-colors">Top-Up</Link>
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="rounded-xl bg-slate-900 hover:bg-black text-white px-4 py-2 text-sm transition-colors"
@@ -249,15 +249,15 @@ export default function Header() {
                   <div className="mt-4 grid gap-2">
                     {!signedIn ? (
                       <>
-                        <Link href="/auth/signin?mode=login" className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Log in</Link>
-                        <Link href="/auth/signin?mode=signup" className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Sign up</Link>
+                        <Link href="/auth/signin?mode=login" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Log in</Link>
+                        <Link href="/auth/signin?mode=signup" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Sign up</Link>
                       </>
                     ) : (
                       <>
                         <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-slate-700">
                           Tokens: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
                         </div>
-                        <Link href="/pricing" className="rounded-xl bg-[#2563EB] hover:bg-[#1E40AF] text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Top-Up</Link>
+                        <Link href="/pricing" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Top-Up</Link>
                         <button
                           onClick={() => { closeMobile(); signOut({ callbackUrl: '/' }); }}
                           className="rounded-xl bg-slate-900 hover:bg-black text-white px-4 py-2 text-sm"

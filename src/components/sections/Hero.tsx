@@ -15,7 +15,6 @@ export default function Hero() {
   const { status } = useSession();
   const signedIn = status === 'authenticated';
   const primaryHref = signedIn ? '/create-cv' : '/auth/signin?mode=login';
-  const secondaryHref = signedIn ? '/create-resume' : '/auth/signin?mode=login';
 
   // Typewriter state
   const [index, setIndex] = useState(0); // which phrase
@@ -66,7 +65,7 @@ export default function Hero() {
   return (
     <div className="relative overflow-hidden">
       {/* Left-to-right gradient blending toward image tone (stronger) */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0e1f4d]/15 via-slate-50/95 to-[#0e1f4d]/20" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-indigo-900/15 via-slate-50/95 to-indigo-900/20" />
       <Section className="pt-12 pb-18 relative">
         <div className="grid md:grid-cols-2 items-center gap-10">
           {/* Left: Copy */}
@@ -79,7 +78,7 @@ export default function Hero() {
             >
               <span className="block">Create a perfect CV.</span>
               <span className="block">Our builder gets you</span>
-              <span className="block h-[1.1em] text-blue-700">
+              <span className="block h-[1.1em] text-indigo-600">
                 {current.slice(0, subIndex)}
                 <span className={`inline-block w-[1ch] ${blink ? 'opacity-100' : 'opacity-0'}`}>|</span>
               </span>
@@ -95,16 +94,13 @@ export default function Hero() {
             </motion.p>
 
             <motion.div
-              className="mt-6 flex flex-col sm:flex-row gap-3"
+              className="mt-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.8, ease: 'easeOut' }}
             >
               <Button href={primaryHref} size="lg" variant="primary" className="hover:animate-pulse">
                 Create my CV
-              </Button>
-              <Button variant="outline" href={secondaryHref} size="lg" className="hover:animate-pulse">
-                Create my resume
               </Button>
             </motion.div>
           </div>
@@ -116,15 +112,15 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-black/10 shadow-sm bg-white">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-black/10 shadow-2xl bg-white">
               <img
-                src="/image1.webp"
+                src="/hero.webp"
                 alt="Person creating a CV on a laptop"
                 className="h-full w-full object-cover"
                 loading="lazy"
               />
               {/* stronger soft gradient overlay from image side */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-transparent to-[#0e1f4d]/25" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-transparent to-indigo-900/25" />
             </div>
           </motion.div>
         </div>

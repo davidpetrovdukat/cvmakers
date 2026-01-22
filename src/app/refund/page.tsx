@@ -4,8 +4,8 @@ import { Currency } from '@/lib/currency';
 import { formatCurrency } from '@/lib/currency';
 
 export const metadata = {
-  title: 'Refund & Cancellation Policy - CareerZen',
-  description: 'Refund and cancellation terms for CareerZen token purchases and services.',
+  title: 'Refund & Cancellation Policy - CV Makers',
+  description: 'Refund and cancellation terms for CV Makers token purchases and services.',
 };
 
 function getDynamicRefundSections(currency: Currency): PolicySection[] {
@@ -13,12 +13,12 @@ function getDynamicRefundSections(currency: Currency): PolicySection[] {
   {
     id: 'summary',
     title: '1. Customer summary',
-    body: `Refunds are processed according to this Policy and applicable law.\nStandard refund processing time is 5–10 business days after approval; actual posting may take longer depending on banks/payment providers.\nRefunds will not exceed the amount actually paid for your order (minus any non-refundable processor fees).\nTokens already used for Services (draft generation, exports, AI improvement, or manager review) are generally non-refundable.\nToken packages can be refunded only if unused; once tokens are spent, refunds are not possible except in cases of technical fault.\nPromotional credits, discounts, and bonus tokens are normally non-refundable unless required by law or explicitly stated otherwise.\nRefund requests must be sent to info@careerzen.co.uk with your order details.\nThis Policy may be updated; significant changes will be communicated as described below.\nBy expressly requesting immediate access to Services (e.g., downloading or generating a CV), you may lose the statutory cancellation right — see section 4.6.`
+    body: `Refunds are processed according to this Policy and applicable law.\nStandard refund processing time is 5–10 business days after approval; actual posting may take longer depending on banks/payment providers.\nRefunds will not exceed the amount actually paid for your order (minus any non-refundable processor fees).\nTokens already used for Services (draft generation, exports, AI improvement, or manager review) are generally non-refundable.\nToken packages can be refunded only if unused; once tokens are spent, refunds are not possible except in cases of technical fault.\nPromotional credits, discounts, and bonus tokens are normally non-refundable unless required by law or explicitly stated otherwise.\nRefund requests must be sent to info@cv-makers.co.uk with your order details.\nThis Policy may be updated; significant changes will be communicated as described below.\nBy expressly requesting immediate access to Services (e.g., downloading or generating a CV), you may lose the statutory cancellation right — see section 4.6.`
   },
   {
     id: 'scope',
     title: '2. Scope and legal note',
-    body: `This Policy applies to refunds and cancellations for CV/resume creation, export, AI improvement, and related services provided by EVERFINA LTD. Nothing in this Policy affects statutory consumer rights (for example under the Consumer Contracts Regulations 2013 and the Consumer Rights Act 2015, where applicable).`
+    body: `This Policy applies to refunds and cancellations for CV/resume creation, export, AI improvement, and related services provided by WORKING AGENT LTD. Nothing in this Policy affects statutory consumer rights (for example under the Consumer Contracts Regulations 2013 and the Consumer Rights Act 2015, where applicable).`
   },
   {
     id: 'definitions',
@@ -33,7 +33,7 @@ function getDynamicRefundSections(currency: Currency): PolicySection[] {
   {
     id: 'request',
     title: '5. How to request a refund',
-    body: `Send an email to info@careerzen.co.uk with the following:\n• Order reference number.\n• Account email used for purchase.\n• Whether the request concerns unused tokens, cancellation, or an issue with generated files.\n• For defective outputs: description of the issue and evidence (screenshots, file names, timestamps).\n• Preferred refund method (normally refunded to the original payment method).\n\nUpon receipt we will:\n• Acknowledge your request within 5 business days.\n• Investigate and, if needed, request further details.\n• Provide a decision and, if approved, initiate the refund within 5–10 business days of approval (posting time depends on your provider).`
+    body: `Send an email to info@cv-makers.co.uk with the following:\n• Order reference number.\n• Account email used for purchase.\n• Whether the request concerns unused tokens, cancellation, or an issue with generated files.\n• For defective outputs: description of the issue and evidence (screenshots, file names, timestamps).\n• Preferred refund method (normally refunded to the original payment method).\n\nUpon receipt we will:\n• Acknowledge your request within 5 business days.\n• Investigate and, if needed, request further details.\n• Provide a decision and, if approved, initiate the refund within 5–10 business days of approval (posting time depends on your provider).`
   },
   {
     id: 'investigation',
@@ -58,7 +58,7 @@ function getDynamicRefundSections(currency: Currency): PolicySection[] {
   {
     id: 'escalation',
     title: '10. Escalation and disputes',
-    body: `If you disagree with our decision, you may send a detailed appeal to info@careerzen.co.uk with your order details. Appeals are reviewed within 10 business days. This does not affect your statutory rights to pursue dispute resolution or legal action.`
+    body: `If you disagree with our decision, you may send a detailed appeal to info@cv-makers.co.uk with your order details. Appeals are reviewed within 10 business days. This does not affect your statutory rights to pursue dispute resolution or legal action.`
   },
   {
     id: 'examples',
@@ -68,7 +68,7 @@ function getDynamicRefundSections(currency: Currency): PolicySection[] {
   {
     id: 'contact',
     title: '12. Contact details',
-    body: `Email: info@careerzen.co.uk\nRegistered office: EVERFINA LTD, 20 Wenlock Road, London, England, N1 7GU`
+    body: `Email: info@cv-makers.co.uk\nRegistered office: WORKING AGENT LTD, 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF`
   },
   ];
 }
@@ -84,7 +84,7 @@ export default function RefundPage() {
       effectiveDate="01.09.2025"
       lastUpdated="18.09.2025"
       version="v1.0.6"
-      helpEmail="info@careerzen.co.uk"
+      helpEmail="info@cv-makers.co.uk"
       showRegionToggle={false}
     />
   );

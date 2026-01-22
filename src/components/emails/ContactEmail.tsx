@@ -25,7 +25,7 @@ export const ContactEmail: React.FC<Readonly<ContactEmailProps>> = ({
 }) => (
   <Html>
     <Head />
-    <Preview>New message from your invoicerly.co.uk contact form</Preview>
+    <Preview>New message from your cv-makers.co.uk contact form</Preview>
     <Body style={{ backgroundColor: '#f6f9fc', fontFamily: 'Arial, sans-serif' }}>
       <Container style={{
         backgroundColor: '#ffffff',

@@ -11,6 +11,8 @@ import { THEME } from '@/lib/theme';
 import PlanCard from '@/components/pricing/PlanCard';
 import CustomPlanCard from '@/components/pricing/CustomPlanCard';
 import { convertToTokens, convertTokensToCurrency, Currency } from '@/lib/currency';
+import { FileText, Download, FileDown, Sparkles, LayoutDashboard } from 'lucide-react';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 export default function Pricing() {
   const bcRef = useRef<BroadcastChannel | null>(null);
@@ -82,25 +84,36 @@ export default function Pricing() {
           <CustomPlanCard currency={currency} onRequest={handleTopUpRequest} />
         </motion.div>
       </div>
-      <div className="mx-auto max-w-3xl mt-6">
-        <Card className="border-dashed">
-          <div className="font-semibold">How much does an action cost?</div>
-          <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
+      <div className="mx-auto max-w-4xl mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <h3 className="text-lg font-semibold text-center mb-6">How much does an action cost?</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {([
-              ['Create CV', '2'],
-              ['Create resume', '2'],
-              ['Export PDF', '1'],
-              ['Export DOCX', '1'],
-              ['Manager', '30'],
-            ] as const).map(([label, v]) => (
-              <div key={label} className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2">
-                <span className="text-xs text-slate-500">{label}</span>
-                <span className="text-xs font-semibold">{v} tok.</span>
-              </div>
+              { icon: FileText, label: 'Create CV', tokens: SERVICE_COSTS.CREATE_DRAFT },
+              { icon: FileText, label: 'Create Resume', tokens: SERVICE_COSTS.CREATE_DRAFT },
+              { icon: Download, label: 'Export PDF', tokens: SERVICE_COSTS.EXPORT_PDF },
+              { icon: FileDown, label: 'Export DOCX', tokens: SERVICE_COSTS.EXPORT_DOCX },
+              { icon: Sparkles, label: 'AI Assist', tokens: SERVICE_COSTS.AI_IMPROVE },
+              { icon: LayoutDashboard, label: 'Manager', tokens: SERVICE_COSTS.PERSONAL_MANAGER },
+            ] as const).map(({ icon: Icon, label, tokens }) => (
+              <Card key={label} className="p-4 text-center hover:shadow-md transition-shadow" padding="sm">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div className="text-xs font-medium text-slate-700">{label}</div>
+                  <div className="text-sm font-bold text-indigo-600">{tokens} Tokens</div>
+                </div>
+              </Card>
             ))}
           </div>
-          <div className="mt-2 text-xs text-slate-500">Tokens never expire. Refunds for exports are not provided.</div>
-        </Card>
+          <div className="mt-4 text-xs text-slate-500 text-center">Tokens never expire. Refunds for exports are not provided.</div>
+        </motion.div>
       </div>
       <p className="mt-4 text-xs text-slate-500 text-center">Taxes may apply. Tokens deposit after purchase (signed-in users only).</p>
     </Section>

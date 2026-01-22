@@ -78,17 +78,17 @@ export default function ResumesCounter() {
         viewport={{ once: true }}
       >
         <div
-          className="mx-auto w-full max-w-3xl rounded-2xl border border-blue-100 bg-blue-50/90 text-[#0e1f4d] px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-center gap-3 text-center"
+          className="mx-auto w-full max-w-3xl rounded-2xl border border-indigo-100 bg-indigo-50/90 text-slate-900 px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-center gap-3 text-center"
           aria-live="polite"
         >
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-white border border-blue-100 text-blue-500">
+          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-white border border-indigo-100 text-indigo-500">
             <Files size={20} aria-hidden="true" />
           </div>
           <div className="flex items-baseline gap-2">
             <div className="text-3xl sm:text-4xl font-bold tracking-tight">
               {formatRu(count)}
             </div>
-            <div className="text-lg sm:text-xl text-[#163a6d]">resumes and CVs created this week</div>
+            <div className="text-lg sm:text-xl text-slate-800">resumes and CVs created this week</div>
           </div>
         </div>
       </motion.div>

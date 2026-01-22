@@ -4,12 +4,38 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      dateOfBirth, 
+      street, 
+      city,
+      country, 
+      postalCode 
+    } = await req.json();
 
+    // Валидация обязательных полей
     if (!email || !password) {
-      // ИЗМЕНЕНО: Возвращаем JSON с сообщением об ошибке
       return NextResponse.json(
         { message: "Missing email or password" },
+        { status: 400 },
+      );
+    }
+
+    if (!firstName || !lastName || !dateOfBirth || !street || !city || !country || !postalCode) {
+      return NextResponse.json(
+        { message: "Missing required registration fields" },
+        { status: 400 },
+      );
+    }
+
+    // Валидация даты рождения
+    const birthDate = new Date(dateOfBirth);
+    if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
+      return NextResponse.json(
+        { message: "Invalid date of birth" },
         { status: 400 },
       );
     }
@@ -19,7 +45,6 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      // ИЗМЕНЕНО: Возвращаем JSON с сообщением об ошибке
       return NextResponse.json(
         { message: "User with this email already exists" },
         { status: 409 },
@@ -32,7 +57,14 @@ export async function POST(req: Request) {
       data: {
         email: email.toLowerCase(),
         password: hashedPassword,
-        name: email.split("@")[0],
+        name: `${firstName} ${lastName}`.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        dateOfBirth: birthDate,
+        street: street.trim(),
+        city: city.trim(),
+        country: country.trim(),
+        postalCode: postalCode.trim(),
       },
     });
 

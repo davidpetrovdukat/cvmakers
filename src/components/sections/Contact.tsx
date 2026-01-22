@@ -39,11 +39,11 @@ export default function Contact() {
           <h2 className="text-2xl font-bold">Contact us</h2>
           <p className="mt-2 text-slate-600">MOCK: Leave a message — we usually reply within 1 business day.</p>
           <div className="mt-6 grid gap-3 text-sm text-slate-700">
-            <div>Company: MOCK COMPANY LTD</div>
-            <div>Reg: 00000000</div>
-            <div>Address: 123 Mock Street, City, Country</div>
-            <div>Email: hello@example.com</div>
-            <div>Phone: +00 0000 000000</div>
+            <div>Company: WORKING AGENT LTD</div>
+            <div>Reg: 15957326</div>
+            <div>Address: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF</div>
+            <div>Email: info@cv-makers.co.uk</div>
+            <div>Phone: +44 7418 601001</div>
           </div>
         </motion.div>
 

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
+import { SERVICE_COSTS } from '@/lib/currency';
 
 type IssueCategory = 'payments' | 'tokens' | 'pdf-email' | 'vat' | 'login' | 'generator';
 type IssueStatus = 'open' | 'solved';
@@ -49,7 +50,7 @@ const ISSUES: TroubleshootingIssue[] = [
       'Drafting and previewing CVs or resumes is free',
       'Tokens are only deducted when you Create/Improve/Send',
       'Top up your account with more tokens',
-      'Each CV or resume costs exactly 150 tokens'
+      `Each CV or resume costs exactly ${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF} tokens`
     ],
     links: [
       { text: 'View balance', href: '/dashboard' },
@@ -116,7 +117,7 @@ const ISSUES: TroubleshootingIssue[] = [
 const CATEGORIES = [
   { id: 'all', label: 'All Issues', color: 'bg-slate-100 text-slate-800' },
   { id: 'payments', label: 'Payments', color: 'bg-green-100 text-green-800' },
-  { id: 'tokens', label: 'Tokens', color: 'bg-blue-100 text-blue-800' },
+  { id: 'tokens', label: 'Tokens', color: 'bg-indigo-100 text-indigo-800' },
   { id: 'pdf-email', label: 'PDF/Email', color: 'bg-purple-100 text-purple-800' },
   { id: 'vat', label: 'VAT', color: 'bg-orange-100 text-orange-800' },
   { id: 'login', label: 'Login', color: 'bg-red-100 text-red-800' },
@@ -204,7 +205,12 @@ export default function TroubleshootingPage() {
     <main className="bg-slate-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Hero */}
-        <div className="text-center mb-12">
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
             Troubleshooting
           </h1>
@@ -213,19 +219,29 @@ export default function TroubleshootingPage() {
           </p>
           
           {/* Search */}
-          <div className="max-w-2xl mx-auto mb-6">
+          <motion.div 
+            className="max-w-2xl mx-auto mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
             <Input
               placeholder="Search problems (e.g. payment failed, PDF issues)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full text-lg py-3"
             />
-          </div>
+          </motion.div>
 
           {/* Category Filters */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {CATEGORIES.map(category => (
-              <button
+          <motion.div 
+            className="flex flex-wrap justify-center gap-2 mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            {CATEGORIES.map((category, index) => (
+              <motion.button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id as IssueCategory | 'all')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -233,33 +249,51 @@ export default function TroubleshootingPage() {
                     ? 'bg-slate-900 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {category.label}
-              </button>
+              </motion.button>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Issues Grid */}
         <div className="grid gap-6">
-          {filteredIssues.map(issue => (
-            <IssueCard
+          {filteredIssues.map((issue, index) => (
+            <motion.div
               key={issue.id}
-              issue={issue}
-              isExpanded={expandedIssues.has(issue.id)}
-              isSolved={solvedIssues.has(issue.id)}
-              onToggle={() => {
-                toggleExpanded(issue.id);
-                handleIssueView(issue.id);
-              }}
-              onMarkSolved={() => markSolved(issue.id)}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -2, transition: { duration: 0.2 } }}
+            >
+              <IssueCard
+                issue={issue}
+                isExpanded={expandedIssues.has(issue.id)}
+                isSolved={solvedIssues.has(issue.id)}
+                onToggle={() => {
+                  toggleExpanded(issue.id);
+                  handleIssueView(issue.id);
+                }}
+                onMarkSolved={() => markSolved(issue.id)}
+              />
+            </motion.div>
           ))}
         </div>
 
         {/* No Results */}
         {filteredIssues.length === 0 && (
-          <div className="text-center py-12">
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <h3 className="text-xl font-semibold text-slate-900 mb-2">No issues found</h3>
             <p className="text-slate-600 mb-6">
               Try different keywords or browse by category
@@ -270,11 +304,17 @@ export default function TroubleshootingPage() {
             }}>
               Clear filters
             </Button>
-          </div>
+          </motion.div>
         )}
 
         {/* Escalation */}
-        <div className="mt-16">
+        <motion.div 
+          className="mt-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
           <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
             <div className="p-8 text-center">
               <h3 className="text-xl font-semibold text-slate-900 mb-4">
@@ -292,7 +332,7 @@ export default function TroubleshootingPage() {
                   Open a ticket
                 </Button>
                 <Button 
-                  href="mailto:info@invoicerly.co.uk" 
+                  href="mailto:info@cv-makers.co.uk" 
                   variant="outline" 
                   size="lg"
                 >
@@ -301,7 +341,7 @@ export default function TroubleshootingPage() {
               </div>
             </div>
           </Card>
-        </div>
+        </motion.div>
       </div>
     </main>
   );

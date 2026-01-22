@@ -116,7 +116,7 @@ export default function PlanCard({
     >
       <Card
         className={`${
-          popular ? "shadow-lg border-indigo-100" : "border-slate-200"
+          popular ? "shadow-lg border-2 border-indigo-200 bg-indigo-50/30" : "border-slate-200"
         } flex flex-col justify-between h-full p-6 rounded-2xl`}
       >
         <div>
@@ -124,7 +124,7 @@ export default function PlanCard({
             <h3 className="text-lg font-semibold text-slate-800">{name}</h3>
             {(popular || badgeText) && (
               <motion.span
-                className={`text-xs rounded-full px-2 py-1 ${THEME.primary.text} bg-indigo-50 border border-indigo-200`}
+                className="text-xs rounded-full px-2 py-1 text-indigo-700 bg-indigo-100 border border-indigo-300 font-semibold"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{

@@ -2,8 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Hero from '@/components/sections/Hero';
-import ResumesCounter from '@/components/sections/ResumesCounter';
-import TrustedBy from '@/components/sections/TrustedBy';
+import TrustStats from '@/components/sections/TrustStats';
 import Pricing from '@/components/sections/Pricing';
 import WhyUs from '@/components/sections/WhyUs';
 import HowItWorks from '@/components/sections/HowItWorks';
@@ -21,19 +20,17 @@ export default function HomePage() {
       <main>
         {/* 1. Hero */}
         <Hero />
-        {/* 2. Counter (resumes created) */}
-        <ResumesCounter />
-        {/* 3. Trusted by */}
-        <TrustedBy />
-        {/* 4. Token top-up plans */}
-        <Pricing />
-        {/* 5. Why choose us */}
+        {/* 2. Trust & Stats */}
+        <TrustStats />
+        {/* 3. Why choose us */}
         <WhyUs />
-        {/* 6. How it works */}
+        {/* 4. How it works */}
         <HowItWorks />
-        {/* 7. Resume & CV templates */}
+        {/* 5. Token top-up plans */}
+        <Pricing />
+        {/* 6. Resume & CV templates */}
         <TemplatesShowcase />
-        {/* 8. CTA block */}
+        {/* 7. CTA block */}
         <CTAVisual />
         {/* Footer — already rendered by layout */}
       </main>

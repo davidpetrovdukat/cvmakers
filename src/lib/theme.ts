@@ -8,10 +8,10 @@ export const THEME: Theme = {
   border: "border-[#E2E8F0]",
   muted: "text-[#475569]",
   primary: {
-    text: "text-[#2563EB]",
-    bg: "bg-[#2563EB]",
-    hover: "hover:bg-[#1E40AF]",
-    ring: "focus:ring-[#2563EB]/25",
+    text: "text-indigo-600",
+    bg: "bg-indigo-600",
+    hover: "hover:bg-indigo-700",
+    ring: "focus:ring-indigo-600/25",
   },
   accent: {
     text: "text-[#FB7185]",

@@ -32,7 +32,7 @@ export default function CustomPlanCard({ currency, onRequest }: { currency: Curr
       viewport={{ once: true }}
     >
       <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">Custom</div>
+        <h3 className="text-lg font-semibold">Top-Up</h3>
         <span className="text-xs rounded-full px-2 py-1 bg-slate-100 border border-[#E2E8F0] text-slate-700">EARLY / SUPPORTER</span>
       </div>
       <div className="mt-3 flex items-center gap-2">

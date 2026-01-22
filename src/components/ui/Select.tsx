@@ -16,7 +16,7 @@ export default function Select({ className = '', uiSize = 'md', ...props }: Prop
   return (
     <select
       {...props}
-      className={`w-full border border-[#E2E8F0] bg-white focus:outline-none focus:ring-4 focus:ring-[#2563EB]/20 ${sizeClasses[uiSize]} ${className}`}
+      className={`w-full border border-[#E2E8F0] bg-white focus:outline-none focus:ring-4 focus:ring-indigo-600/20 ${sizeClasses[uiSize]} ${className}`}
     />
   );
 }

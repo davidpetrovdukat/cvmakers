@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -8,19 +8,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing orderMerchantId" }, { status: 400 });
 
     // 🔹 Знаходимо ордер
-    const order = await db.order.findFirst({ where: { orderMerchantId } });
+    const order = await prisma.order.findFirst({ where: { orderMerchantId } });
     if (!order)
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
 
     // 🔹 Примусово оновлюємо статус як APPROVED
-    await db.order.updateMany({
+    await prisma.order.updateMany({
       where: { orderMerchantId },
       data: { status: "APPROVED", response: { forced: true } },
     });
 
     // 🔹 Отримуємо користувача
     const userEmail = order.userEmail ?? undefined;
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: userEmail },
     });
 
@@ -35,13 +35,13 @@ export async function POST(req: Request) {
     const newBalance = (user.tokenBalance ?? 0) + tokensToAdd;
 
     // 🔹 Оновлення балансу
-    await db.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: { tokenBalance: newBalance },
     });
 
     // 🔹 Створюємо запис у Ledger (без metadata)
-    await db.ledgerEntry.create({
+    await prisma.ledgerEntry.create({
       data: {
         userId: user.id,
         type: "Top-up",
