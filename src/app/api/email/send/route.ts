@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { DocumentPDF } from "@/components/pdf/DocumentPDF";
 
 let resendClient: Resend | null | undefined;
 
@@ -27,29 +27,54 @@ export async function POST(req: Request) {
     const { email: toEmail, documentId } = await req.json();
     if (!toEmail || !documentId) return NextResponse.json({ message: "Recipient email and Document ID are required" }, { status: 400 });
 
-    const doc = await prisma.document.findFirst({ where: { id: documentId, userId: session.user.id }, include: { user: { include: { company: true } } } });
+    console.log(`[EMAIL_SEND] Sending document ${documentId} to ${toEmail}`);
+
+    const doc = await prisma.document.findFirst({ 
+      where: { id: documentId, userId: session.user.id }, 
+      include: { user: { include: { company: true } } } 
+    });
+    
     if (!doc) return NextResponse.json({ message: "Document not found" }, { status: 404 });
 
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const origin = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
-    const printUrl = `${origin}/print/${doc.id}`;
+    console.log(`[EMAIL_SEND] Generating PDF with @react-pdf/renderer`);
 
-    const isLocal = process.env.NODE_ENV === 'development';
-    const execPath = isLocal ? undefined : await chromium.executablePath();
-    const browser = await puppeteer.launch({ args: isLocal ? [] : chromium.args, defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 2 }, executablePath: execPath, headless: chromium.headless });
+    const data = (doc.data || {}) as any;
 
-    let pdfBuffer: Buffer;
-    try {
-      const page = await browser.newPage();
-      await page.goto(printUrl, { waitUntil: ['domcontentloaded', 'networkidle0'], timeout: 30000 });
-      pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '14mm', right: '14mm', bottom: '16mm', left: '14mm' }, preferCSSPageSize: true });
-    } finally {
-      try { await browser.close(); } catch {}
-    }
+    // Generate PDF with @react-pdf/renderer
+    const pdfDoc = DocumentPDF({
+      title: doc.title,
+      documentNo: data.documentNo,
+      documentDate: data.documentDate,
+      sender: {
+        company: doc.user.company?.name || '',
+        vat: doc.user.company?.vat || '',
+        address: doc.user.company?.address1 || '',
+        city: doc.user.company?.city || '',
+        country: doc.user.company?.country || '',
+        iban: doc.user.company?.iban || '',
+        bankName: (doc.user.company as any)?.bankName || undefined,
+        bic: doc.user.company?.bic || undefined,
+        logoUrl: (doc.user.company as any)?.logoUrl || undefined,
+      },
+      recipient: {
+        company: data.recipient?.company,
+        name: data.recipient?.name,
+        email: data.recipient?.email,
+        address: data.recipient?.address,
+        city: data.recipient?.city,
+        country: data.recipient?.country,
+      },
+      content: Array.isArray(data.content) ? data.content : undefined,
+      notes: data.notes,
+      footerText: data.footerText,
+    });
+
+    const pdfBuffer = await renderToBuffer(pdfDoc);
+    console.log(`[EMAIL_SEND] PDF generated, size: ${pdfBuffer.length} bytes`);
 
     const resend = getResendClient();
     if (!resend) {
-      console.error('Resend API key is missing.');
+      console.error('[EMAIL_SEND] Resend API key is missing.');
       return NextResponse.json(
         { message: 'Email service is not configured.' },
         { status: 503 },
@@ -64,10 +89,18 @@ export async function POST(req: Request) {
       attachments: [{ filename: `${doc.title || 'Document'}.pdf`, content: pdfBuffer }],
     });
 
+    console.log(`[EMAIL_SEND] Email sent successfully to ${toEmail}`);
+
     return NextResponse.json({ message: 'Email sent successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[EMAIL_SEND_ERROR]', error);
-    return NextResponse.json({ message: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
+    console.error('[EMAIL_SEND_ERROR] Details:', {
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
+    return NextResponse.json({ 
+      message: error instanceof Error ? error.message : 'Internal Server Error' 
+    }, { status: 500 });
   }
 }
 

@@ -3,15 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { DocumentPDF } from "@/components/pdf/DocumentPDF";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-const absoluteUrl = (path: string) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return `${baseUrl}${path}`;
-};
 
 // Универсальная отправка документа PDF по email
 export async function POST(req: Request) {
@@ -45,49 +40,41 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`[DOC_SEND] Generating PDF for document ${doc.id}`);
+    console.log(`[DOC_SEND] Generating PDF for document ${doc.id} using @react-pdf/renderer`);
     
-    // Generate PDF directly instead of fetching from API
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const origin = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
-    const printUrl = `${origin}/print/${doc.id}`;
-    
-    console.log(`[INVOICE_SEND] Print URL: ${printUrl}`);
-    
-    const isLocal = process.env.NODE_ENV === 'development';
-    const execPath = isLocal ? undefined : await chromium.executablePath();
-    
-    const browser = await puppeteer.launch({
-      args: isLocal ? [] : chromium.args,
-      defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 2 },
-      executablePath: execPath,
-      headless: chromium.headless,
+    const data = (doc.data || {}) as any;
+
+    // Generate PDF with @react-pdf/renderer using DocumentPDF
+    const pdfDoc = DocumentPDF({
+      title: doc.title,
+      documentNo: data.documentNo,
+      documentDate: data.documentDate,
+      sender: {
+        company: doc.user.company?.name || '',
+        vat: doc.user.company?.vat || '',
+        address: doc.user.company?.address1 || '',
+        city: doc.user.company?.city || '',
+        country: doc.user.company?.country || '',
+        iban: doc.user.company?.iban || '',
+        bankName: (doc.user.company as any)?.bankName || undefined,
+        bic: doc.user.company?.bic || undefined,
+        logoUrl: (doc.user.company as any)?.logoUrl || undefined,
+      },
+      recipient: {
+        company: data.recipient?.company,
+        name: data.recipient?.name,
+        email: data.recipient?.email,
+        address: data.recipient?.address,
+        city: data.recipient?.city,
+        country: data.recipient?.country,
+      },
+      content: Array.isArray(data.content) ? data.content : undefined,
+      notes: data.notes,
+      footerText: data.footerText,
     });
-    
-    let pdfBuffer: Buffer;
-    try {
-      const page = await browser.newPage();
-      console.log(`[DOC_SEND] Navigating to: ${printUrl}`);
-      await page.goto(printUrl, { 
-        waitUntil: ['domcontentloaded', 'networkidle0'],
-        timeout: 30000
-      });
-      console.log(`[DOC_SEND] Page loaded, generating PDF...`);
-      
-      pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '14mm', right: '14mm', bottom: '16mm', left: '14mm' },
-        preferCSSPageSize: true,
-      });
-      
-      console.log(`[DOC_SEND] PDF generated, size: ${pdfBuffer.length} bytes`);
-    } catch (pdfError) {
-      console.error(`[DOC_SEND] PDF generation error:`, pdfError);
-      throw new Error(`Failed to generate PDF: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
-    } finally {
-      try { await browser.close(); } catch {}
-    }
+
+    const pdfBuffer = await renderToBuffer(pdfDoc);
+    console.log(`[DOC_SEND] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
 
     await resend.emails.send({
       from: `CV Makers <${process.env.SMTP_USER || "info@cv-makers.co.uk"}>`,
@@ -102,9 +89,15 @@ export async function POST(req: Request) {
       ],
     });
 
+    console.log(`[DOC_SEND] Email sent successfully to ${toEmail}`);
+
     return NextResponse.json({ message: "Email sent successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[DOC_SEND_ERROR]", error);
+    console.error("[DOC_SEND_ERROR] Details:", {
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Internal Server Error" },
       { status: 500 },
