@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { InvoicePDF } from "@/components/pdf/InvoicePDF";
 
 export async function POST(req: Request) {
   try {
@@ -145,53 +145,52 @@ export async function POST(req: Request) {
           
           const resend = new Resend(process.env.RESEND_API_KEY);
           
-          // Генерируем PDF из документа
+          // Генерируем PDF с помощью @react-pdf/renderer
           let pdfBuffer: Buffer | null = null;
           try {
             console.log(`📄 Generating PDF for invoice: ${invoiceDocumentId}`);
+            console.log(`📄 Using @react-pdf/renderer (no Chromium required)`);
             
-            const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-            const origin = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
-            const printUrl = `${origin}/print/${invoiceDoc.id}`;
-            
-            console.log(`📄 Print URL: ${printUrl}`);
-            
-            const isLocal = process.env.NODE_ENV === 'development';
-            const execPath = isLocal ? undefined : await chromium.executablePath();
-            
-            const browser = await puppeteer.launch({
-              args: isLocal ? [] : chromium.args,
-              defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 2 },
-              executablePath: execPath,
-              headless: chromium.headless,
+            // Создаем PDF документ с помощью React PDF
+            const pdfDoc = InvoicePDF({
+              invoiceNumber,
+              invoiceDate,
+              orderMerchantId,
+              description: body.description || `Top-up: ${body.planId || "Payment"}`,
+              sender: {
+                company: company?.name || 'CV Makers',
+                vat: company?.vat || '',
+                address: company?.address1 || '',
+                city: company?.city || '',
+                country: company?.country || '',
+                iban: company?.iban || '',
+                bankName: company?.bankName || undefined,
+                bic: company?.bic || undefined,
+              },
+              recipient: {
+                name: user.name || user.email?.split('@')[0] || "Customer",
+                email: body.email,
+              },
+              payment: {
+                tokens: tokensToAdd,
+                subtotal,
+                vat: vatAmount,
+                total: body.amount,
+                currency: body.currency,
+                newBalance,
+              },
+              notes: `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`,
             });
             
-            try {
-              const page = await browser.newPage();
-              await page.goto(printUrl, {
-                waitUntil: ['domcontentloaded', 'networkidle0'],
-                timeout: 30000,
-              });
-              
-              pdfBuffer = await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                margin: { top: '14mm', right: '14mm', bottom: '16mm', left: '14mm' },
-                preferCSSPageSize: true,
-              });
-              
-              console.log(`✅ PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-            } finally {
-              try {
-                await browser.close();
-              } catch (browserError) {
-                console.error("⚠️ Error closing browser:", browserError);
-              }
-            }
+            // Рендерим PDF в Buffer
+            pdfBuffer = await renderToBuffer(pdfDoc);
+            
+            console.log(`✅ PDF generated successfully with @react-pdf/renderer, size: ${pdfBuffer.length} bytes`);
           } catch (pdfError: any) {
-            console.error("❌ Failed to generate PDF:", pdfError);
+            console.error("❌ Failed to generate PDF with @react-pdf/renderer:", pdfError);
             console.error("❌ PDF error details:", {
               message: pdfError.message,
+              name: pdfError.name,
               stack: process.env.NODE_ENV === 'development' ? pdfError.stack : undefined,
             });
             // Продолжаем отправку email без PDF, если генерация не удалась
