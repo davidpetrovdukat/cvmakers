@@ -20,37 +20,37 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          console.log(
-            `[AUTHORIZE STEP 1]: Searching for user with email: ${credentials.email}`,
+        console.log(
+          `[AUTHORIZE STEP 1]: Searching for user with email: ${credentials.email}`,
+        );
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email.toLowerCase() },
+        });
+
+        if (!user || !user.password) {
+          console.error(
+            `[AUTHORIZE FAIL]: User not found or password not set for email: ${credentials.email}`,
           );
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase() },
-          });
+          throw new Error("Invalid credentials");
+        }
 
-          if (!user || !user.password) {
-            console.error(
-              `[AUTHORIZE FAIL]: User not found or password not set for email: ${credentials.email}`,
-            );
-            throw new Error("Invalid credentials");
-          }
+        console.log(`[AUTHORIZE STEP 2]: User found. Comparing passwords...`);
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.password,
+        );
 
-          console.log(`[AUTHORIZE STEP 2]: User found. Comparing passwords...`);
-          const isCorrectPassword = await bcrypt.compare(
-            credentials.password,
-            user.password,
+        if (!isCorrectPassword) {
+          console.error(
+            `[AUTHORIZE FAIL]: Password incorrect for email: ${credentials.email}`,
           );
+          throw new Error("Invalid credentials");
+        }
 
-          if (!isCorrectPassword) {
-            console.error(
-              `[AUTHORIZE FAIL]: Password incorrect for email: ${credentials.email}`,
-            );
-            throw new Error("Invalid credentials");
-          }
-
-          console.log(
-            `[AUTHORIZE SUCCESS]: Passwords match for user: ${user.id}. Returning user object.`,
-          );
-          return user;
+        console.log(
+          `[AUTHORIZE SUCCESS]: Passwords match for user: ${user.id}. Returning user object.`,
+        );
+        return user;
         } catch (error: any) {
           // Handle database connection errors gracefully
           if (error.code === 'P1001' || error.code === 'P1002' || error.code === 'P1003') {

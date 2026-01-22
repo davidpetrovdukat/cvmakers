@@ -185,21 +185,21 @@ export default function CheckoutClient() {
                     <p className="text-green-600 text-sm mt-1">Redirecting to dashboard...</p>
                   </div>
                 ) : (
-                  <Button
-                    type="submit"
-                    className="w-full flex justify-center items-center gap-2 mt-4"
-                    size="lg"
+                <Button
+                  type="submit"
+                  className="w-full flex justify-center items-center gap-2 mt-4"
+                  size="lg"
                     disabled={isSubmitting || loading}
-                  >
+                >
                     {loading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
                         Processing...
-                      </>
-                    ) : (
-                      <>Pay {checkout.total.toFixed(2)} {checkout.currency}</>
-                    )}
-                  </Button>
+                    </>
+                  ) : (
+                    <>Pay {checkout.total.toFixed(2)} {checkout.currency}</>
+                  )}
+                </Button>
                 )}
               </Form>
             )}

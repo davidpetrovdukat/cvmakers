@@ -297,9 +297,9 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <Card>
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-4">Refunds</h2>
+            <Card>
+              <div className="p-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Refunds</h2>
                 <p className="text-slate-700 mb-4">
                   Unused tokens can be refunded within 14 days of purchase. Used tokens (for issued invoices) 
                   are non-refundable. All refunds are processed to the original payment method within 5-10 business days.
@@ -317,9 +317,9 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <Card>
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Payment Methods & Limits</h2>
+            <Card>
+              <div className="p-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-6">Payment Methods & Limits</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-3">Accepted Methods</h3>

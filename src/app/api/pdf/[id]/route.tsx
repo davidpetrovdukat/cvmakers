@@ -66,7 +66,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     console.log(`[PDF_API] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
 
     const fileName = `document-${id || 'document'}.pdf`;
-    return new Response(pdfBuffer, {
+    return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
