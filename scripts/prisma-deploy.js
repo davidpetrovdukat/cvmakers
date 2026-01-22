@@ -17,11 +17,8 @@ if (run('npx prisma migrate deploy')) {
 
 console.warn('[prisma-deploy] Deploy failed. Trying to resolve failed migrations and retry...');
 // Resolve latest known failures in order (most recent first)
-run('npx prisma migrate resolve --rolled-back 0007_company_logo_url');
-run('npx prisma migrate resolve --rolled-back 0008_add_invoice_due');
-run('npx prisma migrate resolve --rolled-back 0006_company_bankname');
-run('npx prisma migrate resolve --rolled-back 0005_amounts_decimal');
-run('npx prisma migrate resolve --rolled-back 0004_add_client_meta');
+// Note: Only resolve migrations that are actually in failed state
+run('npx prisma migrate resolve --rolled-back 20250925131202_add_document_metadata');
 
 if (!run('npx prisma migrate deploy')) {
   console.error('[prisma-deploy] Deploy failed after resolve attempt.');

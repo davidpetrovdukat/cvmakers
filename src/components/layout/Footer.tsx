@@ -166,31 +166,25 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-4">
-          <div className="text-center">
-            <div className="text-xs text-slate-500 mb-2">We accept</div>
-            <div className="flex items-center gap-4">
-              <Image
-                src="/visa-logo.svg"
-                alt="Visa"
-                width={60}
-                height={24}
-                className="h-6 w-auto"
-              />
-              <Image
-                src="/mastercard-logo.svg"
-                alt="MasterCard"
-                width={60}
-                height={24}
-                className="h-6 w-auto"
-              />
-            </div>
-          </div>
-        </div>
-
         <div className="mt-8 flex flex-col items-center justify-between gap-3 text-xs text-slate-600 sm:flex-row">
           <div>© {year} WORKING AGENT LTD. All rights reserved.</div>
-          <div>Registered in England & Wales</div>
+          <div className="text-center">Registered in England & Wales</div>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/visa-logo.svg"
+              alt="Visa"
+              width={60}
+              height={24}
+              className="h-6 w-auto"
+            />
+            <Image
+              src="/mastercard-logo.svg"
+              alt="MasterCard"
+              width={60}
+              height={24}
+              className="h-6 w-auto"
+            />
+          </div>
         </div>
       </section>
     </motion.footer>
