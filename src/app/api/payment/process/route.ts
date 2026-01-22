@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
 
 export async function POST(req: Request) {
   try {
@@ -77,17 +75,26 @@ export async function POST(req: Request) {
 
     // Создаем Document (инвойс) для отправки по email
     let invoiceDocumentId: string | null = null;
+    let invoiceSent = false;
+    
+    console.log(`📧 Starting invoice creation and sending process...`);
+    console.log(`📧 RESEND_API_KEY exists: ${!!process.env.RESEND_API_KEY}`);
+    console.log(`📧 SMTP_USER: ${process.env.SMTP_USER || 'not set'}`);
+    
     try {
       // Получаем данные компании пользователя
       const company = await prisma.company.findUnique({
         where: { userId: user.id },
       });
+      console.log(`📧 Company data loaded: ${company ? 'exists' : 'not found'}`);
 
       // Формируем данные для инвойса
       const invoiceDate = new Date().toISOString().split('T')[0];
       const invoiceNumber = `INV-${orderMerchantId}`;
       const vatAmount = body.vatAmount || 0;
       const subtotal = body.amount - vatAmount;
+
+      console.log(`📧 Creating invoice document: ${invoiceNumber}`);
 
       // Создаем Document
       const invoiceDoc = await prisma.document.create({
@@ -116,81 +123,86 @@ export async function POST(req: Request) {
       });
 
       invoiceDocumentId = invoiceDoc.id;
-      console.log(`📄 Invoice document created: ${invoiceDocumentId}`);
+      console.log(`✅ Invoice document created: ${invoiceDocumentId}`);
 
-      // Генерируем PDF и отправляем по email
+      // Отправляем по email (ВРЕМЕННО БЕЗ PDF для диагностики)
       if (process.env.RESEND_API_KEY && process.env.SMTP_USER) {
         try {
+          console.log(`📧 Sending invoice email to: ${body.email}`);
+          
           const resend = new Resend(process.env.RESEND_API_KEY);
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-          const origin = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
-          const printUrl = `${origin}/print/${invoiceDoc.id}`;
+          
+          // Формируем детальный HTML для email
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #1e293b;">Thank you for your purchase!</h2>
+              <p>Your payment has been successfully processed and your account has been credited.</p>
+              
+              <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #475569;">Order Details</h3>
+                <p><strong>Order ID:</strong> ${orderMerchantId}</p>
+                <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+                <p><strong>Date:</strong> ${invoiceDate}</p>
+                <p><strong>Description:</strong> ${body.description || `Top-up: ${body.planId || "Payment"}`}</p>
+              </div>
+              
+              <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #059669;">Payment Summary</h3>
+                <p><strong>Tokens credited:</strong> ${tokensToAdd.toLocaleString()}</p>
+                <p><strong>Subtotal:</strong> ${body.currency} ${subtotal.toFixed(2)}</p>
+                <p><strong>VAT:</strong> ${body.currency} ${vatAmount.toFixed(2)}</p>
+                <p><strong>Total paid:</strong> ${body.currency} ${(body.amount).toFixed(2)}</p>
+                <p><strong>New balance:</strong> ${newBalance.toLocaleString()} tokens</p>
+              </div>
+              
+              <p>You can now use your tokens to create CVs and resumes.</p>
+              <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+                If you have any questions, please contact us at <a href="mailto:info@cv-makers.co.uk">info@cv-makers.co.uk</a>
+              </p>
+              
+              <p style="color: #94a3b8; font-size: 12px; margin-top: 20px;">
+                CV Makers - Professional CV & Resume Creator
+              </p>
+            </div>
+          `;
 
-          console.log(`📧 Generating PDF for invoice: ${printUrl}`);
-
-          const isLocal = process.env.NODE_ENV === 'development';
-          const execPath = isLocal ? undefined : await chromium.executablePath();
-
-          const browser = await puppeteer.launch({
-            args: isLocal ? [] : chromium.args,
-            defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 2 },
-            executablePath: execPath,
-            headless: chromium.headless,
-          });
-
-          let pdfBuffer: Buffer;
-          try {
-            const page = await browser.newPage();
-            await page.goto(printUrl, {
-              waitUntil: ['domcontentloaded', 'networkidle0'],
-              timeout: 30000,
-            });
-
-            pdfBuffer = await page.pdf({
-              format: 'A4',
-              printBackground: true,
-              margin: { top: '14mm', right: '14mm', bottom: '16mm', left: '14mm' },
-              preferCSSPageSize: true,
-            });
-
-            console.log(`📄 PDF generated, size: ${pdfBuffer.length} bytes`);
-          } finally {
-            try {
-              await browser.close();
-            } catch {}
-          }
-
-          // Отправляем email с PDF
-          await resend.emails.send({
-            from: `CV Makers <${process.env.SMTP_USER || 'info@cv-makers.co.uk'}>`,
+          const emailResult = await resend.emails.send({
+            from: `CV Makers <${process.env.SMTP_USER}>`,
             to: body.email,
             subject: `Invoice ${invoiceNumber} - CV Makers`,
-            html: `
-              <p>Thank you for your purchase!</p>
-              <p>Your invoice is attached. Your account has been credited with <strong>${tokensToAdd.toLocaleString()} tokens</strong>.</p>
-              <p>Order ID: <strong>${orderMerchantId}</strong></p>
-              <p>If you have any questions, please contact us at info@cv-makers.co.uk</p>
-            `,
-            attachments: [
-              {
-                filename: `Invoice-${invoiceNumber}.pdf`,
-                content: pdfBuffer,
-              },
-            ],
+            html: emailHtml,
           });
 
-          console.log(`✅ Invoice sent to ${body.email}`);
-        } catch (emailError) {
-          console.error("⚠️ Failed to send invoice email:", emailError);
+          console.log(`✅ Invoice email sent successfully!`);
+          console.log(`📧 Resend result:`, JSON.stringify(emailResult, null, 2));
+          invoiceSent = true;
+        } catch (emailError: any) {
+          console.error("❌ Failed to send invoice email:", emailError);
+          console.error("❌ Email error details:", {
+            message: emailError.message,
+            statusCode: emailError.statusCode,
+            name: emailError.name,
+          });
           // Не прерываем процесс, если отправка email не удалась
         }
       } else {
-        console.warn("⚠️ RESEND_API_KEY or SMTP_USER not configured, skipping invoice email");
+        console.warn("⚠️ RESEND_API_KEY or SMTP_USER not configured!");
+        console.warn(`⚠️ RESEND_API_KEY exists: ${!!process.env.RESEND_API_KEY}`);
+        console.warn(`⚠️ SMTP_USER value: ${process.env.SMTP_USER || 'NOT SET'}`);
       }
-    } catch (invoiceError) {
-      console.error("⚠️ Failed to create invoice document:", invoiceError);
+    } catch (invoiceError: any) {
+      console.error("❌ Failed to create invoice document:", invoiceError);
+      console.error("❌ Invoice error details:", {
+        message: invoiceError.message,
+        code: invoiceError.code,
+        stack: process.env.NODE_ENV === 'development' ? invoiceError.stack : undefined,
+      });
       // Не прерываем процесс, если создание инвойса не удалось
     }
+
+    console.log(`📊 Payment processing completed successfully`);
+    console.log(`📊 Invoice document ID: ${invoiceDocumentId || 'not created'}`);
+    console.log(`📊 Invoice sent: ${invoiceSent}`);
 
     return NextResponse.json({
       ok: true,
@@ -198,7 +210,8 @@ export async function POST(req: Request) {
       state: "APPROVED",
       tokensAdded: tokensToAdd,
       tokenBalance: newBalance,
-      invoiceSent: invoiceDocumentId !== null,
+      invoiceCreated: invoiceDocumentId !== null,
+      invoiceSent: invoiceSent,
     });
   } catch (err: any) {
     console.error("❌ Payment processing error:", err);
