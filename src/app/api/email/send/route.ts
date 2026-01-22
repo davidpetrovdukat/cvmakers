@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     await resend.emails.send({
-      from: `CV Makers <${process.env.EMAIL_FROM || 'info@cv-makers.co.uk'}>`,
+      from: `CV Makers <${process.env.SMTP_USER || 'info@cv-makers.co.uk'}>`,
       to: toEmail,
       subject: `${doc.title} from ${doc.user?.company?.name || 'CV Makers'}`,
       html: `<p>Please find your document attached.</p>`,

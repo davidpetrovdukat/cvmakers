@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   try {
     console.log(`[DOC_SEND] Starting email send process`);
     console.log(`[DOC_SEND] RESEND_API_KEY exists: ${!!process.env.RESEND_API_KEY}`);
-    console.log(`[DOC_SEND] EMAIL_FROM: ${process.env.EMAIL_FROM}`);
+    console.log(`[DOC_SEND] SMTP_USER: ${process.env.SMTP_USER}`);
     
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     }
 
     await resend.emails.send({
-      from: `CV Makers <${process.env.EMAIL_FROM || "info@cv-makers.co.uk"}>`,
+      from: `CV Makers <${process.env.SMTP_USER || "info@cv-makers.co.uk"}>`,
       to: toEmail,
       subject: `${doc.title} from ${doc.user?.company?.name || "CV Makers"}`,
       html: `<p>Please find your document attached.</p>`,
