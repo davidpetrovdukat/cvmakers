@@ -71,6 +71,35 @@ export default function PricingClient() {
       return;
     }
 
+    // Обработка Custom top-up - цена уже передана в правильной валюте
+    if (plan.name === 'Custom' && typeof plan.price === 'number' && plan.currency) {
+      const tokens = convertToTokens(plan.price, plan.currency).tokens;
+      const convertedAmount = plan.price; // Уже в правильной валюте
+      const vatAmount = (convertedAmount * vatRate) / 100;
+
+      const checkoutData = {
+        email: session?.user?.email || "",
+        planId: plan.name,
+        description: `Top-up: ${plan.name}`,
+        amount: convertedAmount,
+        currency: plan.currency,
+        tokens,
+        vatRate,
+        vatAmount,
+        total: convertedAmount + vatAmount,
+      };
+
+      localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+      router.push("/checkout");
+      return;
+    }
+
+    // Обработка обычных планов - цена в формате строки с символом валюты
+    if (!plan.price || typeof plan.price !== 'string') {
+      console.error('Invalid plan price:', plan);
+      return;
+    }
+
     const gbpAmount = parseFloat(plan.price.replace(/[£,]/g, ""));
     const tokens = convertToTokens(gbpAmount, "GBP").tokens;
     const convertedAmount = convertTokensToCurrency(tokens, currency);
@@ -153,7 +182,7 @@ export default function PricingClient() {
                 popular={plan.popular}
                 bullets={plan.points}
                 cta="Choose Plan"
-                amount={parseFloat(plan.price.replace(/[£,]/g, ""))}
+                amount={plan.price ? parseFloat(plan.price.replace(/[£,]/g, "")) : 0}
                 currency={currency}
                 onAction={() => handlePlanRequest(plan)}
               />
@@ -166,7 +195,7 @@ export default function PricingClient() {
           >
             <CustomPlanCard
               currency={currency}
-              onRequest={() => handlePlanRequest({ name: "Custom" })}
+              onRequest={handlePlanRequest}
             />
           </motion.div>
         </motion.div>

@@ -57,7 +57,7 @@ export default function Pricing() {
       <div className="grid md:grid-cols-4 gap-6">
         {PRICING_PLANS.map((plan) => {
           // Parse GBP amount from the formatted price string
-          const gbpAmount = parseFloat(plan.price.replace(/[£,]/g, ''));
+          const gbpAmount = plan.price ? parseFloat(plan.price.replace(/[£,]/g, '')) : 0;
           const tokens = convertToTokens(gbpAmount, 'GBP').tokens;
           const convertedAmount = convertTokensToCurrency(tokens, currency);
           

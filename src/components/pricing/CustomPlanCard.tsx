@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Currency } from '@/lib/currency';
 import { convertToTokens } from '@/lib/currency';
 
-export default function CustomPlanCard({ currency, onRequest }: { currency: Currency; onRequest: () => void; }) {
+export default function CustomPlanCard({ currency, onRequest }: { currency: Currency; onRequest: (data: { name: string; price: number; currency: Currency }) => void; }) {
   const [priceInput, setPriceInput] = useState<string>('5');
   const min = 0.01;
   const numericPrice = parseFloat(priceInput || '0');
@@ -17,6 +17,16 @@ export default function CustomPlanCard({ currency, onRequest }: { currency: Curr
 
   const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     setPriceInput(e.target.value);
+  };
+
+  const handleRequest = () => {
+    if (validNumber && numericPrice >= min) {
+      onRequest({
+        name: 'Custom',
+        price: numericPrice,
+        currency: currency,
+      });
+    }
   };
 
   const currencyLabel = currency === 'GBP' ? String.fromCharCode(163) : currency === 'EUR' ? String.fromCharCode(8364) : '$';
@@ -57,7 +67,7 @@ export default function CustomPlanCard({ currency, onRequest }: { currency: Curr
         <li>Minimum {currencyLabel}0.01</li>
       </ul>
       <div className="mt-6">
-        <Button className="w-full" size="lg" onClick={onRequest} disabled={!validNumber || numericPrice < min}>
+        <Button className="w-full" size="lg" onClick={handleRequest} disabled={!validNumber || numericPrice < min}>
           Request top-up
         </Button>
       </div>
