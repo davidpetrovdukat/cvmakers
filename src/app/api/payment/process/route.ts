@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
 export async function POST(req: Request) {
   try {
@@ -107,6 +109,17 @@ export async function POST(req: Request) {
           data: {
             documentNo: invoiceNumber,
             documentDate: invoiceDate,
+            sender: {
+              company: company?.name || 'CV Makers',
+              vat: company?.vat || '',
+              address: company?.address1 || '',
+              city: company?.city || '',
+              country: company?.country || '',
+              iban: company?.iban || '',
+              bankName: company?.bankName || undefined,
+              bic: company?.bic || undefined,
+              logoUrl: company?.logoUrl || undefined,
+            },
             recipient: {
               name: user.name || user.email?.split('@')[0] || "Customer",
               email: body.email,
@@ -125,12 +138,64 @@ export async function POST(req: Request) {
       invoiceDocumentId = invoiceDoc.id;
       console.log(`✅ Invoice document created: ${invoiceDocumentId}`);
 
-      // Отправляем по email (ВРЕМЕННО БЕЗ PDF для диагностики)
+      // Отправляем по email с PDF вложением
       if (process.env.RESEND_API_KEY && process.env.SMTP_USER) {
         try {
           console.log(`📧 Sending invoice email to: ${body.email}`);
           
           const resend = new Resend(process.env.RESEND_API_KEY);
+          
+          // Генерируем PDF из документа
+          let pdfBuffer: Buffer | null = null;
+          try {
+            console.log(`📄 Generating PDF for invoice: ${invoiceDocumentId}`);
+            
+            const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+            const origin = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
+            const printUrl = `${origin}/print/${invoiceDoc.id}`;
+            
+            console.log(`📄 Print URL: ${printUrl}`);
+            
+            const isLocal = process.env.NODE_ENV === 'development';
+            const execPath = isLocal ? undefined : await chromium.executablePath();
+            
+            const browser = await puppeteer.launch({
+              args: isLocal ? [] : chromium.args,
+              defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 2 },
+              executablePath: execPath,
+              headless: chromium.headless,
+            });
+            
+            try {
+              const page = await browser.newPage();
+              await page.goto(printUrl, {
+                waitUntil: ['domcontentloaded', 'networkidle0'],
+                timeout: 30000,
+              });
+              
+              pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: { top: '14mm', right: '14mm', bottom: '16mm', left: '14mm' },
+                preferCSSPageSize: true,
+              });
+              
+              console.log(`✅ PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+            } finally {
+              try {
+                await browser.close();
+              } catch (browserError) {
+                console.error("⚠️ Error closing browser:", browserError);
+              }
+            }
+          } catch (pdfError: any) {
+            console.error("❌ Failed to generate PDF:", pdfError);
+            console.error("❌ PDF error details:", {
+              message: pdfError.message,
+              stack: process.env.NODE_ENV === 'development' ? pdfError.stack : undefined,
+            });
+            // Продолжаем отправку email без PDF, если генерация не удалась
+          }
           
           // Текстовая версия для лучшей доставляемости
           const emailText = `Invoice ${invoiceNumber} - CV Makers
@@ -272,6 +337,14 @@ https://cv-makers.co.uk`;
 </body>
 </html>`;
 
+          // Формируем attachments (PDF если был сгенерирован)
+          const attachments = pdfBuffer ? [
+            {
+              filename: `Invoice-${invoiceNumber}.pdf`,
+              content: pdfBuffer,
+            },
+          ] : undefined;
+
           const emailResult = await resend.emails.send({
             from: `CV Makers <${process.env.SMTP_USER}>`,
             to: body.email,
@@ -279,9 +352,14 @@ https://cv-makers.co.uk`;
             subject: `Invoice ${invoiceNumber} - CV Makers`,
             text: emailText,
             html: emailHtml,
+            ...(attachments && { attachments }),
           });
 
           console.log(`✅ Invoice email sent successfully!`);
+          console.log(`📧 PDF attached: ${pdfBuffer ? 'Yes' : 'No'}`);
+          if (pdfBuffer) {
+            console.log(`📧 PDF size: ${pdfBuffer.length} bytes`);
+          }
           console.log(`📧 Resend result:`, JSON.stringify(emailResult, null, 2));
           invoiceSent = true;
         } catch (emailError: any) {
