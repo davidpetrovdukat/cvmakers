@@ -113,26 +113,41 @@ interface ResumePDFProps {
   data: Profile;
 }
 
-export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Header with name, role, contacts, and photo */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.name}>{data.name}</Text>
-          <Text style={styles.role}>{data.role}</Text>
-          <View style={styles.contacts}>
-            <Text>{data.contacts.email}</Text>
-            <Text>{data.contacts.phone}</Text>
-            <Text>{data.contacts.location}</Text>
-            {data.contacts.website && <Text>{data.contacts.website}</Text>}
-            {data.contacts.linkedin && <Text>{data.contacts.linkedin}</Text>}
+// Helper to validate photo URL for @react-pdf/renderer
+const isValidPhotoUrl = (url: string | undefined): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  // @react-pdf/renderer Image works with http/https URLs
+  try {
+    const parsed = new URL(url);
+    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') && url.length > 0;
+  } catch {
+    return false;
+  }
+};
+
+export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
+  const hasValidPhoto = isValidPhotoUrl(data.photo);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header with name, role, contacts, and photo */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.name}>{data.name || 'No Name'}</Text>
+            {data.role && <Text style={styles.role}>{data.role}</Text>}
+            <View style={styles.contacts}>
+              {data.contacts.email && <Text>{data.contacts.email}</Text>}
+              {data.contacts.phone && <Text>{data.contacts.phone}</Text>}
+              {data.contacts.location && <Text>{data.contacts.location}</Text>}
+              {data.contacts.website && <Text>{data.contacts.website}</Text>}
+              {data.contacts.linkedin && <Text>{data.contacts.linkedin}</Text>}
+            </View>
           </View>
+          {hasValidPhoto && (
+            <Image src={data.photo!} style={styles.photo} />
+          )}
         </View>
-        {data.photo && (
-          <Image src={data.photo} style={styles.photo} />
-        )}
-      </View>
 
       {/* Summary */}
       {data.summary && (
@@ -203,4 +218,5 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => (
       </View>
     </Page>
   </Document>
-);
+  );
+};

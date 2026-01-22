@@ -9,25 +9,83 @@ import { Profile } from "@/components/resume/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Helper to coerce data to Profile type
+// Helper to validate and sanitize string
+const sanitizeString = (value: any): string => {
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number') return String(value);
+  return '';
+};
+
+// Helper to validate URL
+const isValidUrl = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+// Helper to coerce data to Profile type with validation
 const coerceProfile = (input: any): Profile => {
+  // Validate and sanitize experience array
+  const experience = Array.isArray(input?.experience)
+    ? input.experience
+        .map((exp: any) => ({
+          id: sanitizeString(exp?.id) || `exp-${Date.now()}-${Math.random()}`,
+          title: sanitizeString(exp?.title) || '',
+          company: sanitizeString(exp?.company) || '',
+          location: sanitizeString(exp?.location) || '',
+          start: sanitizeString(exp?.start) || '',
+          end: sanitizeString(exp?.end) || '',
+          points: Array.isArray(exp?.points)
+            ? exp.points.map((p: any) => sanitizeString(p)).filter((p: string) => p.length > 0)
+            : [],
+        }))
+        .filter((exp: any) => exp.title || exp.company) // Only include if has at least title or company
+    : [];
+
+  // Validate and sanitize education array
+  const education = Array.isArray(input?.education)
+    ? input.education
+        .map((ed: any) => ({
+          id: sanitizeString(ed?.id) || `edu-${Date.now()}-${Math.random()}`,
+          degree: sanitizeString(ed?.degree) || '',
+          school: sanitizeString(ed?.school) || '',
+          year: sanitizeString(ed?.year) || '',
+          location: sanitizeString(ed?.location) || '',
+        }))
+        .filter((ed: any) => ed.degree || ed.school) // Only include if has at least degree or school
+    : [];
+
+  // Validate and sanitize skills array
+  const skills = Array.isArray(input?.skills)
+    ? input.skills
+        .map((skill: any) => sanitizeString(skill))
+        .filter((skill: string) => skill.length > 0)
+    : [];
+
+  // Validate photo URL
+  const photo = typeof input?.photo === 'string' && isValidUrl(input.photo) ? input.photo : '';
+
   return {
-    name: input?.name || `${input?.firstName || ''} ${input?.lastName || ''}`.trim() || 'No Name',
-    firstName: input?.firstName || '',
-    lastName: input?.lastName || '',
-    role: input?.role || input?.title || '',
-    summary: input?.summary || input?.about || '',
+    name: sanitizeString(input?.name) || `${sanitizeString(input?.firstName)} ${sanitizeString(input?.lastName)}`.trim() || 'No Name',
+    firstName: sanitizeString(input?.firstName) || '',
+    lastName: sanitizeString(input?.lastName) || '',
+    role: sanitizeString(input?.role || input?.title) || '',
+    summary: sanitizeString(input?.summary || input?.about) || '',
     contacts: {
-      email: input?.contacts?.email || input?.email || '',
-      phone: input?.contacts?.phone || input?.phone || '',
-      location: input?.contacts?.location || input?.location || '',
-      website: input?.contacts?.website || input?.website || '',
-      linkedin: input?.contacts?.linkedin || input?.linkedin || '',
+      email: sanitizeString(input?.contacts?.email || input?.email) || '',
+      phone: sanitizeString(input?.contacts?.phone || input?.phone) || '',
+      location: sanitizeString(input?.contacts?.location || input?.location) || '',
+      website: sanitizeString(input?.contacts?.website || input?.website) || undefined,
+      linkedin: sanitizeString(input?.contacts?.linkedin || input?.linkedin) || undefined,
     },
-    experience: Array.isArray(input?.experience) ? input.experience : [],
-    education: Array.isArray(input?.education) ? input.education : [],
-    skills: Array.isArray(input?.skills) ? input.skills : [],
-    photo: typeof input?.photo === 'string' ? input.photo : '',
+    experience,
+    education,
+    skills,
+    photo,
   };
 };
 
@@ -58,9 +116,20 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
     // Extract and coerce profile data
     const raw = (doc.data as any) ?? {};
+    console.log(`[RESUME_PDF] Raw data keys:`, Object.keys(raw));
+    
     const profile = coerceProfile(raw.profile ?? raw.data?.profile ?? raw);
+    console.log(`[RESUME_PDF] Profile coerced:`, {
+      name: profile.name,
+      role: profile.role,
+      experienceCount: profile.experience.length,
+      educationCount: profile.education.length,
+      skillsCount: profile.skills.length,
+      hasPhoto: !!profile.photo,
+    });
 
     // Generate PDF with @react-pdf/renderer
+    console.log(`[RESUME_PDF] Starting PDF generation...`);
     const pdfDoc = <ResumePDF data={profile} />;
     const pdfBuffer = await renderToBuffer(pdfDoc);
 
