@@ -81,8 +81,31 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("❌ Payment processing error:", err);
+    console.error("❌ Error details:", {
+      message: err.message,
+      code: err.code,
+      meta: err.meta,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    });
+    
+    // Более детальные сообщения об ошибках для диагностики
+    let errorMessage = "Payment processing failed";
+    if (err.code === 'P2003') {
+      errorMessage = "Database constraint violation. Please contact support.";
+    } else if (err.code === 'P2002') {
+      errorMessage = "Duplicate entry detected. Please try again.";
+    } else if (err.message?.includes('does not exist')) {
+      errorMessage = "Database table not found. Migration may not be applied.";
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    
     return NextResponse.json(
-      { ok: false, error: err.message || "Payment processing failed" },
+      { 
+        ok: false, 
+        error: errorMessage,
+        code: err.code || undefined,
+      },
       { status: 500 }
     );
   }

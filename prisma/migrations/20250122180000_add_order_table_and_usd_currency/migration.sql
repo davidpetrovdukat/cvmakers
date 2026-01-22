@@ -1,5 +1,9 @@
--- Add USD to Currency enum
-ALTER TYPE "Currency" ADD VALUE IF NOT EXISTS 'USD';
+-- Add USD to Currency enum (safe version with exception handling)
+DO $$ BEGIN
+  ALTER TYPE "Currency" ADD VALUE 'USD';
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable Order
 CREATE TABLE "Order" (
