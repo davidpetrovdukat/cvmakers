@@ -132,44 +132,152 @@ export async function POST(req: Request) {
           
           const resend = new Resend(process.env.RESEND_API_KEY);
           
-          // Формируем детальный HTML для email
-          const emailHtml = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1e293b;">Thank you for your purchase!</h2>
-              <p>Your payment has been successfully processed and your account has been credited.</p>
-              
-              <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #475569;">Order Details</h3>
-                <p><strong>Order ID:</strong> ${orderMerchantId}</p>
-                <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
-                <p><strong>Date:</strong> ${invoiceDate}</p>
-                <p><strong>Description:</strong> ${body.description || `Top-up: ${body.planId || "Payment"}`}</p>
-              </div>
-              
-              <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #059669;">Payment Summary</h3>
-                <p><strong>Tokens credited:</strong> ${tokensToAdd.toLocaleString()}</p>
-                <p><strong>Subtotal:</strong> ${body.currency} ${subtotal.toFixed(2)}</p>
-                <p><strong>VAT:</strong> ${body.currency} ${vatAmount.toFixed(2)}</p>
-                <p><strong>Total paid:</strong> ${body.currency} ${(body.amount).toFixed(2)}</p>
-                <p><strong>New balance:</strong> ${newBalance.toLocaleString()} tokens</p>
-              </div>
-              
-              <p>You can now use your tokens to create CVs and resumes.</p>
-              <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
-                If you have any questions, please contact us at <a href="mailto:info@cv-makers.co.uk">info@cv-makers.co.uk</a>
+          // Текстовая версия для лучшей доставляемости
+          const emailText = `Invoice ${invoiceNumber} - CV Makers
+
+Thank you for your purchase!
+
+Your payment has been successfully processed and your account has been credited.
+
+ORDER DETAILS
+Order ID: ${orderMerchantId}
+Invoice Number: ${invoiceNumber}
+Date: ${invoiceDate}
+Description: ${body.description || `Top-up: ${body.planId || "Payment"}`}
+
+PAYMENT SUMMARY
+Tokens credited: ${tokensToAdd.toLocaleString()}
+Subtotal: ${body.currency} ${subtotal.toFixed(2)}
+VAT: ${body.currency} ${vatAmount.toFixed(2)}
+Total paid: ${body.currency} ${(body.amount).toFixed(2)}
+New balance: ${newBalance.toLocaleString()} tokens
+
+You can now use your tokens to create CVs and resumes.
+
+If you have any questions, please contact us at info@cv-makers.co.uk
+
+---
+CV Makers - Professional CV & Resume Creator
+https://cv-makers.co.uk`;
+
+          // Улучшенный HTML с более простой структурой для лучшей доставляемости
+          const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice ${invoiceNumber}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 30px 30px 20px; background-color: #1e293b; color: #ffffff;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Invoice ${invoiceNumber}</h1>
+              <p style="margin: 5px 0 0; font-size: 14px; color: #cbd5e1;">CV Makers</p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px;">
+              <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1e293b;">
+                Thank you for your purchase! Your payment has been successfully processed and your account has been credited.
               </p>
               
-              <p style="color: #94a3b8; font-size: 12px; margin-top: 20px;">
-                CV Makers - Professional CV & Resume Creator
+              <!-- Order Details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f8fafc; border-radius: 6px; padding: 20px;">
+                <tr>
+                  <td>
+                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #475569; font-weight: bold;">Order Details</h2>
+                    <table width="100%" cellpadding="5" cellspacing="0">
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px; width: 40%;">Order ID:</td>
+                        <td style="color: #1e293b; font-size: 14px; font-weight: bold;">${orderMerchantId}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">Invoice Number:</td>
+                        <td style="color: #1e293b; font-size: 14px; font-weight: bold;">${invoiceNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">Date:</td>
+                        <td style="color: #1e293b; font-size: 14px;">${invoiceDate}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">Description:</td>
+                        <td style="color: #1e293b; font-size: 14px;">${body.description || `Top-up: ${body.planId || "Payment"}`}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Payment Summary -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #ecfdf5; border-radius: 6px; padding: 20px;">
+                <tr>
+                  <td>
+                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #059669; font-weight: bold;">Payment Summary</h2>
+                    <table width="100%" cellpadding="5" cellspacing="0">
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px; width: 40%;">Tokens credited:</td>
+                        <td style="color: #1e293b; font-size: 14px; font-weight: bold;">${tokensToAdd.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">Subtotal:</td>
+                        <td style="color: #1e293b; font-size: 14px;">${body.currency} ${subtotal.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">VAT:</td>
+                        <td style="color: #1e293b; font-size: 14px;">${body.currency} ${vatAmount.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px; font-weight: bold;">Total paid:</td>
+                        <td style="color: #1e293b; font-size: 16px; font-weight: bold;">${body.currency} ${(body.amount).toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 14px;">New balance:</td>
+                        <td style="color: #059669; font-size: 14px; font-weight: bold;">${newBalance.toLocaleString()} tokens</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">
+                You can now use your tokens to create CVs and resumes.
               </p>
-            </div>
-          `;
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 10px; font-size: 14px; color: #64748b; line-height: 1.6;">
+                If you have any questions, please contact us at 
+                <a href="mailto:info@cv-makers.co.uk" style="color: #3b82f6; text-decoration: none;">info@cv-makers.co.uk</a>
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                CV Makers - Professional CV & Resume Creator<br>
+                <a href="https://cv-makers.co.uk" style="color: #3b82f6; text-decoration: none;">https://cv-makers.co.uk</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
           const emailResult = await resend.emails.send({
             from: `CV Makers <${process.env.SMTP_USER}>`,
             to: body.email,
+            replyTo: 'info@cv-makers.co.uk',
             subject: `Invoice ${invoiceNumber} - CV Makers`,
+            text: emailText,
             html: emailHtml,
           });
 
