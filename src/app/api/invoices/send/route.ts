@@ -45,33 +45,35 @@ export async function POST(req: Request) {
     const data = (doc.data || {}) as any;
 
     // Generate PDF with @react-pdf/renderer using DocumentPDF
-    const pdfDoc = DocumentPDF({
-      title: doc.title,
-      documentNo: data.documentNo,
-      documentDate: data.documentDate,
-      sender: {
-        company: doc.user.company?.name || '',
-        vat: doc.user.company?.vat || '',
-        address: doc.user.company?.address1 || '',
-        city: doc.user.company?.city || '',
-        country: doc.user.company?.country || '',
-        iban: doc.user.company?.iban || '',
-        bankName: (doc.user.company as any)?.bankName || undefined,
-        bic: doc.user.company?.bic || undefined,
-        logoUrl: (doc.user.company as any)?.logoUrl || undefined,
-      },
-      recipient: {
-        company: data.recipient?.company,
-        name: data.recipient?.name,
-        email: data.recipient?.email,
-        address: data.recipient?.address,
-        city: data.recipient?.city,
-        country: data.recipient?.country,
-      },
-      content: Array.isArray(data.content) ? data.content : undefined,
-      notes: data.notes,
-      footerText: data.footerText,
-    });
+    const pdfDoc = (
+      <DocumentPDF
+        title={doc.title}
+        documentNo={data.documentNo}
+        documentDate={data.documentDate}
+        sender={{
+          company: doc.user.company?.name || '',
+          vat: doc.user.company?.vat || '',
+          address: doc.user.company?.address1 || '',
+          city: doc.user.company?.city || '',
+          country: doc.user.company?.country || '',
+          iban: doc.user.company?.iban || '',
+          bankName: (doc.user.company as any)?.bankName || undefined,
+          bic: doc.user.company?.bic || undefined,
+          logoUrl: (doc.user.company as any)?.logoUrl || undefined,
+        }}
+        recipient={{
+          company: data.recipient?.company,
+          name: data.recipient?.name,
+          email: data.recipient?.email,
+          address: data.recipient?.address,
+          city: data.recipient?.city,
+          country: data.recipient?.country,
+        }}
+        content={Array.isArray(data.content) ? data.content : undefined}
+        notes={data.notes}
+        footerText={data.footerText}
+      />
+    );
 
     const pdfBuffer = await renderToBuffer(pdfDoc);
     console.log(`[DOC_SEND] PDF generated successfully, size: ${pdfBuffer.length} bytes`);

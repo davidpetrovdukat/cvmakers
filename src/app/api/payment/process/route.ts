@@ -152,35 +152,37 @@ export async function POST(req: Request) {
             console.log(`📄 Using @react-pdf/renderer (no Chromium required)`);
             
             // Создаем PDF документ с помощью React PDF
-            const pdfDoc = InvoicePDF({
-              invoiceNumber,
-              invoiceDate,
-              orderMerchantId,
-              description: body.description || `Top-up: ${body.planId || "Payment"}`,
-              sender: {
-                company: company?.name || 'CV Makers',
-                vat: company?.vat || '',
-                address: company?.address1 || '',
-                city: company?.city || '',
-                country: company?.country || '',
-                iban: company?.iban || '',
-                bankName: company?.bankName || undefined,
-                bic: company?.bic || undefined,
-              },
-              recipient: {
-                name: user.name || user.email?.split('@')[0] || "Customer",
-                email: body.email,
-              },
-              payment: {
-                tokens: tokensToAdd,
-                subtotal,
-                vat: vatAmount,
-                total: body.amount,
-                currency: body.currency,
-                newBalance,
-              },
-              notes: `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`,
-            });
+            const pdfDoc = (
+              <InvoicePDF
+                invoiceNumber={invoiceNumber}
+                invoiceDate={invoiceDate}
+                orderMerchantId={orderMerchantId}
+                description={body.description || `Top-up: ${body.planId || "Payment"}`}
+                sender={{
+                  company: company?.name || 'CV Makers',
+                  vat: company?.vat || '',
+                  address: company?.address1 || '',
+                  city: company?.city || '',
+                  country: company?.country || '',
+                  iban: company?.iban || '',
+                  bankName: company?.bankName || undefined,
+                  bic: company?.bic || undefined,
+                }}
+                recipient={{
+                  name: user.name || user.email?.split('@')[0] || "Customer",
+                  email: body.email,
+                }}
+                payment={{
+                  tokens: tokensToAdd,
+                  subtotal,
+                  vat: vatAmount,
+                  total: body.amount,
+                  currency: body.currency,
+                  newBalance,
+                }}
+                notes={`Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`}
+              />
+            );
             
             // Рендерим PDF в Buffer
             pdfBuffer = await renderToBuffer(pdfDoc);

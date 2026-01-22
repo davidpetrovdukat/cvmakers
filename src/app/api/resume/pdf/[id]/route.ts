@@ -61,7 +61,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const profile = coerceProfile(raw.profile ?? raw.data?.profile ?? raw);
 
     // Generate PDF with @react-pdf/renderer
-    const pdfDoc = ResumePDF({ data: profile });
+    const pdfDoc = <ResumePDF data={profile} />;
     const pdfBuffer = await renderToBuffer(pdfDoc);
 
     console.log(`[RESUME_PDF] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
