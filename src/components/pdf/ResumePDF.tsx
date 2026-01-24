@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { Profile } from '@/components/resume/types';
 
-// Стили для PDF резюме
+// РЎС‚РёР»Рё РґР»СЏ PDF СЂРµР·СЋРјРµ
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -117,6 +117,13 @@ interface ResumePDFProps {
   data: Profile;
 }
 
+const toText = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return '';
+};
+
 // Helper to validate photo URL for @react-pdf/renderer
 const isValidPhotoUrl = (url: string | undefined): boolean => {
   if (!url || typeof url !== 'string') return false;
@@ -138,14 +145,14 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
         {/* Header with name, role, contacts, and photo */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.name}>{data.name || 'No Name'}</Text>
-            {data.role && <Text style={styles.role}>{data.role}</Text>}
+            <Text style={styles.name}>{toText(data.name) || 'No Name'}</Text>
+            {data.role && <Text style={styles.role}>{toText(data.role)}</Text>}
             <View style={styles.contacts}>
-              {data.contacts.email && <Text>{data.contacts.email}</Text>}
-              {data.contacts.phone && <Text>{data.contacts.phone}</Text>}
-              {data.contacts.location && <Text>{data.contacts.location}</Text>}
-              {data.contacts.website && <Text>{data.contacts.website}</Text>}
-              {data.contacts.linkedin && <Text>{data.contacts.linkedin}</Text>}
+              {data.contacts.email && <Text>{toText(data.contacts.email)}</Text>}
+              {data.contacts.phone && <Text>{toText(data.contacts.phone)}</Text>}
+              {data.contacts.location && <Text>{toText(data.contacts.location)}</Text>}
+              {data.contacts.website && <Text>{toText(data.contacts.website)}</Text>}
+              {data.contacts.linkedin && <Text>{toText(data.contacts.linkedin)}</Text>}
             </View>
           </View>
           {hasValidPhoto && (
@@ -157,7 +164,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
       {data.summary && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Summary</Text>
-          <Text style={styles.summaryText}>{data.summary}</Text>
+          <Text style={styles.summaryText}>{toText(data.summary)}</Text>
         </View>
       )}
 
@@ -168,16 +175,16 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
           {data.experience.map((exp) => (
             <View key={exp.id} style={styles.experienceItem}>
               <Text style={styles.itemTitle}>
-                {exp.title} - {exp.company}
+                {toText(exp.title)} - {toText(exp.company)}
               </Text>
               <Text style={styles.itemMeta}>
-                {exp.start} - {exp.end} • {exp.location}
+                {toText(exp.start)} - {toText(exp.end)} вЂў {toText(exp.location)}
               </Text>
               {exp.points && exp.points.length > 0 && (
                 <View style={styles.bulletList}>
                   {exp.points.map((point, idx) => (
                     <Text key={idx} style={styles.bullet}>
-                      • {point}
+                      вЂў {toText(point)}
                     </Text>
                   ))}
                 </View>
@@ -196,7 +203,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
             <View style={styles.skillsContainer}>
               {data.skills.map((skill, idx) => (
                 <Text key={idx} style={styles.skillTag}>
-                  {skill}
+                  {toText(skill)}
                 </Text>
               ))}
             </View>
@@ -210,10 +217,10 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
             {data.education.map((ed) => (
               <View key={ed.id} style={styles.educationItem}>
                 <Text style={styles.itemTitle}>
-                  {ed.degree}, {ed.school}
+                  {toText(ed.degree)}, {toText(ed.school)}
                 </Text>
                 <Text style={styles.itemMeta}>
-                  {ed.year} • {ed.location}
+                  {toText(ed.year)} вЂў {toText(ed.location)}
                 </Text>
               </View>
             ))}
@@ -224,3 +231,6 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
   </Document>
   );
 };
+
+
+

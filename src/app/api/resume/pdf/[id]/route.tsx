@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 const sanitizeString = (value: any): string => {
   if (typeof value === 'string') return value.trim();
   if (typeof value === 'number') return String(value);
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
   return '';
 };
 
@@ -70,19 +71,26 @@ const coerceProfile = (input: any): Profile => {
   // Validate photo URL
   const photo = typeof input?.photo === 'string' && isValidUrl(input.photo) ? input.photo : '';
 
+  const name = sanitizeString(input?.name) || `${sanitizeString(input?.firstName)} ${sanitizeString(input?.lastName)}`.trim() || 'No Name';
+  const firstName = sanitizeString(input?.firstName) || '';
+  const lastName = sanitizeString(input?.lastName) || '';
+  const role = sanitizeString(input?.role || input?.title) || '';
+  const summary = sanitizeString(input?.summary || input?.about) || '';
+  const contacts = {
+    email: sanitizeString(input?.contacts?.email || input?.email) || '',
+    phone: sanitizeString(input?.contacts?.phone || input?.phone) || '',
+    location: sanitizeString(input?.contacts?.location || input?.location) || '',
+    website: sanitizeString(input?.contacts?.website || input?.website) || undefined,
+    linkedin: sanitizeString(input?.contacts?.linkedin || input?.linkedin) || undefined,
+  };
+
   return {
-    name: sanitizeString(input?.name) || `${sanitizeString(input?.firstName)} ${sanitizeString(input?.lastName)}`.trim() || 'No Name',
-    firstName: sanitizeString(input?.firstName) || '',
-    lastName: sanitizeString(input?.lastName) || '',
-    role: sanitizeString(input?.role || input?.title) || '',
-    summary: sanitizeString(input?.summary || input?.about) || '',
-    contacts: {
-      email: sanitizeString(input?.contacts?.email || input?.email) || '',
-      phone: sanitizeString(input?.contacts?.phone || input?.phone) || '',
-      location: sanitizeString(input?.contacts?.location || input?.location) || '',
-      website: sanitizeString(input?.contacts?.website || input?.website) || undefined,
-      linkedin: sanitizeString(input?.contacts?.linkedin || input?.linkedin) || undefined,
-    },
+    name,
+    firstName,
+    lastName,
+    role,
+    summary,
+    contacts,
     experience,
     education,
     skills,
