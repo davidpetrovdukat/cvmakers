@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import puppeteer from "puppeteer-core";
 import type { Browser, Page } from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,13 +17,16 @@ const resolveBaseUrl = (req: Request) => {
   return `${proto}://${host}`;
 };
 
-const launchBrowser = async () => {
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath();
-  return puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: chromium.headless,
+// Connect to Browserless cloud browser service
+const connectBrowser = async (): Promise<Browser> => {
+  const apiKey = process.env.BROWSERLESS_API_KEY;
+  if (!apiKey) {
+    throw new Error('BROWSERLESS_API_KEY is not configured');
+  }
+  
+  console.log('[RESUME_PDF] Connecting to Browserless...');
+  return puppeteer.connect({
+    browserWSEndpoint: `wss://chrome.browserless.io?token=${apiKey}`,
   });
 };
 
@@ -61,7 +63,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const url = `${baseUrl}/print-resume/${id}`;
     console.log(`[RESUME_PDF] Rendering HTML at ${url}`);
 
-    browser = await launchBrowser();
+    browser = await connectBrowser();
+    console.log('[RESUME_PDF] Connected to Browserless successfully');
     page = await browser.newPage();
     await page.emulateMediaType('screen');
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
@@ -101,6 +104,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       hint: isReactError ? 'Data validation issue - check that all profile fields are strings' : undefined,
     }, { status: 500 });
   } finally {
+    // Clean up: close page and disconnect from Browserless
     if (page) {
       try {
         await page.close();
@@ -108,7 +112,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
     if (browser) {
       try {
-        await browser.close();
+        await browser.disconnect();
       } catch {}
     }
   }
