@@ -1,181 +1,36 @@
-import React from "react";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { ResumePDF } from "@/components/pdf/ResumePDF";
-import { Profile } from "@/components/resume/types";
+import puppeteer from "puppeteer-core";
+import type { Browser, Page } from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Helper to validate and sanitize string
-const sanitizeString = (value: any): string => {
-  if (typeof value === 'string') return value.trim();
-  if (typeof value === 'number') return String(value);
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  return '';
+const resolveBaseUrl = (req: Request) => {
+  const forwardedProto = req.headers.get('x-forwarded-proto');
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const host = forwardedHost || req.headers.get('host');
+  const proto = forwardedProto || 'https';
+  if (!host) return null;
+  return `${proto}://${host}`;
 };
 
-// Helper to validate URL
-const isValidUrl = (url: string): boolean => {
-  if (!url || typeof url !== 'string') return false;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
+const launchBrowser = async () => {
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath();
+  return puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath,
+    headless: chromium.headless,
+  });
 };
 
-const isReactElement = (value: unknown): boolean => React.isValidElement(value);
-
-const collectReactElementPaths = (
-  value: unknown,
-  path: string,
-  results: string[],
-  depth = 0,
-  maxDepth = 6,
-) => {
-  if (depth > maxDepth) return;
-  if (isReactElement(value)) {
-    results.push(path);
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => collectReactElementPaths(item, `${path}[${index}]`, results, depth + 1, maxDepth));
-    return;
-  }
-  if (value && typeof value === 'object') {
-    Object.entries(value as Record<string, unknown>).forEach(([key, child]) => {
-      collectReactElementPaths(child, `${path}.${key}`, results, depth + 1, maxDepth);
-    });
-  }
-};
-
-const normalizeProfileForPdf = (profile: Profile): Profile => {
-  const contacts = profile?.contacts ?? ({} as Profile['contacts']);
-  const experience = Array.isArray(profile?.experience)
-    ? profile.experience
-        .map((exp) => ({
-          id: sanitizeString(exp?.id) || `exp-${Date.now()}-${Math.random()}`,
-          title: sanitizeString(exp?.title),
-          company: sanitizeString(exp?.company),
-          location: sanitizeString(exp?.location),
-          start: sanitizeString(exp?.start),
-          end: sanitizeString(exp?.end),
-          points: Array.isArray(exp?.points)
-            ? exp.points.map((point) => sanitizeString(point)).filter((point) => point.length > 0)
-            : [],
-        }))
-        .filter((exp) => exp.title || exp.company)
-    : [];
-  const education = Array.isArray(profile?.education)
-    ? profile.education
-        .map((ed) => ({
-          id: sanitizeString(ed?.id) || `edu-${Date.now()}-${Math.random()}`,
-          degree: sanitizeString(ed?.degree),
-          school: sanitizeString(ed?.school),
-          year: sanitizeString(ed?.year),
-          location: sanitizeString(ed?.location),
-        }))
-        .filter((ed) => ed.degree || ed.school)
-    : [];
-  const skills = Array.isArray(profile?.skills)
-    ? profile.skills.map((skill) => sanitizeString(skill)).filter((skill) => skill.length > 0)
-    : [];
-
-  return {
-    name: sanitizeString(profile?.name) || 'No Name',
-    firstName: sanitizeString(profile?.firstName),
-    lastName: sanitizeString(profile?.lastName),
-    role: sanitizeString(profile?.role),
-    summary: sanitizeString(profile?.summary),
-    contacts: {
-      email: sanitizeString(contacts?.email),
-      phone: sanitizeString(contacts?.phone),
-      location: sanitizeString(contacts?.location),
-      website: sanitizeString(contacts?.website) || undefined,
-      linkedin: sanitizeString(contacts?.linkedin) || undefined,
-    },
-    experience,
-    education,
-    skills,
-    photo: typeof profile?.photo === 'string' && isValidUrl(profile.photo) ? profile.photo : '',
-  };
-};
-
-// Helper to coerce data to Profile type with validation
-const coerceProfile = (input: any): Profile => {
-  // Validate and sanitize experience array
-  const experience = Array.isArray(input?.experience)
-    ? input.experience
-        .map((exp: any) => ({
-          id: sanitizeString(exp?.id) || `exp-${Date.now()}-${Math.random()}`,
-          title: sanitizeString(exp?.title) || '',
-          company: sanitizeString(exp?.company) || '',
-          location: sanitizeString(exp?.location) || '',
-          start: sanitizeString(exp?.start) || '',
-          end: sanitizeString(exp?.end) || '',
-          points: Array.isArray(exp?.points)
-            ? exp.points.map((p: any) => sanitizeString(p)).filter((p: string) => p.length > 0)
-            : [],
-        }))
-        .filter((exp: any) => exp.title || exp.company) // Only include if has at least title or company
-    : [];
-
-  // Validate and sanitize education array
-  const education = Array.isArray(input?.education)
-    ? input.education
-        .map((ed: any) => ({
-          id: sanitizeString(ed?.id) || `edu-${Date.now()}-${Math.random()}`,
-          degree: sanitizeString(ed?.degree) || '',
-          school: sanitizeString(ed?.school) || '',
-          year: sanitizeString(ed?.year) || '',
-          location: sanitizeString(ed?.location) || '',
-        }))
-        .filter((ed: any) => ed.degree || ed.school) // Only include if has at least degree or school
-    : [];
-
-  // Validate and sanitize skills array
-  const skills = Array.isArray(input?.skills)
-    ? input.skills
-        .map((skill: any) => sanitizeString(skill))
-        .filter((skill: string) => skill.length > 0)
-    : [];
-
-  // Validate photo URL
-  const photo = typeof input?.photo === 'string' && isValidUrl(input.photo) ? input.photo : '';
-
-  const name = sanitizeString(input?.name) || `${sanitizeString(input?.firstName)} ${sanitizeString(input?.lastName)}`.trim() || 'No Name';
-  const firstName = sanitizeString(input?.firstName) || '';
-  const lastName = sanitizeString(input?.lastName) || '';
-  const role = sanitizeString(input?.role || input?.title) || '';
-  const summary = sanitizeString(input?.summary || input?.about) || '';
-  const contacts = {
-    email: sanitizeString(input?.contacts?.email || input?.email) || '',
-    phone: sanitizeString(input?.contacts?.phone || input?.phone) || '',
-    location: sanitizeString(input?.contacts?.location || input?.location) || '',
-    website: sanitizeString(input?.contacts?.website || input?.website) || undefined,
-    linkedin: sanitizeString(input?.contacts?.linkedin || input?.linkedin) || undefined,
-  };
-
-  return {
-    name,
-    firstName,
-    lastName,
-    role,
-    summary,
-    contacts,
-    experience,
-    education,
-    skills,
-    photo,
-  };
-};
-
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  let browser: Browser | null = null;
+  let page: Page | null = null;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -198,45 +53,23 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Unsupported document type' }, { status: 400 });
     }
 
-    console.log(`[RESUME_PDF] Using @react-pdf/renderer for ${doc.docType}`);
-
-    // Extract and coerce profile data
-    const raw = (doc.data as any) ?? {};
-    console.log(`[RESUME_PDF] Raw data keys:`, Object.keys(raw));
-
-    const reactElementPaths: string[] = [];
-    collectReactElementPaths(raw, 'data', reactElementPaths);
-    if (reactElementPaths.length) {
-      console.warn(`[RESUME_PDF] React elements found in payload:`, reactElementPaths.slice(0, 20));
+    const baseUrl = resolveBaseUrl(req);
+    if (!baseUrl) {
+      return NextResponse.json({ error: 'Unable to resolve base URL' }, { status: 500 });
     }
-    
-    const profile = coerceProfile(raw.profile ?? raw.data?.profile ?? raw);
-    const safeProfile = normalizeProfileForPdf(profile);
-    console.log(`[RESUME_PDF] Profile coerced:`, {
-      name: safeProfile.name,
-      role: safeProfile.role,
-      experienceCount: safeProfile.experience.length,
-      educationCount: safeProfile.education.length,
-      skillsCount: safeProfile.skills.length,
-      hasPhoto: !!safeProfile.photo,
-    });
 
-    // Generate PDF with @react-pdf/renderer
-    console.log(`[RESUME_PDF] Starting PDF generation...`);
-    
-    // Validate profile data before rendering
-    console.log(`[RESUME_PDF] Profile data validation:`, {
-      nameType: typeof safeProfile.name,
-      roleType: typeof safeProfile.role,
-      summaryType: typeof safeProfile.summary,
-      contactsEmailType: typeof safeProfile.contacts?.email,
-      experienceValid: safeProfile.experience.every((e) => typeof e.title === 'string' && typeof e.company === 'string'),
-      educationValid: safeProfile.education.every((e) => typeof e.degree === 'string' && typeof e.school === 'string'),
-      skillsValid: safeProfile.skills.every((s) => typeof s === 'string'),
+    const url = `${baseUrl}/print-resume/${id}`;
+    console.log(`[RESUME_PDF] Rendering HTML at ${url}`);
+
+    browser = await launchBrowser();
+    page = await browser.newPage();
+    await page.emulateMediaType('screen');
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true,
     });
-    
-    const pdfDoc = <ResumePDF data={safeProfile} />;
-    const pdfBuffer = await renderToBuffer(pdfDoc);
 
     console.log(`[RESUME_PDF] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
 
@@ -267,5 +100,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       details: err.message,
       hint: isReactError ? 'Data validation issue - check that all profile fields are strings' : undefined,
     }, { status: 500 });
+  } finally {
+    if (page) {
+      try {
+        await page.close();
+      } catch {}
+    }
+    if (browser) {
+      try {
+        await browser.close();
+      } catch {}
+    }
   }
 }
