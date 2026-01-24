@@ -181,7 +181,7 @@ export default function PricingClient() {
                 name={plan.name}
                 popular={plan.popular}
                 bullets={plan.points}
-                cta="Choose Plan"
+                cta="Buy Tokens"
                 amount={plan.price ? parseFloat(plan.price.replace(/[£,]/g, "")) : 0}
                 currency={currency}
                 onAction={() => handlePlanRequest(plan)}

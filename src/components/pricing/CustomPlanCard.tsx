@@ -8,6 +8,7 @@ import { convertToTokens } from '@/lib/currency';
 
 export default function CustomPlanCard({ currency, onRequest }: { currency: Currency; onRequest: (data: { name: string; price: number; currency: Currency }) => void; }) {
   const [priceInput, setPriceInput] = useState<string>('5');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const min = 0.01;
   const numericPrice = parseFloat(priceInput || '0');
   const validNumber = Number.isFinite(numericPrice);
@@ -66,9 +67,23 @@ export default function CustomPlanCard({ currency, onRequest }: { currency: Curr
         <li>No subscription - pay what you need</li>
         <li>Minimum {currencyLabel}0.01</li>
       </ul>
-      <div className="mt-6">
-        <Button className="w-full" size="lg" onClick={handleRequest} disabled={!validNumber || numericPrice < min}>
-          Request top-up
+      <div className="mt-6 space-y-3">
+        <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span>
+            I have read and agree to the{' '}
+            <a href="/terms" target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
+              Terms and Conditions
+            </a>
+          </span>
+        </label>
+        <Button className="w-full" size="lg" onClick={handleRequest} disabled={!validNumber || numericPrice < min || !agreeTerms}>
+          Buy Tokens
         </Button>
       </div>
     </motion.div>

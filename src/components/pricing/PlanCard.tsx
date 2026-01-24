@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { motion, useReducedMotion } from "framer-motion";
-import { THEME } from "@/lib/theme";
 import { Currency } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -35,6 +35,7 @@ export default function PlanCard({
                                    vatRatePercent = 20,
                                    tokens,
                                  }: PlanCardProps) {
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const reduceMotion = useReducedMotion();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -166,9 +167,23 @@ export default function PlanCard({
           </ul>
         </div>
 
-        <div className="mt-6">
-          <Button className="w-full" size="lg" onClick={handleTopUp}>
-            {cta || "Request Top-Up"}
+        <div className="mt-6 space-y-3">
+          <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span>
+              I have read and agree to the{' '}
+              <a href="/terms" target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
+                Terms and Conditions
+              </a>
+            </span>
+          </label>
+          <Button className="w-full" size="lg" onClick={handleTopUp} disabled={!agreeTerms}>
+            Buy Tokens
           </Button>
         </div>
       </Card>

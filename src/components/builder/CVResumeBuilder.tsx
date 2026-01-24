@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { ResumeTemplates, ResumeTemplateKey, Profile } from '@/components/resume';
@@ -167,6 +167,31 @@ function removeEdu(setProfile: React.Dispatch<React.SetStateAction<Profile>>, id
     ...current,
     education: current.education.filter((entry) => entry.id !== id),
   }));
+}
+
+// Validation: check if profile has all required fields for AI improvement
+function isProfileComplete(p: Profile): boolean {
+  // Personal details (excluding optional website & linkedin)
+  const hasName = !!(p.name.trim() || (p.firstName.trim() && p.lastName.trim()));
+  const hasRole = !!p.role.trim();
+  const hasEmail = !!p.contacts.email.trim();
+  const hasPhone = !!p.contacts.phone.trim();
+  const hasLocation = !!p.contacts.location.trim();
+  
+  // Summary
+  const hasSummary = !!p.summary.trim();
+  
+  // At least 1 experience
+  const hasExperience = p.experience.length >= 1;
+  
+  // At least 1 education
+  const hasEducation = p.education.length >= 1;
+  
+  // At least 1 skill
+  const hasSkills = p.skills.length >= 1;
+  
+  return hasName && hasRole && hasEmail && hasPhone && hasLocation && 
+         hasSummary && hasExperience && hasEducation && hasSkills;
 }
 
 export default function CVResumeBuilder({ initialDocType, initialTemplate }: BuilderProps) {
@@ -352,6 +377,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
 
   const template = templatesByDoc[docType];
   const profile = profiles[docType];
+  const profileComplete = React.useMemo(() => isProfileComplete(profile), [profile]);
   const SelectedTemplate = ResumeTemplates[template] ?? ResumeTemplates.classic;
 
   type CreateDocResult = {
@@ -692,7 +718,8 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
                     : 'border border-slate-300 text-slate-900 hover:bg-slate-100'
                 }`}
                 onClick={handleAI}
-                disabled={busy !== null}
+                disabled={busy !== null || !profileComplete}
+                title={!profileComplete ? 'Please fill all required fields first' : undefined}
               >
                 {busy === 'ai' ? (
                   <span className="flex items-center justify-center gap-2">
@@ -703,6 +730,11 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
                   'Improve with AI (200 tok.)'
                 )}
               </button>
+              {!profileComplete && (
+                <p className="text-xs text-amber-600">
+                  Fill all sections (personal details, summary, experience, education, skills) to enable AI improvement.
+                </p>
+              )}
               <button
                 id="btn-manager"
                 className={`rounded-md px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${

@@ -23,8 +23,8 @@ interface PolicyPageProps {
 export default function PolicyPage({
   title,
   sections,
-  effectiveDate = '1 Sep 2025',
-  lastUpdated = '2 Sep 2025',
+  effectiveDate = '16 Sep 2025',
+  lastUpdated = '16 Sep 2025',
   version = 'v1.0.0',
   helpEmail = 'info@mail.com',
   showRegionToggle = true,
@@ -78,7 +78,7 @@ export default function PolicyPage({
             transition={{ delay: 0.1, duration: 0.3 }}
           >
             <span className="rounded-full bg-emerald-100 text-emerald-600 px-3 py-1 text-xs font-semibold">Updated</span>
-            <span className="rounded-full bg-indigo-100 text-indigo-600 px-3 py-1 text-xs font-semibold">Effective 1 Sep 2025</span>
+            <span className="rounded-full bg-indigo-100 text-indigo-600 px-3 py-1 text-xs font-semibold">Effective 16 Sep 2025</span>
           </motion.div>
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900">{title}</h1>
           <p className="max-w-2xl mx-auto text-slate-600 text-lg">
@@ -207,7 +207,7 @@ export default function PolicyPage({
                   <h3 className="text-base font-semibold">Change log</h3>
                   <ul className="mt-3 text-sm text-slate-700 space-y-3">
                     <li>
-                      <div className="font-medium text-slate-900">1 Sep 2025</div>
+                      <div className="font-medium text-slate-900">16 Sep 2025</div>
                       <div>New Terms & Conditions published for CV Makers launch.</div>
                     </li>
                   </ul>

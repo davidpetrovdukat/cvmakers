@@ -20,6 +20,7 @@ export default function SignInClient() {
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -174,8 +175,29 @@ export default function SignInClient() {
               </>
             )}
             
+            {mode === 'signup' && (
+              <label className="flex items-start gap-2 text-sm text-slate-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span>
+                  I have read and agree to the{' '}
+                  <a href="/terms" target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
+                    Terms and Conditions
+                  </a>
+                </span>
+              </label>
+            )}
+
             <div className="mt-2">
-              <Button type="submit" disabled={loading} variant="primary">
+              <Button 
+                type="submit" 
+                disabled={loading || (mode === 'signup' && !agreeTerms)} 
+                variant="primary"
+              >
                 {loading ? (mode === 'signup' ? 'Creating…' : 'Signing in…') : (mode === 'signup' ? 'Create account' : 'Log in')}
               </Button>
             </div>
