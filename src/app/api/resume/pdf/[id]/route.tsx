@@ -29,6 +29,83 @@ const isValidUrl = (url: string): boolean => {
   }
 };
 
+const isReactElement = (value: unknown): boolean => React.isValidElement(value);
+
+const collectReactElementPaths = (
+  value: unknown,
+  path: string,
+  results: string[],
+  depth = 0,
+  maxDepth = 6,
+) => {
+  if (depth > maxDepth) return;
+  if (isReactElement(value)) {
+    results.push(path);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => collectReactElementPaths(item, `${path}[${index}]`, results, depth + 1, maxDepth));
+    return;
+  }
+  if (value && typeof value === 'object') {
+    Object.entries(value as Record<string, unknown>).forEach(([key, child]) => {
+      collectReactElementPaths(child, `${path}.${key}`, results, depth + 1, maxDepth);
+    });
+  }
+};
+
+const normalizeProfileForPdf = (profile: Profile): Profile => {
+  const contacts = profile?.contacts ?? ({} as Profile['contacts']);
+  const experience = Array.isArray(profile?.experience)
+    ? profile.experience
+        .map((exp) => ({
+          id: sanitizeString(exp?.id) || `exp-${Date.now()}-${Math.random()}`,
+          title: sanitizeString(exp?.title),
+          company: sanitizeString(exp?.company),
+          location: sanitizeString(exp?.location),
+          start: sanitizeString(exp?.start),
+          end: sanitizeString(exp?.end),
+          points: Array.isArray(exp?.points)
+            ? exp.points.map((point) => sanitizeString(point)).filter((point) => point.length > 0)
+            : [],
+        }))
+        .filter((exp) => exp.title || exp.company)
+    : [];
+  const education = Array.isArray(profile?.education)
+    ? profile.education
+        .map((ed) => ({
+          id: sanitizeString(ed?.id) || `edu-${Date.now()}-${Math.random()}`,
+          degree: sanitizeString(ed?.degree),
+          school: sanitizeString(ed?.school),
+          year: sanitizeString(ed?.year),
+          location: sanitizeString(ed?.location),
+        }))
+        .filter((ed) => ed.degree || ed.school)
+    : [];
+  const skills = Array.isArray(profile?.skills)
+    ? profile.skills.map((skill) => sanitizeString(skill)).filter((skill) => skill.length > 0)
+    : [];
+
+  return {
+    name: sanitizeString(profile?.name) || 'No Name',
+    firstName: sanitizeString(profile?.firstName),
+    lastName: sanitizeString(profile?.lastName),
+    role: sanitizeString(profile?.role),
+    summary: sanitizeString(profile?.summary),
+    contacts: {
+      email: sanitizeString(contacts?.email),
+      phone: sanitizeString(contacts?.phone),
+      location: sanitizeString(contacts?.location),
+      website: sanitizeString(contacts?.website) || undefined,
+      linkedin: sanitizeString(contacts?.linkedin) || undefined,
+    },
+    experience,
+    education,
+    skills,
+    photo: typeof profile?.photo === 'string' && isValidUrl(profile.photo) ? profile.photo : '',
+  };
+};
+
 // Helper to coerce data to Profile type with validation
 const coerceProfile = (input: any): Profile => {
   // Validate and sanitize experience array
@@ -126,15 +203,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     // Extract and coerce profile data
     const raw = (doc.data as any) ?? {};
     console.log(`[RESUME_PDF] Raw data keys:`, Object.keys(raw));
+
+    const reactElementPaths: string[] = [];
+    collectReactElementPaths(raw, 'data', reactElementPaths);
+    if (reactElementPaths.length) {
+      console.warn(`[RESUME_PDF] React elements found in payload:`, reactElementPaths.slice(0, 20));
+    }
     
     const profile = coerceProfile(raw.profile ?? raw.data?.profile ?? raw);
+    const safeProfile = normalizeProfileForPdf(profile);
     console.log(`[RESUME_PDF] Profile coerced:`, {
-      name: profile.name,
-      role: profile.role,
-      experienceCount: profile.experience.length,
-      educationCount: profile.education.length,
-      skillsCount: profile.skills.length,
-      hasPhoto: !!profile.photo,
+      name: safeProfile.name,
+      role: safeProfile.role,
+      experienceCount: safeProfile.experience.length,
+      educationCount: safeProfile.education.length,
+      skillsCount: safeProfile.skills.length,
+      hasPhoto: !!safeProfile.photo,
     });
 
     // Generate PDF with @react-pdf/renderer
@@ -142,16 +226,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     
     // Validate profile data before rendering
     console.log(`[RESUME_PDF] Profile data validation:`, {
-      nameType: typeof profile.name,
-      roleType: typeof profile.role,
-      summaryType: typeof profile.summary,
-      contactsEmailType: typeof profile.contacts?.email,
-      experienceValid: profile.experience.every((e) => typeof e.title === 'string' && typeof e.company === 'string'),
-      educationValid: profile.education.every((e) => typeof e.degree === 'string' && typeof e.school === 'string'),
-      skillsValid: profile.skills.every((s) => typeof s === 'string'),
+      nameType: typeof safeProfile.name,
+      roleType: typeof safeProfile.role,
+      summaryType: typeof safeProfile.summary,
+      contactsEmailType: typeof safeProfile.contacts?.email,
+      experienceValid: safeProfile.experience.every((e) => typeof e.title === 'string' && typeof e.company === 'string'),
+      educationValid: safeProfile.education.every((e) => typeof e.degree === 'string' && typeof e.school === 'string'),
+      skillsValid: safeProfile.skills.every((s) => typeof s === 'string'),
     });
     
-    const pdfDoc = <ResumePDF data={profile} />;
+    const pdfDoc = <ResumePDF data={safeProfile} />;
     const pdfBuffer = await renderToBuffer(pdfDoc);
 
     console.log(`[RESUME_PDF] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
