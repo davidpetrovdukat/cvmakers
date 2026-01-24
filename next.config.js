@@ -11,7 +11,8 @@ const nextConfig = {
   turbopack: {},
 
   // Optimize build performance - moved from experimental in Next.js 15
-  serverExternalPackages: ['@prisma/client'],
+  // Include @react-pdf/renderer to prevent bundling conflicts with Turbopack
+  serverExternalPackages: ['@prisma/client', '@react-pdf/renderer'],
 
   images: {
     remotePatterns: [

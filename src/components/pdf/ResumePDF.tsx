@@ -86,15 +86,17 @@ const styles = StyleSheet.create({
   },
   twoColumn: {
     flexDirection: 'row',
-    gap: 20,
   },
   column: {
+    flex: 1,
+    marginRight: 10,
+  },
+  columnLast: {
     flex: 1,
   },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
   },
   skillTag: {
     fontSize: 9,
@@ -103,6 +105,8 @@ const styles = StyleSheet.create({
     padding: '4px 8px',
     borderRadius: 4,
     border: '1px solid #e2e8f0',
+    marginRight: 6,
+    marginBottom: 6,
   },
   educationItem: {
     marginBottom: 8,
@@ -201,7 +205,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
 
         {/* Education */}
         {data.education && data.education.length > 0 && (
-          <View style={styles.column}>
+          <View style={styles.columnLast}>
             <Text style={styles.sectionTitle}>Education</Text>
             {data.education.map((ed) => (
               <View key={ed.id} style={styles.educationItem}>

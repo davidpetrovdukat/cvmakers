@@ -1,3 +1,4 @@
+import React from "react";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -130,6 +131,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
     // Generate PDF with @react-pdf/renderer
     console.log(`[RESUME_PDF] Starting PDF generation...`);
+    
+    // Validate profile data before rendering
+    console.log(`[RESUME_PDF] Profile data validation:`, {
+      nameType: typeof profile.name,
+      roleType: typeof profile.role,
+      summaryType: typeof profile.summary,
+      contactsEmailType: typeof profile.contacts?.email,
+      experienceValid: profile.experience.every((e) => typeof e.title === 'string' && typeof e.company === 'string'),
+      educationValid: profile.education.every((e) => typeof e.degree === 'string' && typeof e.school === 'string'),
+      skillsValid: profile.skills.every((s) => typeof s === 'string'),
+    });
+    
     const pdfDoc = <ResumePDF data={profile} />;
     const pdfBuffer = await renderToBuffer(pdfDoc);
 
@@ -149,11 +162,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     console.error('[RESUME_PDF_ERROR]', err);
     console.error('[RESUME_PDF_ERROR] Details:', {
       message: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+      name: err.name,
+      code: err.code,
+      stack: err.stack,
     });
+    
+    // Check for React-specific errors
+    const isReactError = err.message?.includes('React error') || err.message?.includes('not valid as a React child');
+    
     return NextResponse.json({ 
       error: 'Failed to generate PDF',
-      details: err.message 
+      details: err.message,
+      hint: isReactError ? 'Data validation issue - check that all profile fields are strings' : undefined,
     }, { status: 500 });
   }
 }
