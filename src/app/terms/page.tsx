@@ -12,7 +12,7 @@ function getDynamicTermsSections(currency: Currency): PolicySection[] {
   {
     id: 'intro',
     title: '1. General provisions',
-    body: `These Terms and Conditions govern the use of the website cv-makers.co.uk and the provision of CV/resume creation, improvement, and export services by WORKING AGENT LTD (Company No. 15957326), registered at 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF (the "Company," "we," "us," "our").\nBy using our website, creating a draft CV, or purchasing token packages, you agree to these Terms. If you do not agree, please do not use the Service.`
+    body: `These Terms and Conditions govern the use of the website cv-makers.co.uk and the provision of CV/resume creation, improvement, and export services by WORKING AGENT LTD (Company No. 15957326), registered at Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF (the "Company," "we," "us," "our").\nBy using our website, creating a draft CV, or purchasing token packages, you agree to these Terms. If you do not agree, please do not use the Service.`
   },
   {
     id: 'definitions',
@@ -100,7 +100,7 @@ All prices are calculated from GBP (1.00 GBP = 100 tokens). Other currencies are
   {
     id: 'notices',
     title: '16. Notices',
-    body: `All official communications must be sent to:\n📧 info@cv-makers.co.uk\n📍 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF`
+    body: `All official communications must be sent to:\n📧 info@cv-makers.co.uk\n📍 Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF`
   },
   {
     id: 'law',
@@ -115,7 +115,7 @@ All prices are calculated from GBP (1.00 GBP = 100 tokens). Other currencies are
   {
     id: 'company-details',
     title: 'Company details',
-    body: `WORKING AGENT LTD\nCompany number: 15957326\nRegistered office: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF\nEmail: info@cv-makers.co.uk`
+    body: `WORKING AGENT LTD\nCompany number: 15957326\nRegistered office: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF\nEmail: info@cv-makers.co.uk`
   },
   ];
 }

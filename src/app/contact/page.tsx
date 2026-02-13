@@ -68,7 +68,7 @@ export default function ContactPage() {
                   <div>
                     <div className="font-medium">United Kingdom (Primary)</div>
                     <div>WORKING AGENT LTD</div>
-                    <div>31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF</div>
+                    <div>Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF</div>
                   </div>
                 </div>
                 <div className="mt-4 h-40 rounded-xl overflow-hidden border border-black/10">
@@ -78,7 +78,7 @@ export default function ContactPage() {
                     height="100%"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                  src="https://www.google.com/maps?q=31%20Auctioneers%20Way%2C%20Northampton%2C%20United%20Kingdom%2C%20NN1%201HF&output=embed"
+                  src="https://www.google.com/maps?q=Academy%20House%2C%2011%20Dunraven%20Place%2C%20Bridgend%2C%20Mid%20Glamorgan%2C%20CF31%201JF&output=embed"
                   />
                 </div>
               </Card>

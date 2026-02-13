@@ -37,7 +37,7 @@ const SOCIAL_LINKS = [
 const COMPANY_DETAILS = [
   { text: 'WORKING AGENT LTD', type: 'text' },
   { text: 'Company number 15957326', type: 'text' },
-  { text: '31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF', type: 'text' },
+  { text: 'Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF', type: 'text' },
   { text: '+44 7418 601001', type: 'tel', href: 'tel:+447418601001' },
   { text: 'info@cv-makers.co.uk', type: 'mailto', href: 'mailto:info@cv-makers.co.uk' },
 ];

@@ -31,10 +31,10 @@ export async function GET(req: Request) {
         firstName: 'Test',
         lastName: 'User',
         dateOfBirth: testUserDateOfBirth,
-        street: '31 Auctioneers Way',
-        city: 'Northampton',
+        street: 'Academy House, 11 Dunraven Place',
+        city: 'Bridgend',
         country: 'United Kingdom',
-        postalCode: 'NN1 1HF',
+        postalCode: 'CF31 1JF',
       },
     ];
 

@@ -148,7 +148,7 @@ const TRUST_ITEMS = [
 const COMPANY_DETAILS = [
   'WORKING AGENT LTD',
   'Company number: 15957326',
-  '31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF',
+  'Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF',
   'General enquiries: info@cv-makers.co.uk',
 ];
 

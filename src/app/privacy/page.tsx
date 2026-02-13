@@ -10,7 +10,7 @@ const sections: PolicySection[] = [
   {
     id: 'introduction',
     title: '1. Introduction',
-    body: `We respect your privacy and handle personal data responsibly. This Policy explains what personal data we collect, why we process it, how long we retain it, who we may share it with, and how you can exercise your rights under data-protection law in connection with the services offered by cv-makers.co.uk, operated by WORKING AGENT LTD (Company No. 15957326), registered office: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF.
+    body: `We respect your privacy and handle personal data responsibly. This Policy explains what personal data we collect, why we process it, how long we retain it, who we may share it with, and how you can exercise your rights under data-protection law in connection with the services offered by cv-makers.co.uk, operated by WORKING AGENT LTD (Company No. 15957326), registered office: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.
 For any questions or requests, please contact: info@cv-makers.co.uk.`
   },
   {
@@ -101,7 +101,7 @@ If you are not satisfied with how we handle your personal data, you have the rig
     title: 'Company details',
     body: `WORKING AGENT LTD
 Company number: 15957326
-Registered office: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF
+Registered office: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF
 Email: info@cv-makers.co.uk`
   },
 ];

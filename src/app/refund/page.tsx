@@ -68,7 +68,7 @@ function getDynamicRefundSections(currency: Currency): PolicySection[] {
   {
     id: 'contact',
     title: '12. Contact details',
-    body: `Email: info@cv-makers.co.uk\nRegistered office: WORKING AGENT LTD, 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF`
+    body: `Email: info@cv-makers.co.uk\nRegistered office: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF`
   },
   ];
 }

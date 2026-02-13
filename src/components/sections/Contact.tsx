@@ -41,7 +41,7 @@ export default function Contact() {
           <div className="mt-6 grid gap-3 text-sm text-slate-700">
             <div>Company: WORKING AGENT LTD</div>
             <div>Reg: 15957326</div>
-            <div>Address: 31 Auctioneers Way, Northampton, United Kingdom, NN1 1HF</div>
+            <div>Address: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF</div>
             <div>Email: info@cv-makers.co.uk</div>
             <div>Phone: +44 7418 601001</div>
           </div>
