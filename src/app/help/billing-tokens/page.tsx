@@ -62,7 +62,7 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
   return (
     <main className="bg-slate-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <motion.div 
+        <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -269,8 +269,8 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                           <td className="px-3 py-2 text-slate-600">{entry.date}</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              entry.type === 'Top-up' 
-                                ? 'bg-emerald-100 text-emerald-800' 
+                              entry.type === 'Top-up'
+                                ? 'bg-emerald-100 text-emerald-800'
                                 : 'bg-indigo-100 text-indigo-800'
                             }`}>
                               {entry.type}
@@ -301,7 +301,7 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
               <div className="p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Refunds</h2>
                 <p className="text-slate-700 mb-4">
-                  Unused tokens can be refunded within 14 days of purchase. Used tokens (for issued invoices) 
+                  Unused tokens can be refunded within 14 days of purchase. Used tokens (for issued invoices)
                   are non-refundable. All refunds are processed to the original payment method within 5-10 business days.
                 </p>
                 <Button href="/refund" variant="outline" size="sm">
@@ -344,7 +344,7 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                   <div className="flex items-start gap-3">
                     <div className="text-amber-600 font-semibold text-sm">⚠️ Payment Issues</div>
                     <p className="text-amber-800 text-sm">
-                      If your payment is declined, check your card details and billing address. 
+                      If your payment is declined, check your card details and billing address.
                       For large amounts, contact support for bank transfer options.
                     </p>
                   </div>
@@ -360,16 +360,16 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                 <div className="p-6">
                   <h3 className="font-semibold text-slate-900 mb-4">Quick Actions</h3>
                   <div className="space-y-3">
-                    <Button 
+                    <Button
                       href={`/pricing?amount=${customAmount}&currency=${selectedCurrency}`}
                       className="w-full"
                       onClick={() => handleTopUpClick()}
                     >
                       Top up tokens
                     </Button>
-                    <Button 
-                      href="/token-calculator" 
-                      variant="outline" 
+                    <Button
+                      href="/token-calculator"
+                      variant="outline"
                       className="w-full"
                     >
                       Open Token Calculator

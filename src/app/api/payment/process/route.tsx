@@ -7,7 +7,7 @@ import { InvoicePDF } from "@/components/pdf/InvoicePDF";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
+
     // Валидация обязательных полей
     if (!body.email || !body.amount || !body.currency || !body.tokens) {
       return NextResponse.json(
@@ -78,11 +78,11 @@ export async function POST(req: Request) {
     // Создаем Document (инвойс) для отправки по email
     let invoiceDocumentId: string | null = null;
     let invoiceSent = false;
-    
+
     console.log(`📧 Starting invoice creation and sending process...`);
     console.log(`📧 RESEND_API_KEY exists: ${!!process.env.RESEND_API_KEY}`);
     console.log(`📧 SMTP_USER: ${process.env.SMTP_USER || 'not set'}`);
-    
+
     try {
       // Получаем данные компании пользователя
       const company = await prisma.company.findUnique({
@@ -142,15 +142,15 @@ export async function POST(req: Request) {
       if (process.env.RESEND_API_KEY && process.env.SMTP_USER) {
         try {
           console.log(`📧 Sending invoice email to: ${body.email}`);
-          
+
           const resend = new Resend(process.env.RESEND_API_KEY);
-          
+
           // Генерируем PDF с помощью @react-pdf/renderer
           let pdfBuffer: Buffer | null = null;
           try {
             console.log(`📄 Generating PDF for invoice: ${invoiceDocumentId}`);
             console.log(`📄 Using @react-pdf/renderer (no Chromium required)`);
-            
+
             // Создаем PDF документ с помощью React PDF
             const pdfDoc = (
               <InvoicePDF
@@ -183,10 +183,10 @@ export async function POST(req: Request) {
                 notes={`Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`}
               />
             );
-            
+
             // Рендерим PDF в Buffer
             pdfBuffer = await renderToBuffer(pdfDoc);
-            
+
             console.log(`✅ PDF generated successfully with @react-pdf/renderer, size: ${pdfBuffer.length} bytes`);
           } catch (pdfError: any) {
             console.error("❌ Failed to generate PDF with @react-pdf/renderer:", pdfError);
@@ -197,7 +197,7 @@ export async function POST(req: Request) {
             });
             // Продолжаем отправку email без PDF, если генерация не удалась
           }
-          
+
           // Текстовая версия для лучшей доставляемости
           const emailText = `Invoice ${invoiceNumber} - CV Makers
 
@@ -246,14 +246,14 @@ https://cv-makers.co.uk`;
               <p style="margin: 5px 0 0; font-size: 14px; color: #cbd5e1;">CV Makers</p>
             </td>
           </tr>
-          
+
           <!-- Content -->
           <tr>
             <td style="padding: 30px;">
               <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1e293b;">
                 Thank you for your purchase! Your payment has been successfully processed and your account has been credited.
               </p>
-              
+
               <!-- Order Details -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f8fafc; border-radius: 6px; padding: 20px;">
                 <tr>
@@ -280,7 +280,7 @@ https://cv-makers.co.uk`;
                   </td>
                 </tr>
               </table>
-              
+
               <!-- Payment Summary -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #ecfdf5; border-radius: 6px; padding: 20px;">
                 <tr>
@@ -311,18 +311,18 @@ https://cv-makers.co.uk`;
                   </td>
                 </tr>
               </table>
-              
+
               <p style="margin: 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">
                 You can now use your tokens to create CVs and resumes.
               </p>
             </td>
           </tr>
-          
+
           <!-- Footer -->
           <tr>
             <td style="padding: 20px 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 10px; font-size: 14px; color: #64748b; line-height: 1.6;">
-                If you have any questions, please contact us at 
+                If you have any questions, please contact us at
                 <a href="mailto:info@cv-makers.co.uk" style="color: #3b82f6; text-decoration: none;">info@cv-makers.co.uk</a>
               </p>
               <p style="margin: 0; font-size: 12px; color: #94a3b8;">
@@ -408,7 +408,7 @@ https://cv-makers.co.uk`;
       meta: err.meta,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     });
-    
+
     // Более детальные сообщения об ошибках для диагностики
     let errorMessage = "Payment processing failed";
     if (err.code === 'P2003') {
@@ -420,10 +420,10 @@ https://cv-makers.co.uk`;
     } else if (err.message) {
       errorMessage = err.message;
     }
-    
+
     return NextResponse.json(
-      { 
-        ok: false, 
+      {
+        ok: false,
         error: errorMessage,
         code: err.code || undefined,
       },

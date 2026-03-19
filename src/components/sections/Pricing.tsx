@@ -60,7 +60,7 @@ export default function Pricing() {
           const gbpAmount = plan.price ? parseFloat(plan.price.replace(/[£,]/g, '')) : 0;
           const tokens = convertToTokens(gbpAmount, 'GBP').tokens;
           const convertedAmount = convertTokensToCurrency(tokens, currency);
-          
+
           return (
             <PlanCard
               key={plan.name}

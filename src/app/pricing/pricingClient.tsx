@@ -124,7 +124,7 @@ export default function PricingClient() {
   return (
     <div className="bg-slate-50 min-h-screen">
       <Section className="py-12">
-        <motion.div 
+        <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,7 +135,7 @@ export default function PricingClient() {
             Choose a plan and proceed to secure checkout.
           </p>
 
-          <motion.div 
+          <motion.div
             className="mt-6 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -164,7 +164,7 @@ export default function PricingClient() {
           </motion.div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="mt-10 grid md:grid-cols-3 lg:grid-cols-4 gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

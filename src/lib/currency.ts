@@ -29,10 +29,10 @@ export interface CurrencyConversion {
 export function convertToTokens(amount: number, currency: Currency): CurrencyConversion {
   // Convert to GBP first
   const gbpAmount = amount / EXCHANGE_RATES[currency];
-  
+
   // Calculate tokens (1 GBP = 100 tokens)
   const tokens = Math.floor(gbpAmount * TOKENS_PER_GBP);
-  
+
   return {
     amount,
     currency,
@@ -64,7 +64,7 @@ export function formatCurrency(amount: number, currency: Currency): string {
     EUR: '€',
     USD: '$',
   };
-  
+
   return `${symbols[currency]}${amount.toFixed(2)}`;
 }
 

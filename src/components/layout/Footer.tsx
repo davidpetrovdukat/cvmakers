@@ -65,7 +65,7 @@ export default function Footer() {
             <div className="font-semibold text-slate-900">Product</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {PRODUCT_LINKS.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={item.label}
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -85,7 +85,7 @@ export default function Footer() {
             <div className="font-semibold text-slate-900">Help</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {HELP_LINKS.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={item.label}
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -105,7 +105,7 @@ export default function Footer() {
             <div className="font-semibold text-slate-900">Legal</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {LEGAL_LINKS.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={item.label}
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -125,7 +125,7 @@ export default function Footer() {
             <div className="font-semibold text-slate-900">Company</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {COMPANY_DETAILS.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={item.text}
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -149,7 +149,7 @@ export default function Footer() {
             <div className="font-semibold text-slate-900">Socials</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {SOCIAL_LINKS.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={item.label}
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -182,7 +182,14 @@ export default function Footer() {
               alt="MasterCard"
               width={60}
               height={24}
-              className="h-6 w-auto"
+              className="h-10 w-auto"
+            />
+            <Image
+              src="/pci-dss-compliant-logo-vector.svg"
+              alt="MasterCard"
+              width={120}
+              height={50}
+              className="h-20 w-auto"
             />
           </div>
         </div>

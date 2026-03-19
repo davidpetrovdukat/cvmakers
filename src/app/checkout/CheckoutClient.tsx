@@ -66,7 +66,7 @@ export default function CheckoutClient() {
 
       // Платеж успешно обработан
       console.log("✅ Payment approved:", data.orderMerchantId);
-      
+
       // Сохраняем orderMerchantId для истории
       if (data.orderMerchantId) {
         localStorage.setItem("orderMerchantId", data.orderMerchantId);
@@ -74,7 +74,7 @@ export default function CheckoutClient() {
 
       // Показываем сообщение об успехе
       setSuccess(true);
-      
+
       // Очищаем данные checkout
       localStorage.removeItem("checkoutData");
 
