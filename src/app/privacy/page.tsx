@@ -111,8 +111,8 @@ export default function PrivacyPage() {
     <PolicyPage
       title="Privacy Policy"
       sections={sections}
-      effectiveDate="16.09.2025"
-      lastUpdated="18.09.2025"
+      effectiveDate="06.10.2025"
+      lastUpdated="06.10.2025"
       version="v1.0.6"
       helpEmail="info@cv-makers.co.uk"
       showRegionToggle={false}
