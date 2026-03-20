@@ -29,9 +29,8 @@ const LEGAL_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: 'Facebook', href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'LinkedIn', href: '#' },
+  { label: 'Instagram', href: 'https://www.instagram.com/cvmakers.uk/' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/112488156' },
 ];
 
 const COMPANY_DETAILS = [
