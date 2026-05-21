@@ -213,7 +213,6 @@ export default function CheckoutClient() {
             <div className="space-y-3 text-gray-700">
               <div className="flex justify-between"><span>Plan</span><span className="font-medium">{checkout.planId}</span></div>
               <div className="flex justify-between"><span>Price</span><span>{checkout.amount.toFixed(2)} {checkout.currency}</span></div>
-              <div className="flex justify-between"><span>VAT ({checkout.vatRate}%)</span><span>{checkout.vatAmount.toFixed(2)} {checkout.currency}</span></div>
               <div className="border-t border-gray-300 my-3"></div>
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>

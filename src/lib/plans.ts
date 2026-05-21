@@ -1,4 +1,5 @@
-import { PRICING_PLANS, convertToTokens, formatCurrency, Currency } from './currency';
+import { convertToTokens, Currency } from './currency';
+import { PRICING_PLANS } from './data';
 
 export const pricingPlans = PRICING_PLANS;
 

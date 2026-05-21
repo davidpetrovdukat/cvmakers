@@ -93,8 +93,7 @@ export async function POST(req: Request) {
       // Формируем данные для инвойса
       const invoiceDate = new Date().toISOString().split('T')[0];
       const invoiceNumber = `INV-${orderMerchantId}`;
-      const vatAmount = body.vatAmount || 0;
-      const subtotal = body.amount - vatAmount;
+      const subtotal = Number(body.amount || 0);
 
       console.log(`📧 Creating invoice document: ${invoiceNumber}`);
 
@@ -127,7 +126,7 @@ export async function POST(req: Request) {
             content: [
               {
                 heading: "Payment Summary",
-                text: `Order ID: ${orderMerchantId}\n\nDescription: ${body.description || `Top-up: ${body.planId || "Payment"}`}\n\nTokens: ${tokensToAdd.toLocaleString()}\nSubtotal: ${body.currency} ${subtotal.toFixed(2)}\nVAT: ${body.currency} ${vatAmount.toFixed(2)}\nTotal: ${body.currency} ${(body.amount).toFixed(2)}`,
+                text: `Order ID: ${orderMerchantId}\n\nDescription: ${body.description || `Top-up: ${body.planId || "Payment"}`}\n\nTokens: ${tokensToAdd.toLocaleString()}\nTotal: ${body.currency} ${subtotal.toFixed(2)}`,
               },
             ],
             notes: `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`,
@@ -175,8 +174,8 @@ export async function POST(req: Request) {
                 payment={{
                   tokens: tokensToAdd,
                   subtotal,
-                  vat: vatAmount,
-                  total: body.amount,
+                  vat: 0,
+                  total: subtotal,
                   currency: body.currency,
                   newBalance,
                 }}
@@ -213,9 +212,7 @@ Description: ${body.description || `Top-up: ${body.planId || "Payment"}`}
 
 PAYMENT SUMMARY
 Tokens credited: ${tokensToAdd.toLocaleString()}
-Subtotal: ${body.currency} ${subtotal.toFixed(2)}
-VAT: ${body.currency} ${vatAmount.toFixed(2)}
-Total paid: ${body.currency} ${(body.amount).toFixed(2)}
+Total paid: ${body.currency} ${subtotal.toFixed(2)}
 New balance: ${newBalance.toLocaleString()} tokens
 
 You can now use your tokens to create CVs and resumes.
@@ -292,16 +289,8 @@ https://cv-makers.co.uk`;
                         <td style="color: #1e293b; font-size: 14px; font-weight: bold;">${tokensToAdd.toLocaleString()}</td>
                       </tr>
                       <tr>
-                        <td style="color: #64748b; font-size: 14px;">Subtotal:</td>
-                        <td style="color: #1e293b; font-size: 14px;">${body.currency} ${subtotal.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td style="color: #64748b; font-size: 14px;">VAT:</td>
-                        <td style="color: #1e293b; font-size: 14px;">${body.currency} ${vatAmount.toFixed(2)}</td>
-                      </tr>
-                      <tr>
                         <td style="color: #64748b; font-size: 14px; font-weight: bold;">Total paid:</td>
-                        <td style="color: #1e293b; font-size: 16px; font-weight: bold;">${body.currency} ${(body.amount).toFixed(2)}</td>
+                        <td style="color: #1e293b; font-size: 16px; font-weight: bold;">${body.currency} ${subtotal.toFixed(2)}</td>
                       </tr>
                       <tr>
                         <td style="color: #64748b; font-size: 14px;">New balance:</td>

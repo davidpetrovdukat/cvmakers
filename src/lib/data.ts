@@ -1,24 +1,29 @@
 import { PricingPlan, Testimonial, Feature, TemplateInfo } from '@/types';
-import { convertToTokens, formatCurrency } from './currency';
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
+    id: 'plan-starter',
     name: 'Quick Start',
-    price: formatCurrency(5.00, 'GBP'),
+    gbpAmount: 5.0,
+    tokens: 500,
     points: ['Manual token top-up', 'No subscription', 'Preview included'],
     cta: 'Buy Tokens',
     popular: false,
   },
   {
+    id: 'plan-pro',
     name: 'Job Hunter',
-    price: formatCurrency(15.00, 'GBP'),
+    gbpAmount: 15.0,
+    tokens: 1500,
     points: ['Manual token top-up', 'Branding options', 'Priority support'],
     cta: 'Buy Tokens',
     popular: true,
   },
   {
+    id: 'plan-business',
     name: 'Career Boost',
-    price: formatCurrency(30.00, 'GBP'),
+    gbpAmount: 30.0,
+    tokens: 3000,
     points: ['Manual token top-up', 'Team access', 'Integrations roadmap'],
     cta: 'Buy Tokens',
     popular: false,

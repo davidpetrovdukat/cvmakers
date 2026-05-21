@@ -254,12 +254,14 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
             {payment.currency} {payment.subtotal.toFixed(2)}
           </Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>VAT:</Text>
-          <Text style={styles.detailValue}>
-            {payment.currency} {payment.vat.toFixed(2)}
-          </Text>
-        </View>
+        {payment.vat > 0 && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>VAT:</Text>
+            <Text style={styles.detailValue}>
+              {payment.currency} {payment.vat.toFixed(2)}
+            </Text>
+          </View>
+        )}
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total paid:</Text>
           <Text style={styles.totalValue}>

@@ -3,17 +3,25 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { useState } from 'react';
-import type { Currency } from '@/lib/currency';
+import type { Currency, ExchangeRateSnapshot } from '@/lib/currency';
 import { convertToTokens } from '@/lib/currency';
 
-export default function CustomPlanCard({ currency, onRequest }: { currency: Currency; onRequest: (data: { name: string; price: number; currency: Currency }) => void; }) {
+export default function CustomPlanCard({
+  currency,
+  exchangeRates,
+  onRequest,
+}: {
+  currency: Currency;
+  exchangeRates?: ExchangeRateSnapshot;
+  onRequest: (data: { name: string; price: number; currency: Currency; tokens: number }) => void;
+}) {
   const [priceInput, setPriceInput] = useState<string>('5');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const min = 0.01;
   const numericPrice = parseFloat(priceInput || '0');
   const validNumber = Number.isFinite(numericPrice);
 
-  const tokens = validNumber ? convertToTokens(numericPrice, currency).tokens : 0;
+  const tokens = validNumber ? convertToTokens(numericPrice, currency, exchangeRates).tokens : 0;
   const reduceMotion = useReducedMotion();
 
   const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -26,6 +34,7 @@ export default function CustomPlanCard({ currency, onRequest }: { currency: Curr
         name: 'Custom',
         price: numericPrice,
         currency: currency,
+        tokens,
       });
     }
   };

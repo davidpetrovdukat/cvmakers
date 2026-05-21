@@ -18,8 +18,10 @@ export interface Theme {
 }
 
 export interface PricingPlan {
+  id: string;
   name: string;
-  price: string;
+  gbpAmount: number;
+  tokens: number;
   points: string[];
   cta: string;
   popular: boolean;

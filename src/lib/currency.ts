@@ -1,17 +1,26 @@
-// Currency conversion system with GBP as base currency
-// 1.00 GBP = 100 tokens
-
 export type Currency = 'GBP' | 'EUR' | 'USD';
 
-// Exchange rates relative to GBP (base currency)
-export const EXCHANGE_RATES: Record<Currency, number> = {
-  GBP: 1.0,    // Base currency
-  EUR: 1.15,   // 1 GBP = 1.15 EUR (approximate)
-  USD: 1.27,   // 1 GBP = 1.27 USD (approximate, updated Jan 2025)
+export const TOKENS_PER_GBP = 100;
+
+export type ExchangeRateSnapshot = {
+  base: 'EUR';
+  rates: Record<Currency, number>;
+  asOf: string;
+  fetchedAt: string;
+  source: 'ecb' | 'fallback';
 };
 
-// Token conversion rate
-export const TOKENS_PER_GBP = 100;
+export const DEFAULT_EXCHANGE_RATE_SNAPSHOT: ExchangeRateSnapshot = {
+  base: 'EUR',
+  rates: {
+    EUR: 1,
+    GBP: 0.86438,
+    USD: 1.1555,
+  },
+  asOf: '2026-03-20',
+  fetchedAt: '2026-03-20T16:00:00.000Z',
+  source: 'fallback',
+};
 
 export interface CurrencyConversion {
   amount: number;
@@ -20,17 +29,37 @@ export interface CurrencyConversion {
   gbpEquivalent: number;
 }
 
-/**
- * Convert any currency amount to tokens based on GBP as base currency
- * @param amount - Amount in the specified currency
- * @param currency - Source currency
- * @returns CurrencyConversion object with tokens and GBP equivalent
- */
-export function convertToTokens(amount: number, currency: Currency): CurrencyConversion {
-  // Convert to GBP first
-  const gbpAmount = amount / EXCHANGE_RATES[currency];
+function getSnapshot(snapshot?: ExchangeRateSnapshot): ExchangeRateSnapshot {
+  return snapshot ?? DEFAULT_EXCHANGE_RATE_SNAPSHOT;
+}
 
-  // Calculate tokens (1 GBP = 100 tokens)
+export function convertCurrency(
+  amount: number,
+  from: Currency,
+  to: Currency,
+  snapshot?: ExchangeRateSnapshot,
+): number {
+  if (!Number.isFinite(amount)) return 0;
+  if (from === to) return amount;
+
+  const activeSnapshot = getSnapshot(snapshot);
+  const fromRate = activeSnapshot.rates[from];
+  const toRate = activeSnapshot.rates[to];
+
+  if (!Number.isFinite(fromRate) || !Number.isFinite(toRate) || fromRate <= 0 || toRate <= 0) {
+    return 0;
+  }
+
+  const amountInEur = amount / fromRate;
+  return amountInEur * toRate;
+}
+
+export function convertToTokens(
+  amount: number,
+  currency: Currency,
+  snapshot?: ExchangeRateSnapshot,
+): CurrencyConversion {
+  const gbpAmount = convertCurrency(amount, currency, 'GBP', snapshot);
   const tokens = Math.floor(gbpAmount * TOKENS_PER_GBP);
 
   return {
@@ -41,44 +70,43 @@ export function convertToTokens(amount: number, currency: Currency): CurrencyCon
   };
 }
 
-/**
- * Convert tokens back to currency amount
- * @param tokens - Number of tokens
- * @param currency - Target currency
- * @returns Amount in the specified currency
- */
-export function convertTokensToCurrency(tokens: number, currency: Currency): number {
+export function convertTokensToCurrency(
+  tokens: number,
+  currency: Currency,
+  snapshot?: ExchangeRateSnapshot,
+): number {
   const gbpAmount = tokens / TOKENS_PER_GBP;
-  return gbpAmount * EXCHANGE_RATES[currency];
+  return convertCurrency(gbpAmount, 'GBP', currency, snapshot);
 }
 
-/**
- * Format currency amount with proper symbol and decimals
- * @param amount - Amount to format
- * @param currency - Currency code
- * @returns Formatted currency string
- */
 export function formatCurrency(amount: number, currency: Currency): string {
-  const symbols = {
-    GBP: '£',
-    EUR: '€',
-    USD: '$',
-  };
-
-  return `${symbols[currency]}${amount.toFixed(2)}`;
+  const locale = currency === 'GBP' ? 'en-GB' : currency === 'EUR' ? 'en-IE' : 'en-US';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-/**
- * Get pricing plans with proper currency conversion
- */
-export const PRICING_PLANS = [
+export type TokenBundle = {
+  id: string;
+  name: string;
+  gbpAmount: number;
+  tokens: number;
+  popular: boolean;
+  cta: string;
+  bullets: string[];
+};
+
+export const TOKEN_BUNDLES: TokenBundle[] = [
   {
     id: 'plan-starter',
     name: 'Starter',
-    gbpAmount: 5.00,
-    tokens: convertToTokens(5.00, 'GBP').tokens,
+    gbpAmount: 5.0,
+    tokens: 500,
     popular: false,
-    cta: 'Request top-up',
+    cta: 'Buy Tokens',
     bullets: [
       'Top up 500 tokens (~50 documents)',
       'No subscription',
@@ -88,10 +116,10 @@ export const PRICING_PLANS = [
   {
     id: 'plan-pro',
     name: 'Pro',
-    gbpAmount: 15.00,
-    tokens: convertToTokens(15.00, 'GBP').tokens,
+    gbpAmount: 15.0,
+    tokens: 1500,
     popular: true,
-    cta: 'Request top-up',
+    cta: 'Buy Tokens',
     bullets: [
       'Top up 1,500 tokens (~150 documents)',
       'Templates and branding',
@@ -102,10 +130,10 @@ export const PRICING_PLANS = [
   {
     id: 'plan-business',
     name: 'Business',
-    gbpAmount: 30.00,
-    tokens: convertToTokens(30.00, 'GBP').tokens,
+    gbpAmount: 30.0,
+    tokens: 3000,
     popular: false,
-    cta: 'Request top-up',
+    cta: 'Buy Tokens',
     bullets: [
       'Top up 3,000 tokens (~300 documents)',
       'Team management and roles',
@@ -115,24 +143,24 @@ export const PRICING_PLANS = [
   },
 ];
 
-export type Plan = (typeof PRICING_PLANS)[0];
+export type Plan = (typeof TOKEN_BUNDLES)[0];
 
-/**
- * Service costs in tokens
- */
+export function getBundlePrice(
+  bundle: { gbpAmount: number },
+  currency: Currency,
+  snapshot?: ExchangeRateSnapshot,
+): number {
+  return Math.round(convertCurrency(bundle.gbpAmount, 'GBP', currency, snapshot) * 100) / 100;
+}
+
 export const SERVICE_COSTS = {
-  CREATE_DRAFT: 100,        // Create CV/resume draft
-  EXPORT_PDF: 50,           // Export to PDF
-  EXPORT_DOCX: 50,          // Export to DOCX
-  AI_IMPROVE: 200,          // Improve with AI
-  PERSONAL_MANAGER: 800,    // Send to personal manager
+  CREATE_DRAFT: 100,
+  EXPORT_PDF: 50,
+  EXPORT_DOCX: 50,
+  AI_IMPROVE: 200,
+  PERSONAL_MANAGER: 800,
 } as const;
 
-/**
- * Calculate total cost for a service combination
- * @param services - Array of service keys
- * @returns Total tokens required
- */
 export function calculateServiceCost(services: (keyof typeof SERVICE_COSTS)[]): number {
   return services.reduce((total, service) => total + SERVICE_COSTS[service], 0);
 }
