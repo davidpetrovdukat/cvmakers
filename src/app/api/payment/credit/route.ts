@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         type: "Top-up",
         delta: tokensToAdd,
         balanceAfter: newBalance,
-        currency: order.currency === "EUR" ? "EUR" : "GBP",
+        currency: order.currency,
         amount: Math.round(baseAmount * 100),
         receiptUrl: `order:${orderMerchantId}`,
       },

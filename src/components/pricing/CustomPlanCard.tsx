@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { useState } from 'react';
 import type { Currency, ExchangeRateSnapshot } from '@/lib/currency';
-import { convertToTokens } from '@/lib/currency';
+import { convertToTokens, formatCurrency, getCurrencySymbol } from '@/lib/currency';
 
 export default function CustomPlanCard({
   currency,
@@ -39,7 +39,8 @@ export default function CustomPlanCard({
     }
   };
 
-  const currencyLabel = currency === 'GBP' ? String.fromCharCode(163) : currency === 'EUR' ? String.fromCharCode(8364) : '$';
+  const currencyLabel = getCurrencySymbol(currency);
+  const minimumAmount = formatCurrency(min, currency);
 
   return (
     <motion.div
@@ -68,13 +69,13 @@ export default function CustomPlanCard({
         <span className="text-base font-normal text-slate-500">/one-time</span>
       </div>
       {(!validNumber || numericPrice < min) && (
-        <div className="mt-1 text-[11px] text-red-600">Minimum amount is {currencyLabel}0.01</div>
+        <div className="mt-1 text-[11px] text-red-600">Minimum amount is {minimumAmount}</div>
       )}
       <div className="mt-1 text-xs text-slate-600">= {tokens} tokens</div>
       <ul className="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
         <li>Plan a manual top-up</li>
         <li>No subscription - pay what you need</li>
-        <li>Minimum {currencyLabel}0.01</li>
+        <li>Minimum {minimumAmount}</li>
       </ul>
       <div className="mt-6 space-y-3">
         <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">

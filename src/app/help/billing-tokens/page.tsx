@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { SERVICE_COSTS } from '@/lib/currency';
+import { Currency, SERVICE_COSTS } from '@/lib/currency';
 
 const TOKENS_PER_CURRENCY_UNIT = 100;
 const TOKENS_PER_DOCUMENT = SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF; // Create + Export PDF
@@ -18,6 +18,12 @@ const TOKEN_PACKAGES = [
   { amount: 10, currency: 'EUR', tokens: 1000 },
   { amount: 50, currency: 'EUR', tokens: 5000 },
   { amount: 100, currency: 'EUR', tokens: 10000 },
+  { amount: 10, currency: 'USD', tokens: 1000 },
+  { amount: 50, currency: 'USD', tokens: 5000 },
+  { amount: 100, currency: 'USD', tokens: 10000 },
+  { amount: 10, currency: 'TRY', tokens: 1000 },
+  { amount: 50, currency: 'TRY', tokens: 5000 },
+  { amount: 100, currency: 'TRY', tokens: 10000 },
 ];
 
 const LEDGER_SAMPLE = [
@@ -31,7 +37,7 @@ const LEDGER_SAMPLE = [
 ];
 
 export default function BillingTokensPage() {
-  const [selectedCurrency, setSelectedCurrency] = useState<'GBP' | 'EUR' | 'USD'>('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>('GBP');
   const [customAmount, setCustomAmount] = useState<number>(10);
 
   useEffect(() => {
@@ -140,12 +146,13 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
                       />
                       <select
                         value={selectedCurrency}
-                        onChange={(e) => setSelectedCurrency(e.target.value as 'GBP' | 'EUR' | 'USD')}
+                        onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
                         className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                       >
                         <option value="GBP">GBP</option>
                         <option value="EUR">EUR</option>
                         <option value="USD">USD</option>
+                        <option value="TRY">TRY</option>
                       </select>
                     </div>
                   </div>
@@ -401,5 +408,4 @@ const calculateCostPerDocument = () => COST_PER_DOCUMENT;
     </main>
   );
 }
-
 

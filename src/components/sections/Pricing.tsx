@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { PRICING_PLANS } from '@/lib/data';
 import PlanCard from '@/components/pricing/PlanCard';
 import CustomPlanCard from '@/components/pricing/CustomPlanCard';
-import { Currency, getBundlePrice, SERVICE_COSTS } from '@/lib/currency';
+import { Currency, getBundlePrice, isCurrency, SERVICE_COSTS } from '@/lib/currency';
 import { FileText, Download, FileDown, Sparkles, LayoutDashboard } from 'lucide-react';
 import { useExchangeRates } from '@/lib/useExchangeRates';
 
@@ -23,7 +23,7 @@ export default function Pricing() {
       bcRef.current = new BroadcastChannel('app-events');
       bcRef.current.onmessage = (ev: MessageEvent) => {
         const data: any = (ev as any)?.data || {};
-        if (data.type === 'currency-updated' && (data.currency === 'GBP' || data.currency === 'EUR' || data.currency === 'USD')) {
+        if (data.type === 'currency-updated' && isCurrency(data.currency)) {
           setCurrency(data.currency);
           try {
             localStorage.setItem('currency', data.currency);
@@ -34,7 +34,7 @@ export default function Pricing() {
 
     try {
       const saved = localStorage.getItem('currency');
-      if (saved === 'GBP' || saved === 'EUR' || saved === 'USD') setCurrency(saved);
+      if (isCurrency(saved)) setCurrency(saved);
     } catch {}
 
     return () => {

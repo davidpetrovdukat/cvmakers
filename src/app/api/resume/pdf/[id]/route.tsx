@@ -9,11 +9,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const resolveBaseUrl = (req: Request) => {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '');
+  }
+
   const forwardedProto = req.headers.get('x-forwarded-proto');
   const forwardedHost = req.headers.get('x-forwarded-host');
   const host = forwardedHost || req.headers.get('host');
-  const proto = forwardedProto || 'https';
   if (!host) return null;
+  const proto = forwardedProto || new URL(req.url).protocol.replace(/:$/, '');
   return `${proto}://${host}`;
 };
 
@@ -53,6 +58,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     
     if (!['cv', 'resume'].includes(doc.docType)) {
       return NextResponse.json({ error: 'Unsupported document type' }, { status: 400 });
+    }
+
+    if (!process.env.BROWSERLESS_API_KEY) {
+      return NextResponse.json({
+        error: 'PDF export is not configured',
+        details: 'BROWSERLESS_API_KEY is not configured',
+      }, { status: 500 });
     }
 
     const baseUrl = resolveBaseUrl(req);

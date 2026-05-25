@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Segmented from '@/components/ui/Segmented';
-import { convertToTokens, convertTokensToCurrency, formatCurrency as formatCurrencyLib, Currency, SERVICE_COSTS } from '@/lib/currency';
+import { convertToTokens, convertTokensToCurrency, formatCurrency as formatCurrencyLib, Currency, SERVICE_COSTS, CURRENCY_OPTIONS, isCurrency } from '@/lib/currency';
 
 const TOKENS_PER_GBP = 100;
 const MIN_TOP_UP = 0.01;
@@ -112,7 +112,7 @@ export default function TokenCalculatorPage() {
       bcRef.current = new BroadcastChannel('app-events');
       bcRef.current.onmessage = (event: MessageEvent) => {
         const data: any = (event as MessageEvent).data;
-        if (data?.type === 'currency-updated' && (data.currency === 'GBP' || data.currency === 'EUR' || data.currency === 'USD')) {
+        if (data?.type === 'currency-updated' && isCurrency(data.currency)) {
           setCurrency(data.currency);
         }
       };
@@ -132,7 +132,7 @@ export default function TokenCalculatorPage() {
 
   const estimatedCost = convertTokensToCurrency(totalTokens, currency);
   const recommendedTopUp = Math.max(MIN_TOP_UP, Math.ceil(estimatedCost * 100) / 100);
-  const tokensPerUnitLabel = currency === 'GBP' ? '£1.00' : currency === 'EUR' ? '€1.15' : '$1.27';
+  const tokensPerUnitLabel = formatCurrencyLib(convertTokensToCurrency(TOKENS_PER_GBP, currency), currency);
 
   const handleCountChange = (action: ActionKey, value: string) => {
     const parsed = Math.max(0, Math.floor(Number(value) || 0));
@@ -157,11 +157,7 @@ export default function TokenCalculatorPage() {
           <p className="mt-2 text-slate-600">Calculate tokens needed and see effective cost per document.</p>
           <div className="mt-6 flex justify-center">
             <Segmented
-              options={[
-                { label: 'GBP', value: 'GBP' },
-                { label: 'EUR', value: 'EUR' },
-                { label: 'USD', value: 'USD' },
-              ]}
+              options={CURRENCY_OPTIONS}
               value={currency}
               onChange={(value) => setCurrency(value as Currency)}
             />

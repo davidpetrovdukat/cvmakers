@@ -2,10 +2,11 @@ import {
   Currency,
   DEFAULT_EXCHANGE_RATE_SNAPSHOT,
   ExchangeRateSnapshot,
+  GBP_TO_TRY_RATE,
+  SUPPORTED_CURRENCIES,
 } from '@/lib/currency';
 
 const ECB_DAILY_RATES_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
-const SUPPORTED_CURRENCIES: Currency[] = ['EUR', 'GBP', 'USD'];
 
 function extractRate(xml: string, currency: Currency): number | null {
   if (currency === 'EUR') return 1;
@@ -45,6 +46,7 @@ export async function getExchangeRateSnapshot(): Promise<ExchangeRateSnapshot> {
       acc[currency] = rate;
       return acc;
     }, {} as Record<Currency, number>);
+    rates.TRY = rates.GBP * GBP_TO_TRY_RATE;
 
     return {
       base: 'EUR',

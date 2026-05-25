@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/pdf/InvoicePDF";
+import { isCurrency } from "@/lib/currency";
 
 export async function POST(req: Request) {
   try {
@@ -12,6 +13,13 @@ export async function POST(req: Request) {
     if (!body.email || !body.amount || !body.currency || !body.tokens) {
       return NextResponse.json(
         { ok: false, error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    if (!isCurrency(body.currency)) {
+      return NextResponse.json(
+        { ok: false, error: "Unsupported currency" },
         { status: 400 }
       );
     }

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Section from "@/components/layout/Section";
 import Segmented from "@/components/ui/Segmented";
-import { Currency, getBundlePrice } from "@/lib/currency";
+import { CURRENCY_OPTIONS, Currency, getBundlePrice, isCurrency } from "@/lib/currency";
 import { PRICING_PLANS } from "@/lib/data";
 import PlanCard from "@/components/pricing/PlanCard";
 import CustomPlanCard from "@/components/pricing/CustomPlanCard";
@@ -25,7 +25,8 @@ export default function PricingClient() {
   const [currency, setCurrency] = useState<Currency>(() => {
     if (typeof window === "undefined") return "GBP";
     try {
-      return (localStorage.getItem("currency") as Currency) || "GBP";
+      const saved = localStorage.getItem("currency");
+      return isCurrency(saved) ? saved : "GBP";
     } catch {
       return "GBP";
     }
@@ -51,7 +52,7 @@ export default function PricingClient() {
         const data: any = (ev as any)?.data || {};
         if (
           data.type === "currency-updated" &&
-          (data.currency === "GBP" || data.currency === "EUR" || data.currency === "USD")
+          isCurrency(data.currency)
         ) {
           setCurrency(data.currency);
           try {
@@ -107,11 +108,7 @@ export default function PricingClient() {
             transition={{ delay: 0.2, duration: 0.4 }}
           >
             <Segmented
-              options={[
-                { label: "GBP", value: "GBP" },
-                { label: "EUR", value: "EUR" },
-                { label: "USD", value: "USD" },
-              ]}
+              options={CURRENCY_OPTIONS}
               value={currency}
               onChange={(v) => handleCurrencyChange(v as Currency)}
             />

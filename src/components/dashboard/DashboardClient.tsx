@@ -12,12 +12,11 @@ import InvoiceA4 from '@/components/pdf/InvoiceA4';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Currency, getCurrencySymbol } from '@/lib/currency';
 
 
 
 // ТИПЫ И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-
-type Currency = 'GBP' | 'EUR' | 'USD';
 
 type Document = { id: string; title: string; updatedAt: string; status?: "Draft" | "Ready"; format?: string; docType?: string; data?: any };
 
@@ -33,7 +32,7 @@ type ProfileForm = { firstName: string; lastName: string; email: string; phone: 
 
 
 
-const currencySym = (c: Currency) => (c === 'GBP' ? 'GBP ' : c === 'EUR' ? 'EUR ' : 'USD ');
+const currencySym = (c: Currency) => `${c} `;
 
 const fmtMoney = (n: number, c: Currency) => {
 
@@ -51,7 +50,7 @@ const fmtMoney = (n: number, c: Currency) => {
 
 function money(n: number, c: Currency) {
 
-  const sym = c === 'GBP' ? '?' : c === 'EUR' ? '€' : '$';
+  const sym = getCurrencySymbol(c);
 
   const abs = Math.abs(n);
 
@@ -275,13 +274,18 @@ export default function DashboardClient() {
     const resolvedDoc = mark.document ?? invFull;
     const docType = (resolvedDoc as any).docType;
     const isResumeDocument = docType === 'cv' || docType === 'resume';
-    const downloadPath = isResumeDocument ? `/api/resume/pdf/${id}` : `/api/pdf/${id}`;
+    const documentId = (resolvedDoc as any).id || id;
+    const downloadPath = isResumeDocument ? `/api/resume/pdf/${documentId}` : `/api/pdf/${documentId}`;
     const fallbackName = (resolvedDoc as any).title || (isResumeDocument ? (docType === 'cv' ? 'CV' : 'Resume') : 'Document');
 
     try {
       const res = await fetch(downloadPath);
 
-      if (!res.ok) throw new Error('Server PDF failed');
+      if (!res.ok) {
+        const details = await res.json().catch(() => null);
+        const message = [details?.error, details?.details, details?.hint].filter(Boolean).join(': ');
+        throw new Error(message || `PDF download failed with status ${res.status}`);
+      }
 
       const blob = await res.blob();
 
@@ -295,7 +299,7 @@ export default function DashboardClient() {
 
     } catch (e) {
 
-      alert('Failed to download PDF');
+      alert(e instanceof Error ? e.message : 'Failed to download PDF');
 
     }
 
@@ -647,60 +651,6 @@ export default function DashboardClient() {
 
                         </tr>
 
-                        {viewId===inv.id && viewInv && (
-
-                          <tr className={`bg-white ${viewId===inv.id ? '' : 'border-t border-black/10'}`}>
-
-                            <td className={`px-3 py-3 ${viewId===inv.id ? 'border-l-2 border-r-2 border-b-2 border-black rounded-b-xl' : ''}`} colSpan={4}>
-
-                              <div className="p-2">
-
-                                <ModalInvoiceView
-
-                                  invoice={viewInv}
-
-                                  onClose={()=>{ setViewId(null); setViewInv(null); }}
-
-                                  onRefresh={async(id)=>{ const iv = await fetchInvoice(id); if(iv) setViewInv(iv); }}
-
-                                  onDownload={()=>ensureReadyAndDownload(viewInv.id)}
-
-                                  onSendEmail={async()=>{
-
-                                    const current = viewInv as any;
-
-                                    const defaultEmail = current?.data?.recipient?.email || '';
-
-                                    const to = prompt('Recipient email:', defaultEmail);
-
-                                    if (!to) return;
-
-                                    const r = await fetch('/api/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: to, documentId: current.id }) });
-
-                                    if (!r.ok) alert('Email send failed'); else alert('Email sent successfully!');
-
-                                  }}
-
-                                  onSave={async(next)=>{
-
-                                    const res = await fetch(`/api/documents/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
-
-                                    if (res.ok) { const j = await res.json(); setViewInv(j.document); setInvoices(prev=>prev.map(x=>x.id===j.document.id? j.document : x)); }
-
-                                    else { const j = await res.json().catch(()=>({error:'Failed'})); alert(j.error||'Failed to save'); }
-
-                                  }}
-
-                                />
-
-                              </div>
-
-                            </td>
-
-                          </tr>
-
-                        )}
-
                       </React.Fragment>
 
                     );
@@ -888,67 +838,34 @@ export default function DashboardClient() {
 
               onSendEmail={async () => {
 
-                const clientEmail = (viewInv.clientMeta?.email as string) || '';
-
-                
-
-                if (!clientEmail) {
-
-                  alert('Please add client email address first in the Edit mode.');
-
-                  return;
-
-                }
-
-
-
-                const recipientEmail = prompt("Please enter the recipient's email address:", clientEmail);
-
+                const current = viewInv as any;
+                const defaultEmail = current?.data?.recipient?.email || '';
+                const recipientEmail = prompt("Please enter the recipient's email address:", defaultEmail);
                 if (!recipientEmail) return;
 
-
-
-                const r = await markReadyIfDraft(viewInv);
-
-                if (r.ok) {
-
-                  try {
-
-                    const res = await fetch(`/api/invoices/send`, {
-
-                      method: 'POST',
-
-                      headers: { 'Content-Type': 'application/json' },
-
-                      body: JSON.stringify({ email: recipientEmail, invoiceId: viewInv.id }),
-
-                    });
-
-                    if (!res.ok) throw new Error('Failed to send email.');
-
-                    alert('Email sent successfully!');
-
-                  } catch (error) {
-
-                    console.error('Email send error:', error);
-
-                    alert('Error sending email. Please try again.');
-
+                try {
+                  const res = await fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: recipientEmail, documentId: current.id }),
+                  });
+                  if (!res.ok) {
+                    const payload = await res.json().catch(() => ({}));
+                    throw new Error(payload?.error || 'Failed to send email.');
                   }
-
-                } else {
-
-                  alert(r.err || 'Failed to prepare invoice for sending.');
-
+                  alert('Email sent successfully!');
+                } catch (error) {
+                  console.error('Email send error:', error);
+                  alert(error instanceof Error ? error.message : 'Error sending email. Please try again.');
                 }
 
               }}
 
               onSave={async(next)=>{
 
-                const res = await fetch(`/api/invoices/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
+                const res = await fetch(`/api/documents/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
 
-                if (res.ok) { const j = await res.json(); setViewInv(j.invoice); setInvoices(prev=>prev.map(x=>x.id===j.invoice.id? { ...x, client: j.invoice.client, subtotal: j.invoice.subtotal, tax: j.invoice.tax, total: j.invoice.total } : x)); }
+                if (res.ok) { const j = await res.json(); setViewInv(j.document); setInvoices(prev=>prev.map(x=>x.id===j.document.id? j.document : x)); }
 
                 else { const j = await res.json().catch(()=>({error:'Failed'})); alert(j.error||'Failed to save'); }
 
@@ -1044,27 +961,37 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
   onRefresh: (id: string) => Promise<void>;
 
-  onSave: (next: { client?: string; subtotal?: number; tax?: number; total?: number }) => Promise<void>;
+  onSave: (next: Record<string, any>) => Promise<void>;
 
 }) {
 
   const [editing, setEditing] = useState(false);
+  const invoiceData = (invoice.data || {}) as any;
+  const initialItems = Array.isArray(invoice.items) ? invoice.items : Array.isArray(invoiceData.items) ? invoiceData.items : [];
+  const displayDate = (() => {
+    const value = invoice.date || invoiceData.documentDate || invoice.createdAt || invoice.updatedAt;
+    if (!value) return '';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toISOString().slice(0, 10);
+  })();
+  const displayRecipient = invoice.clientMeta || invoiceData.recipient || {};
+  const displayCurrency = invoice.currency || invoiceData.currency || 'GBP';
 
   const [form, setForm] = useState<{ client: string; subtotal: number; tax: number; total: number }>({ client: invoice.client, subtotal: invoice.subtotal, tax: invoice.tax, total: invoice.total });
 
   const [client, setClient] = useState<{ name: string; vat: string; address: string; city: string; country: string; email: string }>({
 
-    name: invoice.client || '',
+    name: invoice.client || displayRecipient.name || displayRecipient.company || '',
 
-    vat: (invoice.clientMeta?.vat as string) || '',
+    vat: (displayRecipient?.vat as string) || '',
 
-    address: (invoice.clientMeta?.address as string) || '',
+    address: (displayRecipient?.address as string) || '',
 
-    city: (invoice.clientMeta?.city as string) || '',
+    city: (displayRecipient?.city as string) || '',
 
-    country: (invoice.clientMeta?.country as string) || '',
+    country: (displayRecipient?.country as string) || '',
 
-    email: (invoice.clientMeta?.email as string) || '',
+    email: (displayRecipient?.email as string) || '',
 
   });
 
@@ -1092,13 +1019,13 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
   const [items, setItems] = useState<Array<{ desc: string; qty: number; rate: number; tax: number }>>(
 
-    (invoice.items || []).map((it: any) => ({ desc: it.description, qty: it.quantity, rate: Number(it.rate), tax: it.tax }))
+    initialItems.map((it: any) => ({ desc: it.description ?? it.desc ?? '', qty: it.quantity ?? it.qty ?? 0, rate: Number(it.rate), tax: it.tax ?? 0 }))
 
   );
 
   const [rateInputs, setRateInputs] = useState<string[]>(
 
-    (invoice.items || []).map((it: any) => {
+    initialItems.map((it: any) => {
 
       const v = Number(it.rate ?? 0);
 
@@ -1126,19 +1053,22 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
     setForm({ client: invoice.client, subtotal: invoice.subtotal, tax: invoice.tax, total: invoice.total });
 
+    const nextData = (invoice.data || {}) as any;
+    const nextRecipient = invoice.clientMeta || nextData.recipient || {};
+
     setClient({
 
-      name: invoice.client || '',
+      name: invoice.client || nextRecipient.name || nextRecipient.company || '',
 
-      vat: (invoice.clientMeta?.vat as string) || '',
+      vat: (nextRecipient?.vat as string) || '',
 
-      address: (invoice.clientMeta?.address as string) || '',
+      address: (nextRecipient?.address as string) || '',
 
-      city: (invoice.clientMeta?.city as string) || '',
+      city: (nextRecipient?.city as string) || '',
 
-      country: (invoice.clientMeta?.country as string) || '',
+      country: (nextRecipient?.country as string) || '',
 
-      email: (invoice.clientMeta?.email as string) || '',
+      email: (nextRecipient?.email as string) || '',
 
     });
 
@@ -1164,9 +1094,10 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
     });
 
-    setItems((invoice.items || []).map((it: any) => ({ desc: it.description, qty: it.quantity, rate: Number(it.rate), tax: it.tax })));
+    const nextItems = Array.isArray(invoice.items) ? invoice.items : Array.isArray(nextData.items) ? nextData.items : [];
+    setItems(nextItems.map((it: any) => ({ desc: it.description ?? it.desc ?? '', qty: it.quantity ?? it.qty ?? 0, rate: Number(it.rate), tax: it.tax ?? 0 })));
 
-    setRateInputs((invoice.items || []).map((it: any) => {
+    setRateInputs(nextItems.map((it: any) => {
 
       const v = Number(it.rate ?? 0);
 
@@ -1214,7 +1145,7 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
             <div className="flex flex-wrap items-center gap-3 w-full">
 
-              <div className="text-sm text-slate-700">Totals: Subtotal <b>{fmtMoney(totals.subtotal, invoice.currency)}</b> · Tax <b>{fmtMoney(totals.tax, invoice.currency)}</b> · Total <b>{fmtMoney(totals.total, invoice.currency)}</b></div>
+              <div className="text-sm text-slate-700">Totals: Subtotal <b>{fmtMoney(totals.subtotal, displayCurrency)}</b> · Tax <b>{fmtMoney(totals.tax, displayCurrency)}</b> · Total <b>{fmtMoney(totals.total, displayCurrency)}</b></div>
 
               <div className="ml-auto flex items-center gap-2">
 
@@ -1222,22 +1153,23 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
                   await fetch('/api/company', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(company) });
 
-                  await fetch(`/api/invoices/${invoice.id}`, {
-
-                    method: 'PATCH',
-
-                    headers: { 'Content-Type': 'application/json' },
-
-                    body: JSON.stringify({
-
-                      client: client.name,
-
-                      clientMeta: { vat: client.vat, address: client.address, city: client.city, country: client.country, email: client.email, iban: (client as any).iban || '', bankName: (client as any).bankName || '', bic: (client as any).bic || '' },
-
-                      items: items.map(it=>({ description: it.desc, quantity: it.qty, rate: it.rate, tax: it.tax }))
-
-                    })
-
+                  await onSave({
+                    data: {
+                      ...(invoice.data || {}),
+                      recipient: {
+                        ...(invoice.data?.recipient || {}),
+                        name: client.name,
+                        vat: client.vat,
+                        address: client.address,
+                        city: client.city,
+                        country: client.country,
+                        email: client.email,
+                        iban: (client as any).iban || '',
+                        bankName: (client as any).bankName || '',
+                        bic: (client as any).bic || '',
+                      },
+                      items: items.map(it=>({ description: it.desc, quantity: it.qty, rate: it.rate, tax: it.tax })),
+                    },
                   });
 
                   setEditing(false);
@@ -1268,23 +1200,23 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
             <InvoiceA4
 
-              currency={invoice.currency}
+              currency={displayCurrency}
 
-              items={(invoice.items||[]).map((it:any)=>({ desc: it.description, qty: it.quantity, rate: it.rate, tax: it.tax }))}
+              items={items.map((it:any)=>({ desc: it.desc, qty: it.qty, rate: it.rate, tax: it.tax }))}
 
-              subtotal={invoice.subtotal}
+              subtotal={invoice.subtotal ?? totals.subtotal}
 
-              taxTotal={invoice.tax}
+              taxTotal={invoice.tax ?? totals.tax}
 
-              total={invoice.total}
+              total={invoice.total ?? totals.total}
 
               sender={{ company: invoice.user?.company?.name || 'Company', vat: invoice.user?.company?.vat, address: invoice.user?.company?.address1, city: invoice.user?.company?.city, country: invoice.user?.company?.country, iban: invoice.user?.company?.iban, bankName: invoice.user?.company?.bankName, bic: invoice.user?.company?.bic }}
 
-              client={{ name: invoice.client, vat: (invoice.clientMeta?.vat as string) || undefined, address: (invoice.clientMeta?.address as string) || undefined, city: (invoice.clientMeta?.city as string) || undefined, country: (invoice.clientMeta?.country as string) || undefined }}
+              client={{ name: invoice.client || displayRecipient.name || displayRecipient.company, vat: (displayRecipient?.vat as string) || undefined, address: (displayRecipient?.address as string) || undefined, city: (displayRecipient?.city as string) || undefined, country: (displayRecipient?.country as string) || undefined }}
 
-              invoiceNo={invoice.number}
+              invoiceNo={invoice.number || invoiceData.documentNo}
 
-              invoiceDate={new Date(invoice.date).toISOString().slice(0,10)}
+              invoiceDate={displayDate}
 
               invoiceDue={''}
 

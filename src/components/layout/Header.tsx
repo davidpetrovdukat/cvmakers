@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { THEME } from '@/lib/theme';
 import Segmented from '@/components/ui/Segmented';
 import { useSession, signOut } from 'next-auth/react';
+import { CURRENCY_OPTIONS, Currency, isCurrency } from '@/lib/currency';
 
 export default function Header() {
   const pathname = usePathname();
@@ -21,16 +22,55 @@ export default function Header() {
   const isTokenCalc = pathname === '/token-calculator';
   const isAbout = pathname === '/about';
   const isDashboard = pathname === '/dashboard';
-  const [currency, setCurrency] = useState<'GBP' | 'EUR' | 'USD'>('GBP');
+  const [currency, setCurrency] = useState<Currency>('GBP');
   const [helpOpen, setHelpOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const refreshTokens = useCallback(async () => {
+    if (status !== 'authenticated') {
+      setTokens(null);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/me', { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await response.json().catch(() => null);
+      const tokenBalance = payload?.user?.tokenBalance;
+      if (typeof tokenBalance === 'number') {
+        setTokens(tokenBalance);
+      }
+    } catch {}
+  }, [status]);
+
   useEffect(() => {
     const t = (session?.user as any)?.tokenBalance;
-    if (typeof t === 'number') setTokens(t);
-  }, [session]);
+    if (typeof t === 'number' && tokens === null) setTokens(t);
+  }, [session, tokens]);
+
+  useEffect(() => {
+    refreshTokens();
+  }, [pathname, refreshTokens]);
+
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const onFocus = () => {
+      refreshTokens();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshTokens();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [refreshTokens, status]);
 
   useEffect(() => {
     try {
@@ -40,7 +80,7 @@ export default function Header() {
         if (data.type === 'tokens-updated' && typeof data.tokenBalance === 'number') {
           setTokens(data.tokenBalance);
         }
-        if (data.type === 'currency-updated' && (data.currency === 'GBP' || data.currency === 'EUR' || data.currency === 'USD')) {
+        if (data.type === 'currency-updated' && isCurrency(data.currency)) {
           setCurrency(data.currency);
           try { localStorage.setItem('currency', data.currency); } catch {}
         }
@@ -54,11 +94,11 @@ export default function Header() {
     // Read saved currency client-side to avoid SSR hydration mismatch
     try {
       const saved = localStorage.getItem('currency');
-      if (saved === 'GBP' || saved === 'EUR' || saved === 'USD') setCurrency(saved);
+      if (isCurrency(saved)) setCurrency(saved);
     } catch {}
   }, []);
 
-  const onCurrencyChange = (next: 'GBP'|'EUR'|'USD') => {
+  const onCurrencyChange = (next: Currency) => {
     setCurrency(next);
     try { localStorage.setItem('currency', next); } catch {}
     try { bcRef.current?.postMessage({ type: 'currency-updated', currency: next }); } catch {}
@@ -143,9 +183,9 @@ export default function Header() {
         <div className="hidden sm:flex items-center gap-3">
           <div className="hidden md:block">
             <Segmented
-              options={[{ label: 'GBP', value: 'GBP' }, { label: 'EUR', value: 'EUR' }, { label: 'USD', value: 'USD' }]}
+              options={CURRENCY_OPTIONS}
               value={currency}
-              onChange={(v)=>onCurrencyChange(v as 'GBP'|'EUR'|'USD')}
+              onChange={(v)=>onCurrencyChange(v as Currency)}
             />
           </div>
           {!signedIn ? (
@@ -240,9 +280,9 @@ export default function Header() {
                   <div className="mt-4">
                     <div className="mb-2 text-xs text-slate-500">Currency</div>
                     <Segmented
-                      options={[{ label: 'GBP', value: 'GBP' }, { label: 'EUR', value: 'EUR' }, { label: 'USD', value: 'USD' }]}
+                      options={CURRENCY_OPTIONS}
                       value={currency}
-                      onChange={(v)=>onCurrencyChange(v as 'GBP'|'EUR'|'USD')}
+                      onChange={(v)=>onCurrencyChange(v as Currency)}
                     />
                   </div>
 
