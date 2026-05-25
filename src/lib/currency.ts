@@ -1,4 +1,4 @@
-export type Currency = 'GBP' | 'EUR' | 'USD';
+export type Currency = 'GBP' | 'EUR' | 'USD' | 'TRY';
 
 export const TOKENS_PER_GBP = 100;
 
@@ -16,6 +16,7 @@ export const DEFAULT_EXCHANGE_RATE_SNAPSHOT: ExchangeRateSnapshot = {
     EUR: 1,
     GBP: 0.86438,
     USD: 1.1555,
+    TRY: 36.5,
   },
   asOf: '2026-03-20',
   fetchedAt: '2026-03-20T16:00:00.000Z',
@@ -80,7 +81,7 @@ export function convertTokensToCurrency(
 }
 
 export function formatCurrency(amount: number, currency: Currency): string {
-  const locale = currency === 'GBP' ? 'en-GB' : currency === 'EUR' ? 'en-IE' : 'en-US';
+  const locale = currency === 'GBP' ? 'en-GB' : currency === 'EUR' ? 'en-IE' : currency === 'TRY' ? 'tr-TR' : 'en-US';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,

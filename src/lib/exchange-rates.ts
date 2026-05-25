@@ -5,7 +5,7 @@ import {
 } from '@/lib/currency';
 
 const ECB_DAILY_RATES_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
-const SUPPORTED_CURRENCIES: Currency[] = ['EUR', 'GBP', 'USD'];
+const SUPPORTED_CURRENCIES: Currency[] = ['EUR', 'GBP', 'USD', 'TRY'];
 
 function extractRate(xml: string, currency: Currency): number | null {
   if (currency === 'EUR') return 1;
