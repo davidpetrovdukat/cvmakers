@@ -116,7 +116,7 @@ export default function PricingClient() {
         </motion.div>
 
         <motion.div
-          className="mt-10 grid gap-6 md:grid-cols-3 lg:grid-cols-4"
+          className="mt-10 grid gap-6 md:grid-cols-3 lg:grid-cols-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
@@ -132,7 +132,7 @@ export default function PricingClient() {
                 name={plan.name}
                 popular={plan.popular}
                 bullets={plan.points}
-                cta="Buy Tokens"
+                cta={plan.cta}
                 amount={getBundlePrice(plan, currency, exchangeRates)}
                 currency={currency}
                 tokens={plan.tokens}

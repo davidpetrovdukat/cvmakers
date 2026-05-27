@@ -17,7 +17,7 @@ export default function CustomPlanCard({
 }) {
   const [priceInput, setPriceInput] = useState<string>('5');
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const min = 0.01;
+  const min = 5;
   const numericPrice = parseFloat(priceInput || '0');
   const validNumber = Number.isFinite(numericPrice);
 
@@ -52,10 +52,7 @@ export default function CustomPlanCard({
       transition={{ duration: 0.4 }}
       viewport={{ once: true }}
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Top-Up</h3>
-        <span className="text-xs rounded-full px-2 py-1 bg-slate-100 border border-[#E2E8F0] text-slate-700">EARLY / SUPPORTER</span>
-      </div>
+      <h3 className="text-lg font-semibold">Custom</h3>
       <div className="mt-3 flex items-center gap-2">
         <span className="text-3xl font-bold">{currencyLabel}</span>
         <input
@@ -66,7 +63,6 @@ export default function CustomPlanCard({
           className="w-24 text-3xl font-bold bg-transparent border-b border-[#E2E8F0] focus:outline-none focus:ring-0"
           aria-label="Custom price"
         />
-        <span className="text-base font-normal text-slate-500">/one-time</span>
       </div>
       {(!validNumber || numericPrice < min) && (
         <div className="mt-1 text-[11px] text-red-600">Minimum amount is {minimumAmount}</div>

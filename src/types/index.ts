@@ -25,6 +25,7 @@ export interface PricingPlan {
   points: string[];
   cta: string;
   popular: boolean;
+  billing?: 'one-time' | 'annual';
 }
 
 export interface Testimonial {

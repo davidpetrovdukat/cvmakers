@@ -76,7 +76,6 @@ export default function PlanCard({
 
           <div className="mt-3 text-3xl font-bold text-slate-900">
             {formatCurrency(amount, currency)}
-            <span className="text-base font-normal text-slate-500">/one-time</span>
           </div>
 
           <div className="mt-1 text-sm text-slate-600">{tokens.toLocaleString()} tokens</div>

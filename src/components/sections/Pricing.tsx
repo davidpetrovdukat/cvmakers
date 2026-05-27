@@ -61,7 +61,7 @@ export default function Pricing() {
         <p className="mt-2 text-slate-600">Tokens are charged per action. No subscription or hidden fees.</p>
       </motion.div>
 
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-5">
         {PRICING_PLANS.map((plan) => (
           <PlanCard
             key={plan.id}
