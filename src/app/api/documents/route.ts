@@ -3,33 +3,48 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { SERVICE_COSTS } from '@/lib/currency';
+import { getRequestLocale, getTranslator } from '@/i18n/server';
+import { normalizeLocale } from '@/i18n/config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // List documents for current user
 export async function GET() {
+  const locale = await getRequestLocale();
+  const t = getTranslator(locale);
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: t('api.unauthorized') }, { status: 401 });
     const userId = (session.user as any).id as string;
     const docs = await prisma.document.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' } });
     return NextResponse.json({ documents: docs });
   } catch (err) {
     console.error('[DOCUMENTS_GET_ERROR]', err);
-    return NextResponse.json({ error: 'Failed to load documents' }, { status: 500 });
+    return NextResponse.json({ error: t('api.failedLoadDocuments') }, { status: 500 });
   }
 }
 
 // Create a document and charge tokens (configurable, default 100)
 export async function POST(req: Request) {
+  const requestLocale = await getRequestLocale();
+  const t = getTranslator(requestLocale);
   const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session?.user) return NextResponse.json({ error: t('api.unauthorized') }, { status: 401 });
   const userId = (session.user as any).id as string;
 
   const body = await req.json().catch(() => ({}));
-  const title = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : 'Untitled Document';
-  const data = typeof body.data === 'object' && body.data !== null ? body.data : {};
+  const locale = normalizeLocale(body.locale || body?.data?.meta?.locale || requestLocale);
+  const localeT = getTranslator(locale);
+  const title = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : localeT('documents.untitled');
+  const rawData = typeof body.data === 'object' && body.data !== null ? body.data : {};
+  const data = {
+    ...rawData,
+    meta: {
+      ...(typeof rawData.meta === 'object' && rawData.meta !== null ? rawData.meta : {}),
+      locale,
+    },
+  };
   const actionRaw = typeof body.action === 'string' ? body.action.toLowerCase() : 'draft';
   const allowedActions = new Set(['draft', 'export-pdf', 'export-docx']);
   const action = allowedActions.has(actionRaw) ? actionRaw : 'draft';
@@ -50,8 +65,8 @@ export async function POST(req: Request) {
   try {
     return await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId }, select: { tokenBalance: true } });
-      if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      if (user.tokenBalance < charge) return NextResponse.json({ error: 'Not enough tokens' }, { status: 400 });
+      if (!user) return NextResponse.json({ error: localeT('api.userNotFound') }, { status: 404 });
+      if (user.tokenBalance < charge) return NextResponse.json({ error: localeT('api.notEnoughTokens') }, { status: 400 });
 
       const doc = await tx.document.create({
         data: {
@@ -79,9 +94,8 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error('[DOCUMENTS_POST_ERROR]', err);
-    return NextResponse.json({ error: 'Failed to create document' }, { status: 500 });
+    return NextResponse.json({ error: t('api.failedCreateDocument') }, { status: 500 });
   }
 }
-
 
 

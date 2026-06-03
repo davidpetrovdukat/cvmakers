@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getOpenAIClient, getDefaultOpenAIModel } from '@/lib/openai';
+import { getRequestLocale, getTranslator } from '@/i18n/server';
+import { normalizeLocale } from '@/i18n/config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -229,6 +231,7 @@ function buildPrompt(profile: Profile, docType: DocType, action: Action): string
     `${tone}`,
     'Clean grammar, highlight impact, and keep the structure identical.',
     'Preserve existing sections. Improve bullet points with strong verbs and quantifiable results when possible.',
+    'Preserve the language used by the applicant. Do not translate user-entered CV or resume content unless the applicant already wrote it in that language.',
     'Do not fabricate experience or education entries that do not exist.',
     'Keep each experience item\'s id field unchanged. If a field is missing, fall back to the original value.',
     'Return valid JSON that matches this shape:',
@@ -305,9 +308,11 @@ function computeReleaseAt(now: Date): { releaseAt: Date; hours: number } {
 }
 
 export async function POST(req: Request) {
+  const requestLocale = await getRequestLocale();
+  const requestT = getTranslator(requestLocale);
   const session = await getServerSession(authOptions);
   if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: requestT('api.unauthorized') }, { status: 401 });
   }
   const userId = (session.user as any).id as string;
 
@@ -315,9 +320,11 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    return NextResponse.json({ error: requestT('api.invalidPayload') }, { status: 400 });
   }
 
+  const locale = normalizeLocale(body?.locale || body?.data?.meta?.locale || requestLocale);
+  const t = getTranslator(locale);
   const action: Action = body?.action === 'manager' ? 'manager' : 'ai';
   const docType: DocType = body?.docType === 'cv' ? 'cv' : 'resume';
   const template = typeof body?.template === 'string' && body.template ? body.template : 'classic';
@@ -327,10 +334,10 @@ export async function POST(req: Request) {
 
   const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { tokenBalance: true } });
   if (!currentUser) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ error: t('api.userNotFound') }, { status: 404 });
   }
   if (currentUser.tokenBalance < charge) {
-    return NextResponse.json({ error: 'Not enough tokens' }, { status: 400 });
+    return NextResponse.json({ error: t('api.notEnoughTokens') }, { status: 400 });
   }
 
   let improvedProfile: Profile = baseProfile;
@@ -338,7 +345,7 @@ export async function POST(req: Request) {
     improvedProfile = await improveProfileWithAI(baseProfile, docType, action);
   } catch (error) {
     console.error('[RESUME_IMPROVE_OPENAI_ERROR]', error);
-    return NextResponse.json({ error: 'Unable to contact OpenAI' }, { status: 502 });
+    return NextResponse.json({ error: t('api.openaiUnavailable') }, { status: 502 });
   }
 
   const requestedAt = new Date();
@@ -356,6 +363,7 @@ export async function POST(req: Request) {
       releaseAt: releaseAtIso,
       releaseWindowHours: releaseData?.hours ?? null,
       requestedAt: requestedAt.toISOString(),
+      locale,
     },
   }));
 
@@ -372,10 +380,10 @@ export async function POST(req: Request) {
           userId,
           title:
             improvedProfile.name && improvedProfile.name.trim()
-              ? `${improvedProfile.name.trim()} ${docType === 'cv' ? 'CV' : 'Resume'}`
+              ? `${improvedProfile.name.trim()} ${docType === 'cv' ? 'CV' : locale === 'tr' ? 'Özgeçmiş' : 'Resume'}`
               : docType === 'cv'
-              ? 'CV Draft'
-              : 'Resume Draft',
+              ? t('documents.cvDraft')
+              : t('documents.resumeDraft'),
           docType,
           status: action === 'manager' ? 'Sent' : 'Ready',
           format: action === 'manager' ? 'pending-manager' : 'pdf',
@@ -412,14 +420,14 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'INSUFFICIENT_TOKENS') {
-        return NextResponse.json({ error: 'Not enough tokens' }, { status: 400 });
+        return NextResponse.json({ error: t('api.notEnoughTokens') }, { status: 400 });
       }
       if (error.message === 'USER_NOT_FOUND') {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        return NextResponse.json({ error: t('api.userNotFound') }, { status: 404 });
       }
     }
     console.error('[RESUME_IMPROVE_ERROR]', error);
-    return NextResponse.json({ error: 'Failed to save improved document' }, { status: 500 });
+    return NextResponse.json({ error: t('api.failedSaveDocument') }, { status: 500 });
   }
 }
 

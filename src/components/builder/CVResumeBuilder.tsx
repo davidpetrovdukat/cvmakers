@@ -5,6 +5,7 @@ import { ResumeTemplates, ResumeTemplateKey, Profile } from '@/components/resume
 import { useSearchParams } from 'next/navigation';
 import { ScaledA4 } from '@/components/resume/ui';
 import { BUILDER_TEMPLATE_KEYS } from '@/lib/resume/templates';
+import { useI18n } from '@/i18n/LocaleProvider';
 
 export type DocType = 'resume' | 'cv';
 
@@ -13,28 +14,245 @@ type BuilderProps = {
   initialTemplate?: ResumeTemplateKey | string;
 };
 
-const TEMPLATE_LABELS: Record<ResumeTemplateKey, string> = {
-  classic: 'Classic ATS',
-  split: 'Modern Split',
-  serif: 'Elegant Serif',
-  tech: 'Tech Compact',
-};
-
-const TEMPLATE_OPTIONS = BUILDER_TEMPLATE_KEYS.map((key) => ({
-  key,
-  label: TEMPLATE_LABELS[key],
-}));
-
 type StepKey = 'personal' | 'summary' | 'experience' | 'education' | 'skills' | 'review';
 
-const steps: { key: StepKey; n: number; label: string }[] = [
-  { key: 'personal', n: 1, label: 'Personal details' },
-  { key: 'summary', n: 2, label: 'Summary' },
-  { key: 'experience', n: 3, label: 'Experience' },
-  { key: 'education', n: 4, label: 'Education' },
-  { key: 'skills', n: 5, label: 'Skills' },
-  { key: 'review', n: 6, label: 'Review and finish' },
+const steps: { key: StepKey; n: number }[] = [
+  { key: 'personal', n: 1 },
+  { key: 'summary', n: 2 },
+  { key: 'experience', n: 3 },
+  { key: 'education', n: 4 },
+  { key: 'skills', n: 5 },
+  { key: 'review', n: 6 },
 ];
+
+const BUILDER_COPY = {
+  en: {
+    templates: {
+      classic: 'Classic ATS',
+      split: 'Modern Split',
+      serif: 'Elegant Serif',
+      tech: 'Tech Compact',
+    },
+    docTypes: { resume: 'Resume', cv: 'CV' },
+    steps: {
+      personal: 'Personal details',
+      summary: 'Summary',
+      experience: 'Experience',
+      education: 'Education',
+      skills: 'Skills',
+      review: 'Review and finish',
+    },
+    costs: 'Costs',
+    costCreate: 'Create',
+    costExport: 'Export',
+    costManager: 'Manager',
+    costAi: 'AI',
+    template: 'Template',
+    tokenActions: 'Token actions',
+    tokenActionsBody: (doc: string) => `Use tokens to generate your ${doc}.`,
+    creatingDraft: 'Creating draft...',
+    create: 'Create (100 tok.)',
+    creatingPdf: 'Creating PDF...',
+    exportPdf: 'Create & Export PDF (150 tok.)',
+    creatingDocx: 'Creating DOCX...',
+    exportDocx: 'Create & Export DOCX (150 tok.)',
+    aiAssist: 'AI assist',
+    aiBody: 'Let our model rewrite selected sections or generate bullet ideas.',
+    fillRequiredTitle: 'Please fill all required fields first',
+    creatingPerfect: (doc: string) => `We are creating the perfect ${doc} for you...`,
+    improveAi: 'Improve with AI (200 tok.)',
+    fillRequired: 'Fill all sections (personal details, summary, experience, education, skills) to enable AI improvement.',
+    sendingManager: 'Sending to your personal manager...',
+    sendManager: 'Send to personal manager (800 tok.)',
+    tips: 'Tips',
+    tipItems: [
+      'Use action verbs and numbers in experience bullets.',
+      'Keep the summary to three or four clear sentences.',
+      'Tailor keywords to match the vacancy.',
+    ],
+    notices: {
+      saveError: 'Unable to save draft',
+      downloadError: 'Failed to download file',
+      saved: (tokens: number) => `Draft saved to dashboard. Spent ${tokens} tokens.`,
+      exported: (format: string, tokens: number) => `${format.toUpperCase()} ready. Spent ${tokens} tokens.`,
+      exportError: (format: string) => `Unable to export ${format.toUpperCase()}`,
+      aiError: 'Unable to improve resume',
+      aiDone: 'AI polished your document and downloaded the PDF.',
+      managerError: 'Unable to send to personal manager',
+      managerPending: 'within the next few hours',
+      managerDone: (doc: string, date: string) => `Request sent. Your personal manager will share the polished ${doc} by ${date}.`,
+      managerQueued: 'Request sent to your personal manager. Expect an update within 3-6 hours.',
+      loadError: 'Failed to load document',
+      notFound: 'Document not found',
+    },
+    forms: {
+      name: 'Name',
+      namePlaceholder: 'Enter name',
+      surname: 'Surname',
+      surnamePlaceholder: 'Enter surname',
+      role: 'Role / Title',
+      rolePlaceholder: 'e.g. Product Manager',
+      email: 'Email',
+      phone: 'Phone',
+      phonePlaceholder: 'Phone number',
+      location: 'Location',
+      locationPlaceholder: 'City, Country',
+      website: 'Website',
+      websitePlaceholder: 'Personal site (optional)',
+      linkedin: 'LinkedIn',
+      photoUrl: 'Photo URL',
+      photoUrlPlaceholder: 'Link to photo',
+      profileAlt: 'Profile',
+      removePhoto: 'Remove photo',
+      uploadPhoto: 'Upload photo',
+      professionalSummary: 'Professional summary',
+      summaryPlaceholder: 'Summarize your experience and strengths',
+      writingTips: 'Writing tips',
+      summaryTips: ['Use measurable outcomes (percentages, revenue, team size).', 'Keep it to three or four concise sentences.'],
+      addRole: 'Add role',
+      title: 'Title',
+      titlePlaceholder: 'Job title',
+      company: 'Company',
+      companyPlaceholder: 'Company',
+      start: 'Start',
+      startPlaceholder: 'Start date',
+      end: 'End',
+      endPlaceholder: 'End date or Present',
+      bullets: 'Bullets (one per line)',
+      bulletsPlaceholder: 'Use action verbs + results',
+      remove: 'Remove',
+      addEducation: 'Add education',
+      degree: 'Degree',
+      degreePlaceholder: 'Degree or certificate',
+      school: 'School',
+      schoolPlaceholder: 'School',
+      year: 'Year',
+      yearPlaceholder: 'Year completed',
+      addSkill: 'Add a skill',
+      add: 'Add',
+      reviewName: 'Name',
+      reviewRole: 'Role',
+      reviewExperience: 'Experience entries',
+      reviewEducation: 'Education entries',
+      reviewSkills: 'Skills',
+      reviewHint: 'Use the export buttons to generate PDF or DOCX files.',
+    },
+  },
+  tr: {
+    templates: {
+      classic: 'Klasik ATS',
+      split: 'Modern Bölmeli',
+      serif: 'Zarif Serif',
+      tech: 'Teknik Kompakt',
+    },
+    docTypes: { resume: 'Özgeçmiş', cv: 'CV' },
+    steps: {
+      personal: 'Kişisel bilgiler',
+      summary: 'Özet',
+      experience: 'Deneyim',
+      education: 'Eğitim',
+      skills: 'Yetkinlikler',
+      review: 'Gözden geçir ve tamamla',
+    },
+    costs: 'Maliyetler',
+    costCreate: 'Oluştur',
+    costExport: 'Dışa aktar',
+    costManager: 'Yönetici',
+    costAi: 'YZ',
+    template: 'Şablon',
+    tokenActions: 'Token işlemleri',
+    tokenActionsBody: (doc: string) => `${doc} oluşturmak için token kullanın.`,
+    creatingDraft: 'Taslak oluşturuluyor...',
+    create: 'Oluştur (100 tok.)',
+    creatingPdf: 'PDF oluşturuluyor...',
+    exportPdf: 'PDF oluştur ve indir (150 tok.)',
+    creatingDocx: 'DOCX oluşturuluyor...',
+    exportDocx: 'DOCX oluştur ve indir (150 tok.)',
+    aiAssist: 'Yapay zekâ desteği',
+    aiBody: 'Modelimizin bölümleri yeniden yazmasına veya madde önerileri oluşturmasına izin verin.',
+    fillRequiredTitle: 'Lütfen önce tüm zorunlu alanları doldurun',
+    creatingPerfect: (doc: string) => `Sizin için ideal ${doc} hazırlanıyor...`,
+    improveAi: 'Yapay zekâ ile iyileştir (200 tok.)',
+    fillRequired: 'Yapay zekâ iyileştirmesini etkinleştirmek için tüm bölümleri doldurun: kişisel bilgiler, özet, deneyim, eğitim ve yetkinlikler.',
+    sendingManager: 'Kişisel yöneticinize gönderiliyor...',
+    sendManager: 'Kişisel yöneticiye gönder (800 tok.)',
+    tips: 'İpuçları',
+    tipItems: [
+      'Deneyim maddelerinde eylem fiilleri ve sayılar kullanın.',
+      'Özeti üç veya dört net cümleyle sınırlayın.',
+      'Anahtar kelimeleri başvurduğunuz ilana göre uyarlayın.',
+    ],
+    notices: {
+      saveError: 'Taslak kaydedilemedi',
+      downloadError: 'Dosya indirilemedi',
+      saved: (tokens: number) => `Taslak panele kaydedildi. ${tokens} token harcandı.`,
+      exported: (format: string, tokens: number) => `${format.toUpperCase()} hazır. ${tokens} token harcandı.`,
+      exportError: (format: string) => `${format.toUpperCase()} dışa aktarılamadı`,
+      aiError: 'Özgeçmiş iyileştirilemedi',
+      aiDone: 'Yapay zekâ belgenizi iyileştirdi ve PDF indirildi.',
+      managerError: 'Kişisel yöneticiye gönderilemedi',
+      managerPending: 'önümüzdeki birkaç saat içinde',
+      managerDone: (doc: string, date: string) => `Talep gönderildi. Kişisel yöneticiniz iyileştirilmiş ${doc} belgesini ${date} tarihine kadar paylaşacak.`,
+      managerQueued: 'Talep kişisel yöneticinize gönderildi. 3-6 saat içinde güncelleme bekleyebilirsiniz.',
+      loadError: 'Belge yüklenemedi',
+      notFound: 'Belge bulunamadı',
+    },
+    forms: {
+      name: 'Ad',
+      namePlaceholder: 'Adınızı girin',
+      surname: 'Soyad',
+      surnamePlaceholder: 'Soyadınızı girin',
+      role: 'Pozisyon / Ünvan',
+      rolePlaceholder: 'örn. Ürün Yöneticisi',
+      email: 'E-posta',
+      phone: 'Telefon',
+      phonePlaceholder: 'Telefon numarası',
+      location: 'Konum',
+      locationPlaceholder: 'Şehir, Ülke',
+      website: 'Web sitesi',
+      websitePlaceholder: 'Kişisel site (isteğe bağlı)',
+      linkedin: 'LinkedIn',
+      photoUrl: 'Fotoğraf URL',
+      photoUrlPlaceholder: 'Fotoğraf bağlantısı',
+      profileAlt: 'Profil',
+      removePhoto: 'Fotoğrafı kaldır',
+      uploadPhoto: 'Fotoğraf yükle',
+      professionalSummary: 'Profesyonel özet',
+      summaryPlaceholder: 'Deneyiminizi ve güçlü yönlerinizi özetleyin',
+      writingTips: 'Yazım ipuçları',
+      summaryTips: ['Ölçülebilir sonuçlar kullanın: yüzde, gelir, ekip büyüklüğü.', 'Üç veya dört kısa ve net cümle yazın.'],
+      addRole: 'Rol ekle',
+      title: 'Ünvan',
+      titlePlaceholder: 'İş ünvanı',
+      company: 'Şirket',
+      companyPlaceholder: 'Şirket',
+      start: 'Başlangıç',
+      startPlaceholder: 'Başlangıç tarihi',
+      end: 'Bitiş',
+      endPlaceholder: 'Bitiş tarihi veya Devam ediyor',
+      bullets: 'Maddeler (her satıra bir tane)',
+      bulletsPlaceholder: 'Eylem fiili + sonuç kullanın',
+      remove: 'Kaldır',
+      addEducation: 'Eğitim ekle',
+      degree: 'Derece',
+      degreePlaceholder: 'Derece veya sertifika',
+      school: 'Okul',
+      schoolPlaceholder: 'Okul',
+      year: 'Yıl',
+      yearPlaceholder: 'Tamamlanma yılı',
+      addSkill: 'Yetkinlik ekle',
+      add: 'Ekle',
+      reviewName: 'Ad',
+      reviewRole: 'Pozisyon',
+      reviewExperience: 'Deneyim kaydı',
+      reviewEducation: 'Eğitim kaydı',
+      reviewSkills: 'Yetkinlikler',
+      reviewHint: 'PDF veya DOCX oluşturmak için dışa aktarma düğmelerini kullanın.',
+    },
+  },
+} as const;
+
+type BuilderCopy = (typeof BUILDER_COPY)[keyof typeof BUILDER_COPY];
 
 function normalizeDocType(value?: DocType | string): DocType {
   return value === 'cv' ? 'cv' : 'resume';
@@ -195,6 +413,8 @@ function isProfileComplete(p: Profile): boolean {
 }
 
 export default function CVResumeBuilder({ initialDocType, initialTemplate }: BuilderProps) {
+  const { locale, t } = useI18n();
+  const copy = BUILDER_COPY[locale];
   const defaultDocType = normalizeDocType(initialDocType);
   const defaultTemplate = normalizeTemplate(initialTemplate);
 
@@ -377,6 +597,10 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
 
   const template = templatesByDoc[docType];
   const profile = profiles[docType];
+  const templateOptions = React.useMemo(
+    () => BUILDER_TEMPLATE_KEYS.map((key) => ({ key, label: copy.templates[key] })),
+    [copy],
+  );
   const profileComplete = React.useMemo(() => isProfileComplete(profile), [profile]);
   const SelectedTemplate = ResumeTemplates[template] ?? ResumeTemplates.classic;
 
@@ -416,7 +640,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
     const response = await fetch(url);
     if (!response.ok) {
       const info = await response.json().catch(() => ({}));
-      throw new Error(info?.error || 'Failed to download file');
+      throw new Error(info?.error || copy.notices.downloadError);
     }
     const blob = await response.blob();
     const href = URL.createObjectURL(blob);
@@ -427,7 +651,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(href);
-  }, [setProfiles]);
+  }, [copy.notices.downloadError, setProfiles]);
 
   const createDocument = React.useCallback(
     async (action: 'draft' | 'export-pdf' | 'export-docx'): Promise<CreateDocResult> => {
@@ -440,8 +664,9 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
       }
       const payload = {
         title: profilePayload.name
-          ? `${profilePayload.name} ${docType === 'cv' ? 'CV' : 'Resume'}`
-          : docType === 'cv' ? 'CV Draft' : 'Resume Draft',
+          ? `${profilePayload.name} ${docType === 'cv' ? copy.docTypes.cv : copy.docTypes.resume}`
+          : docType === 'cv' ? t('documents.cvDraft') : t('documents.resumeDraft'),
+        locale,
         action,
         docType,
         template,
@@ -449,7 +674,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
           docType,
           template,
           profile: profilePayload,
-          meta: { generatedAt: new Date().toISOString() },
+          meta: { generatedAt: new Date().toISOString(), locale },
         },
       };
 
@@ -461,7 +686,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.error || 'Unable to save document');
+        throw new Error(result?.error || copy.notices.saveError);
       }
 
       if (typeof result?.tokenBalance === 'number') {
@@ -471,7 +696,7 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
 
       return result as CreateDocResult;
     },
-    [profile, docType, template],
+    [profile, docType, template, locale, t, copy],
   );
 
   const handleCreateDraft = React.useCallback(async () => {
@@ -481,14 +706,14 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
     try {
       const result = await createDocument('draft');
       const charged = result.charge ?? 100;
-      pushNotice('success', `Draft saved to dashboard. Spent ${charged} tokens.`);
+      pushNotice('success', copy.notices.saved(charged));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to save draft';
+      const message = error instanceof Error ? error.message : copy.notices.saveError;
       pushNotice('error', message);
     } finally {
       setBusy(null);
     }
-  }, [busy, createDocument, pushNotice]);
+  }, [busy, createDocument, pushNotice, copy]);
 
   const handleExport = React.useCallback(
     async (format: 'pdf' | 'docx') => {
@@ -502,16 +727,16 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
         const endpoint = format === 'pdf' ? `/api/resume/pdf/${documentSummary.id}` : `/api/resume/docx/${documentSummary.id}`;
         await downloadBinary(endpoint, filename);
         const charged = result.charge ?? 150;
-        pushNotice('success', `${format.toUpperCase()} ready. Spent ${charged} tokens.`);
+        pushNotice('success', copy.notices.exported(format, charged));
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : `Unable to export ${format.toUpperCase()}`;
+          error instanceof Error ? error.message : copy.notices.exportError(format);
         pushNotice('error', message);
       } finally {
         setBusy(null);
       }
     },
-    [busy, createDocument, downloadBinary, pushNotice, sanitizeFilename],
+    [busy, createDocument, downloadBinary, pushNotice, sanitizeFilename, copy],
   );
 
   const handleAI = React.useCallback(async () => {
@@ -527,11 +752,12 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
           docType,
           template,
           profile,
+          locale,
         }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload?.error || 'Unable to improve resume');
+        throw new Error(payload?.error || copy.notices.aiError);
       }
       if (payload?.profile) {
         const nextProfile = coerceProfileData(payload.profile);
@@ -543,18 +769,18 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
       try { bcRef.current?.postMessage({ type: 'documents-updated' }); } catch {}
       const docSummary = payload?.document as { id: string; title?: string } | undefined;
       if (docSummary?.id) {
-        const fallback = docSummary.title || `${docType === 'cv' ? 'CV' : 'Resume'} AI`;
+        const fallback = docSummary.title || `${docType === 'cv' ? copy.docTypes.cv : copy.docTypes.resume} AI`;
         const filename = sanitizeFilename(fallback, 'pdf');
         await downloadBinary(`/api/resume/pdf/${docSummary.id}`, filename);
       }
-      pushNotice('success', 'AI polished your document and downloaded the PDF.');
+      pushNotice('success', copy.notices.aiDone);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to improve resume';
+      const message = error instanceof Error ? error.message : copy.notices.aiError;
       pushNotice('error', message);
     } finally {
       setBusy(null);
     }
-  }, [busy, docType, template, profile, downloadBinary, pushNotice, setProfiles]);
+  }, [busy, docType, template, profile, locale, downloadBinary, pushNotice, setProfiles, sanitizeFilename, copy]);
 
   const handleManager = React.useCallback(async () => {
     if (busy) return;
@@ -569,11 +795,12 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
           docType,
           template,
           profile,
+          locale,
         }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload?.error || 'Unable to send to personal manager');
+        throw new Error(payload?.error || copy.notices.managerError);
       }
       if (payload?.profile) {
         const nextProfile = coerceProfileData(payload.profile);
@@ -587,19 +814,19 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
       if (releaseAtIso) {
         const releaseAt = new Date(releaseAtIso);
         const formatted = Number.isNaN(releaseAt.getTime())
-          ? 'within the next few hours'
+          ? copy.notices.managerPending
           : releaseAt.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-        pushNotice('success', `Request sent. Your personal manager will share the polished ${docType === 'cv' ? 'CV' : 'resume'} by ${formatted}.`);
+        pushNotice('success', copy.notices.managerDone(docType === 'cv' ? copy.docTypes.cv : copy.docTypes.resume, formatted));
       } else {
-        pushNotice('success', 'Request sent to your personal manager. Expect an update within 3-6 hours.');
+        pushNotice('success', copy.notices.managerQueued);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to send to personal manager';
+      const message = error instanceof Error ? error.message : copy.notices.managerError;
       pushNotice('error', message);
     } finally {
       setBusy(null);
     }
-  }, [busy, docType, template, profile, pushNotice, setProfiles]);
+  }, [busy, docType, template, profile, locale, pushNotice, setProfiles, copy]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -612,15 +839,15 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
               value={docType}
               onChange={(event) => setDocType(event.target.value as DocType)}
             >
-              <option value="resume">Resume</option>
-              <option value="cv">CV</option>
+              <option value="resume">{copy.docTypes.resume}</option>
+              <option value="cv">{copy.docTypes.cv}</option>
             </select>
             <select
               className="col-span-2 rounded-md border border-slate-300 bg-white px-2 py-1"
               value={template}
               onChange={(event) => handleTemplateChange(event.target.value as ResumeTemplateKey)}
             >
-              {TEMPLATE_OPTIONS.map((option) => (
+              {templateOptions.map((option) => (
                 <option key={option.key} value={option.key}>
                   {option.label}
                 </option>
@@ -637,31 +864,31 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
                 <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] text-slate-600">
                   {item.n}
                 </span>
-                {item.label}
+                {copy.steps[item.key]}
               </button>
             ))}
           </nav>
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-            <div className="font-semibold">Costs</div>
+            <div className="font-semibold">{copy.costs}</div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <CostPill label="Create" value="100 tok." />
-              <CostPill label="Export" value="150 tok." />
-              <CostPill label="Manager" value="800 tok." />
-              <CostPill label="AI" value="200 tok." />
+              <CostPill label={copy.costCreate} value="100 tok." />
+              <CostPill label={copy.costExport} value="150 tok." />
+              <CostPill label={copy.costManager} value="800 tok." />
+              <CostPill label={copy.costAi} value="200 tok." />
             </div>
           </div>
         </aside>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <Editor step={step} profile={profile} setProfile={setProfile} />
+          <Editor step={step} profile={profile} setProfile={setProfile} copy={copy} />
         </section>
 
         <section className="space-y-3" id="preview-pane">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between text-sm">
               <div>
-                <div className="text-xs text-slate-500">Template</div>
-                <div className="font-semibold">{TEMPLATE_LABELS[template]}</div>
+                <div className="text-xs text-slate-500">{copy.template}</div>
+                <div className="font-semibold">{copy.templates[template]}</div>
               </div>
             </div>
             <div className="mt-3 rounded-xl border border-slate-200 bg-slate-100 p-3">
@@ -672,29 +899,29 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm text-sm">
-            <div className="font-semibold">Token actions</div>
-            <p className="mt-1 text-slate-600">Use tokens to generate your {docType === 'cv' ? 'CV' : 'resume'}.</p>
+            <div className="font-semibold">{copy.tokenActions}</div>
+            <p className="mt-1 text-slate-600">{copy.tokenActionsBody(docType === 'cv' ? copy.docTypes.cv : copy.docTypes.resume)}</p>
             <div className="mt-3 flex flex-col gap-2">
               <button
                 className="rounded-md bg-slate-900 px-3 py-2 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleCreateDraft}
                 disabled={busy !== null}
               >
-                {busy === 'draft' ? 'Creating draft...' : 'Create (100 tok.)'}
+                {busy === 'draft' ? copy.creatingDraft : copy.create}
               </button>
               <button
                 className="rounded-md border border-slate-300 px-3 py-2 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => handleExport('pdf')}
                 disabled={busy !== null}
               >
-                {busy === 'pdf' ? 'Creating PDF...' : 'Create & Export PDF (150 tok.)'}
+                {busy === 'pdf' ? copy.creatingPdf : copy.exportPdf}
               </button>
               <button
                 className="rounded-md border border-slate-300 px-3 py-2 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => handleExport('docx')}
                 disabled={busy !== null}
               >
-                {busy === 'docx' ? 'Creating DOCX...' : 'Create & Export DOCX (150 tok.)'}
+                {busy === 'docx' ? copy.creatingDocx : copy.exportDocx}
               </button>
             </div>
             {notice && (
@@ -707,8 +934,8 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm text-sm">
-            <div className="font-semibold">AI assist</div>
-            <p className="mt-1 text-slate-600">Let our model rewrite selected sections or generate bullet ideas.</p>
+            <div className="font-semibold">{copy.aiAssist}</div>
+            <p className="mt-1 text-slate-600">{copy.aiBody}</p>
             <div className="mt-3 flex flex-col gap-2">
               <button
                 id="btn-ai"
@@ -719,20 +946,20 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
                 }`}
                 onClick={handleAI}
                 disabled={busy !== null || !profileComplete}
-                title={!profileComplete ? 'Please fill all required fields first' : undefined}
+                title={!profileComplete ? copy.fillRequiredTitle : undefined}
               >
                 {busy === 'ai' ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
-                    We are creating the perfect {docType === 'cv' ? 'CV' : 'resume'} for you...
+                    {copy.creatingPerfect(docType === 'cv' ? copy.docTypes.cv : copy.docTypes.resume)}
                   </span>
                 ) : (
-                  'Improve with AI (200 tok.)'
+                  copy.improveAi
                 )}
               </button>
               {!profileComplete && (
                 <p className="text-xs text-amber-600">
-                  Fill all sections (personal details, summary, experience, education, skills) to enable AI improvement.
+                  {copy.fillRequired}
                 </p>
               )}
               <button
@@ -748,21 +975,19 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
                 {busy === 'manager' ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
-                    Sending to your personal manager...
+                    {copy.sendingManager}
                   </span>
                 ) : (
-                  'Send to personal manager (800 tok.)'
+                  copy.sendManager
                 )}
               </button>
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
-            <div className="font-semibold">Tips</div>
+            <div className="font-semibold">{copy.tips}</div>
             <ul className="mt-2 space-y-1">
-              <li>Use action verbs and numbers in experience bullets.</li>
-              <li>Keep the summary to three or four clear sentences.</li>
-              <li>Tailor keywords to match the vacancy.</li>
+              {copy.tipItems.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </section>
@@ -771,20 +996,20 @@ export default function CVResumeBuilder({ initialDocType, initialTemplate }: Bui
   );
 }
 
-function Editor({ step, profile, setProfile }: { step: StepKey; profile: Profile; setProfile: React.Dispatch<React.SetStateAction<Profile>> }) {
+function Editor({ step, profile, setProfile, copy }: { step: StepKey; profile: Profile; setProfile: React.Dispatch<React.SetStateAction<Profile>>; copy: BuilderCopy }) {
   switch (step) {
     case 'personal':
-      return <PersonalForm profile={profile} setProfile={setProfile} />;
+      return <PersonalForm profile={profile} setProfile={setProfile} copy={copy} />;
     case 'summary':
-      return <SummaryForm profile={profile} setProfile={setProfile} />;
+      return <SummaryForm profile={profile} setProfile={setProfile} copy={copy} />;
     case 'experience':
-      return <ExperienceForm profile={profile} setProfile={setProfile} />;
+      return <ExperienceForm profile={profile} setProfile={setProfile} copy={copy} />;
     case 'education':
-      return <EducationForm profile={profile} setProfile={setProfile} />;
+      return <EducationForm profile={profile} setProfile={setProfile} copy={copy} />;
     case 'skills':
-      return <SkillsForm profile={profile} setProfile={setProfile} />;
+      return <SkillsForm profile={profile} setProfile={setProfile} copy={copy} />;
     case 'review':
-      return <ReviewPanel profile={profile} />;
+      return <ReviewPanel profile={profile} copy={copy} />;
     default:
       return null;
   }
@@ -809,7 +1034,7 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea {...rest} className={`w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ${className || ''}`} />;
 }
 
-function PersonalForm({ profile, setProfile }: EditorProps) {
+function PersonalForm({ profile, setProfile, copy }: EditorProps) {
   const nameParts = React.useMemo(() => {
     const parts = (profile.name || '').trim().split(/\s+/).filter(Boolean);
     const first = profile.firstName ?? parts[0] ?? '';
@@ -862,47 +1087,47 @@ function PersonalForm({ profile, setProfile }: EditorProps) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold">Personal details</h2>
+      <h2 className="text-lg font-semibold">{copy.steps.personal}</h2>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <Field label="Name">
-          <Input value={nameParts.first} placeholder="Enter name" onChange={(event) => handleFirstNameChange(event.target.value)} />
+        <Field label={copy.forms.name}>
+          <Input value={nameParts.first} placeholder={copy.forms.namePlaceholder} onChange={(event) => handleFirstNameChange(event.target.value)} />
         </Field>
-        <Field label="Surname">
-          <Input value={nameParts.last} placeholder="Enter surname" onChange={(event) => handleLastNameChange(event.target.value)} />
+        <Field label={copy.forms.surname}>
+          <Input value={nameParts.last} placeholder={copy.forms.surnamePlaceholder} onChange={(event) => handleLastNameChange(event.target.value)} />
         </Field>
-        <Field label="Role / Title">
-          <Input value={profile.role} placeholder="e.g. Product Manager" onChange={(event) => setProfile((prev) => ({ ...prev, role: event.target.value }))} />
+        <Field label={copy.forms.role}>
+          <Input value={profile.role} placeholder={copy.forms.rolePlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, role: event.target.value }))} />
         </Field>
-        <Field label="Email">
+        <Field label={copy.forms.email}>
           <Input value={profile.contacts.email} placeholder="name@email.com" onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, email: event.target.value } }))} />
         </Field>
-        <Field label="Phone">
-          <Input value={profile.contacts.phone} placeholder="Phone number" onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, phone: event.target.value } }))} />
+        <Field label={copy.forms.phone}>
+          <Input value={profile.contacts.phone} placeholder={copy.forms.phonePlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, phone: event.target.value } }))} />
         </Field>
-        <Field label="Location">
-          <Input value={profile.contacts.location} placeholder="City, Country" onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, location: event.target.value } }))} />
+        <Field label={copy.forms.location}>
+          <Input value={profile.contacts.location} placeholder={copy.forms.locationPlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, location: event.target.value } }))} />
         </Field>
-        <Field label="Website">
-          <Input value={profile.contacts.website || ''} placeholder="Personal site (optional)" onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, website: event.target.value } }))} />
+        <Field label={copy.forms.website}>
+          <Input value={profile.contacts.website || ''} placeholder={copy.forms.websitePlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, website: event.target.value } }))} />
         </Field>
-        <Field label="LinkedIn">
+        <Field label={copy.forms.linkedin}>
           <Input value={profile.contacts.linkedin || ''} placeholder="LinkedIn profile" onChange={(event) => setProfile((prev) => ({ ...prev, contacts: { ...prev.contacts, linkedin: event.target.value } }))} />
         </Field>
         {profile.photo ? (
           <div className="col-span-2 grid gap-2">
-            <Field label="Photo URL">
-              <Input value={profile.photo} placeholder="Link to photo" onChange={(event) => setProfile((prev) => ({ ...prev, photo: event.target.value }))} />
+            <Field label={copy.forms.photoUrl}>
+              <Input value={profile.photo} placeholder={copy.forms.photoUrlPlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, photo: event.target.value }))} />
             </Field>
             <div className="flex items-center gap-3">
-              <img src={profile.photo} alt="Profile" className="h-16 w-16 rounded-full object-cover border border-slate-200" />
+              <img src={profile.photo} alt={copy.forms.profileAlt} className="h-16 w-16 rounded-full object-cover border border-slate-200" />
               <button type="button" className="text-xs text-slate-500 underline" onClick={handlePhotoRemove}>
-                Remove photo
+                {copy.forms.removePhoto}
               </button>
             </div>
           </div>
         ) : (
           <label className="col-span-2 block">
-            <div className="mb-1 text-xs font-semibold text-slate-600">Upload photo</div>
+            <div className="mb-1 text-xs font-semibold text-slate-600">{copy.forms.uploadPhoto}</div>
             <input type="file" accept="image/*" onChange={handlePhotoUpload} className="text-sm" />
           </label>
         )}
@@ -911,19 +1136,18 @@ function PersonalForm({ profile, setProfile }: EditorProps) {
   );
 }
 
-function SummaryForm({ profile, setProfile }: EditorProps) {
+function SummaryForm({ profile, setProfile, copy }: EditorProps) {
   return (
     <div>
-      <h2 className="text-lg font-semibold">Summary</h2>
+      <h2 className="text-lg font-semibold">{copy.steps.summary}</h2>
       <div className="mt-3 grid gap-3">
-        <Field label="Professional summary">
-          <Textarea rows={5} value={profile.summary} placeholder="Summarize your experience and strengths" onChange={(event) => setProfile((prev) => ({ ...prev, summary: event.target.value }))} />
+        <Field label={copy.forms.professionalSummary}>
+          <Textarea rows={5} value={profile.summary} placeholder={copy.forms.summaryPlaceholder} onChange={(event) => setProfile((prev) => ({ ...prev, summary: event.target.value }))} />
         </Field>
         <div className="rounded-lg border border-dashed border-slate-300 p-3 text-xs text-slate-600">
-          <div className="font-semibold">Writing tips</div>
+          <div className="font-semibold">{copy.forms.writingTips}</div>
           <ul className="mt-1 list-disc pl-5">
-            <li>Use measurable outcomes (percentages, revenue, team size).</li>
-            <li>Keep it to three or four concise sentences.</li>
+            {copy.forms.summaryTips.map((tip) => <li key={tip}>{tip}</li>)}
           </ul>
         </div>
       </div>
@@ -931,11 +1155,11 @@ function SummaryForm({ profile, setProfile }: EditorProps) {
   );
 }
 
-function ExperienceForm({ profile, setProfile }: EditorProps) {
+function ExperienceForm({ profile, setProfile, copy }: EditorProps) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Experience</h2>
+        <h2 className="text-lg font-semibold">{copy.steps.experience}</h2>
         <button
           className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-100"
           onClick={() => {
@@ -948,35 +1172,35 @@ function ExperienceForm({ profile, setProfile }: EditorProps) {
             }));
           }}
         >
-          Add role
+          {copy.forms.addRole}
         </button>
       </div>
       <div className="mt-3 space-y-4">
         {profile.experience.map((entry) => (
           <div key={entry.id} className="rounded-lg border border-slate-200 p-3">
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Title">
-                <Input value={entry.title} placeholder="Job title" onChange={(event) => mutateExp(setProfile, entry.id, { title: event.target.value })} />
+              <Field label={copy.forms.title}>
+                <Input value={entry.title} placeholder={copy.forms.titlePlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { title: event.target.value })} />
               </Field>
-              <Field label="Company">
-                <Input value={entry.company} placeholder="Company" onChange={(event) => mutateExp(setProfile, entry.id, { company: event.target.value })} />
+              <Field label={copy.forms.company}>
+                <Input value={entry.company} placeholder={copy.forms.companyPlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { company: event.target.value })} />
               </Field>
-              <Field label="Location">
-                <Input value={entry.location} placeholder="Location" onChange={(event) => mutateExp(setProfile, entry.id, { location: event.target.value })} />
+              <Field label={copy.forms.location}>
+                <Input value={entry.location} placeholder={copy.forms.locationPlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { location: event.target.value })} />
               </Field>
-              <Field label="Start">
-                <Input value={entry.start} placeholder="Start date" onChange={(event) => mutateExp(setProfile, entry.id, { start: event.target.value })} />
+              <Field label={copy.forms.start}>
+                <Input value={entry.start} placeholder={copy.forms.startPlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { start: event.target.value })} />
               </Field>
-              <Field label="End">
-                <Input value={entry.end} placeholder="End date or Present" onChange={(event) => mutateExp(setProfile, entry.id, { end: event.target.value })} />
+              <Field label={copy.forms.end}>
+                <Input value={entry.end} placeholder={copy.forms.endPlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { end: event.target.value })} />
               </Field>
-              <Field label="Bullets (one per line)">
-                <Textarea rows={3} value={entry.points.join('\n')} placeholder="Use action verbs + results" onChange={(event) => mutateExp(setProfile, entry.id, { points: event.target.value.split('\n') })} />
+              <Field label={copy.forms.bullets}>
+                <Textarea rows={3} value={entry.points.join('\n')} placeholder={copy.forms.bulletsPlaceholder} onChange={(event) => mutateExp(setProfile, entry.id, { points: event.target.value.split('\n') })} />
               </Field>
             </div>
             <div className="mt-2 text-right">
               <button className="text-xs text-slate-500 hover:underline" onClick={() => removeExp(setProfile, entry.id)}>
-                Remove
+                {copy.forms.remove}
               </button>
             </div>
           </div>
@@ -986,11 +1210,11 @@ function ExperienceForm({ profile, setProfile }: EditorProps) {
   );
 }
 
-function EducationForm({ profile, setProfile }: EditorProps) {
+function EducationForm({ profile, setProfile, copy }: EditorProps) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Education</h2>
+        <h2 className="text-lg font-semibold">{copy.steps.education}</h2>
         <button
           className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-100"
           onClick={() => {
@@ -1003,27 +1227,27 @@ function EducationForm({ profile, setProfile }: EditorProps) {
             }));
           }}
         >
-          Add education
+          {copy.forms.addEducation}
         </button>
       </div>
       <div className="mt-3 space-y-4">
         {profile.education.map((entry) => (
           <div key={entry.id} className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 p-3">
-            <Field label="Degree">
-              <Input value={entry.degree} placeholder="Degree or certificate" onChange={(event) => mutateEdu(setProfile, entry.id, { degree: event.target.value })} />
+            <Field label={copy.forms.degree}>
+              <Input value={entry.degree} placeholder={copy.forms.degreePlaceholder} onChange={(event) => mutateEdu(setProfile, entry.id, { degree: event.target.value })} />
             </Field>
-            <Field label="School">
-              <Input value={entry.school} placeholder="School" onChange={(event) => mutateEdu(setProfile, entry.id, { school: event.target.value })} />
+            <Field label={copy.forms.school}>
+              <Input value={entry.school} placeholder={copy.forms.schoolPlaceholder} onChange={(event) => mutateEdu(setProfile, entry.id, { school: event.target.value })} />
             </Field>
-            <Field label="Year">
-              <Input value={entry.year} placeholder="Year completed" onChange={(event) => mutateEdu(setProfile, entry.id, { year: event.target.value })} />
+            <Field label={copy.forms.year}>
+              <Input value={entry.year} placeholder={copy.forms.yearPlaceholder} onChange={(event) => mutateEdu(setProfile, entry.id, { year: event.target.value })} />
             </Field>
-            <Field label="Location">
-              <Input value={entry.location} placeholder="Location" onChange={(event) => mutateEdu(setProfile, entry.id, { location: event.target.value })} />
+            <Field label={copy.forms.location}>
+              <Input value={entry.location} placeholder={copy.forms.locationPlaceholder} onChange={(event) => mutateEdu(setProfile, entry.id, { location: event.target.value })} />
             </Field>
             <div className="col-span-2 text-right">
               <button className="text-xs text-slate-500 hover:underline" onClick={() => removeEdu(setProfile, entry.id)}>
-                Remove
+                {copy.forms.remove}
               </button>
             </div>
           </div>
@@ -1033,14 +1257,14 @@ function EducationForm({ profile, setProfile }: EditorProps) {
   );
 }
 
-function SkillsForm({ profile, setProfile }: EditorProps) {
+function SkillsForm({ profile, setProfile, copy }: EditorProps) {
   const [draft, setDraft] = React.useState('');
 
   return (
     <div>
-      <h2 className="text-lg font-semibold">Skills</h2>
+      <h2 className="text-lg font-semibold">{copy.steps.skills}</h2>
       <div className="mt-3 flex gap-2">
-        <Input placeholder="Add a skill" value={draft} onChange={(event) => setDraft(event.target.value)} />
+        <Input placeholder={copy.forms.addSkill} value={draft} onChange={(event) => setDraft(event.target.value)} />
         <button
           className="rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100"
           onClick={() => {
@@ -1049,7 +1273,7 @@ function SkillsForm({ profile, setProfile }: EditorProps) {
             setDraft('');
           }}
         >
-          Add
+          {copy.forms.add}
         </button>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -1060,7 +1284,7 @@ function SkillsForm({ profile, setProfile }: EditorProps) {
               className="text-xs text-slate-500 hover:underline"
               onClick={() => setProfile((prev) => ({ ...prev, skills: prev.skills.filter((_, idx) => idx !== index) }))}
             >
-              Remove
+              {copy.forms.remove}
             </button>
           </span>
         ))}
@@ -1069,18 +1293,18 @@ function SkillsForm({ profile, setProfile }: EditorProps) {
   );
 }
 
-function ReviewPanel({ profile }: { profile: Profile }) {
+function ReviewPanel({ profile, copy }: { profile: Profile; copy: BuilderCopy }) {
   return (
     <div>
-      <h2 className="text-lg font-semibold">Review and finish</h2>
+      <h2 className="text-lg font-semibold">{copy.steps.review}</h2>
       <ul className="mt-3 grid grid-cols-2 gap-2 text-sm">
-        <li className="rounded border border-slate-200 bg-slate-50 p-2">Name: <b>{profile.name}</b></li>
-        <li className="rounded border border-slate-200 bg-slate-50 p-2">Role: <b>{profile.role}</b></li>
-        <li className="rounded border border-slate-200 bg-slate-50 p-2">Experience entries: <b>{profile.experience.length}</b></li>
-        <li className="rounded border border-slate-200 bg-slate-50 p-2">Education entries: <b>{profile.education.length}</b></li>
-        <li className="rounded border border-slate-200 bg-slate-50 p-2">Skills: <b>{profile.skills.length}</b></li>
+        <li className="rounded border border-slate-200 bg-slate-50 p-2">{copy.forms.reviewName}: <b>{profile.name}</b></li>
+        <li className="rounded border border-slate-200 bg-slate-50 p-2">{copy.forms.reviewRole}: <b>{profile.role}</b></li>
+        <li className="rounded border border-slate-200 bg-slate-50 p-2">{copy.forms.reviewExperience}: <b>{profile.experience.length}</b></li>
+        <li className="rounded border border-slate-200 bg-slate-50 p-2">{copy.forms.reviewEducation}: <b>{profile.education.length}</b></li>
+        <li className="rounded border border-slate-200 bg-slate-50 p-2">{copy.forms.reviewSkills}: <b>{profile.skills.length}</b></li>
       </ul>
-      <div className="mt-4 text-xs text-slate-500">Use the export buttons to generate PDF or DOCX files.</div>
+      <div className="mt-4 text-xs text-slate-500">{copy.forms.reviewHint}</div>
     </div>
   );
 }
@@ -1088,6 +1312,7 @@ function ReviewPanel({ profile }: { profile: Profile }) {
 type EditorProps = {
   profile: Profile;
   setProfile: React.Dispatch<React.SetStateAction<Profile>>;
+  copy: BuilderCopy;
 };
 
 function CostPill({ label, value }: { label: string; value: string }) {

@@ -11,6 +11,8 @@ import { PRICING_PLANS } from "@/lib/data";
 import PlanCard from "@/components/pricing/PlanCard";
 import CustomPlanCard from "@/components/pricing/CustomPlanCard";
 import { useExchangeRates } from "@/lib/useExchangeRates";
+import { useLocale } from "@/i18n/LocaleProvider";
+import { localizePath } from "@/i18n/config";
 
 type CheckoutPayload = {
   name: string;
@@ -19,7 +21,64 @@ type CheckoutPayload = {
   tokens: number;
 };
 
+const COPY = {
+  en: {
+    title: 'Top-Up',
+    subtitle: 'Choose a plan and proceed to secure checkout.',
+    tokenLabel: 'tokens',
+    popular: 'POPULAR',
+    termsLabel: 'I have read and agree to the',
+    termsLinkLabel: 'Terms and Conditions',
+    plans: {
+      'plan-starter': { name: 'Quick Start', points: ['Manual token top-up', 'No subscription', 'Preview included'], cta: 'Buy Tokens' },
+      'plan-pro': { name: 'Job Hunter', points: ['Manual token top-up', 'Branding options', 'Priority support'], cta: 'Buy Tokens' },
+      'plan-business': { name: 'Career Boost', points: ['Manual token top-up', 'Team access', 'Integrations roadmap'], cta: 'Buy Tokens' },
+      'plan-annual': { name: 'Annual Pro', points: ['50,000 tokens for the year', 'Best value per token', 'Priority support'], cta: 'Buy Now' },
+    },
+    custom: {
+      custom: 'Custom',
+      customPayloadName: 'Custom',
+      ariaPrice: 'Custom price',
+      minimumAmount: 'Minimum amount is {amount}',
+      tokens: 'tokens',
+      bullets: ['Plan a manual top-up', 'No subscription - pay what you need', 'Minimum {amount}'],
+      termsLabel: 'I have read and agree to the',
+      termsLinkLabel: 'Terms and Conditions',
+      termsHref: '/terms',
+      buyTokens: 'Buy Tokens',
+    },
+  },
+  tr: {
+    title: 'Token Yükle',
+    subtitle: 'Bir plan seçin ve güvenli ödeme adımına geçin.',
+    tokenLabel: 'token',
+    popular: 'POPÜLER',
+    termsLabel: 'Okudum ve kabul ediyorum:',
+    termsLinkLabel: 'Şartlar ve Koşullar',
+    plans: {
+      'plan-starter': { name: 'Hızlı Başlangıç', points: ['Manuel token yükleme', 'Abonelik yok', 'Önizleme dahil'], cta: 'Token Satın Al' },
+      'plan-pro': { name: 'İş Arayan', points: ['Manuel token yükleme', 'Markalama seçenekleri', 'Öncelikli destek'], cta: 'Token Satın Al' },
+      'plan-business': { name: 'Kariyer Desteği', points: ['Manuel token yükleme', 'Ekip erişimi', 'Entegrasyon yol haritası'], cta: 'Token Satın Al' },
+      'plan-annual': { name: 'Yıllık Pro', points: ['Yıl için 50.000 token', 'Token başına en iyi değer', 'Öncelikli destek'], cta: 'Satın Al' },
+    },
+    custom: {
+      custom: 'Özel',
+      customPayloadName: 'Özel',
+      ariaPrice: 'Özel fiyat',
+      minimumAmount: 'Minimum tutar {amount}',
+      tokens: 'token',
+      bullets: ['Manuel token yükleme planlayın', 'Abonelik yok - ihtiyacınız kadar ödeyin', 'Minimum {amount}'],
+      termsLabel: 'Okudum ve kabul ediyorum:',
+      termsLinkLabel: 'Şartlar ve Koşullar',
+      termsHref: '/terms',
+      buyTokens: 'Token Satın Al',
+    },
+  },
+} as const;
+
 export default function PricingClient() {
+  const locale = useLocale();
+  const copy = COPY[locale];
   const bcRef = useRef<BroadcastChannel | null>(null);
   const { snapshot: exchangeRates } = useExchangeRates();
   const [currency, setCurrency] = useState<Currency>(() => {
@@ -71,7 +130,7 @@ export default function PricingClient() {
 
   const handlePlanRequest = (plan: CheckoutPayload) => {
     if (!signedIn) {
-      router.push("/auth/signin?mode=login");
+      router.push(`${localizePath('/auth/signin', locale)}?mode=login`);
       return;
     }
 
@@ -83,10 +142,11 @@ export default function PricingClient() {
       currency: plan.currency,
       tokens: plan.tokens,
       total: plan.price,
+      locale,
     };
 
     localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
-    router.push("/checkout");
+    router.push(localizePath('/checkout', locale));
   };
 
   return (
@@ -98,8 +158,8 @@ export default function PricingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="mt-4 text-3xl font-bold sm:text-4xl">Top-Up</h1>
-          <p className="mt-2 text-slate-600">Choose a plan and proceed to secure checkout.</p>
+          <h1 className="mt-4 text-3xl font-bold sm:text-4xl">{copy.title}</h1>
+          <p className="mt-2 text-slate-600">{copy.subtitle}</p>
 
           <motion.div
             className="mt-6 flex flex-wrap items-center justify-center gap-3"
@@ -121,7 +181,9 @@ export default function PricingClient() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
         >
-          {PRICING_PLANS.map((plan, index) => (
+          {PRICING_PLANS.map((plan, index) => {
+            const localized = copy.plans[plan.id as keyof typeof copy.plans];
+            return (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 20 }}
@@ -129,19 +191,24 @@ export default function PricingClient() {
               transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
             >
               <PlanCard
-                name={plan.name}
+                name={localized?.name ?? plan.name}
                 popular={plan.popular}
-                bullets={plan.points}
-                cta={plan.cta}
+                badgeText={plan.popular ? copy.popular : undefined}
+                bullets={localized?.points ?? plan.points}
+                cta={localized?.cta ?? plan.cta}
                 amount={getBundlePrice(plan, currency, exchangeRates)}
                 currency={currency}
                 tokens={plan.tokens}
+                tokenLabel={copy.tokenLabel}
+                termsLabel={copy.termsLabel}
+                termsLinkLabel={copy.termsLinkLabel}
+                termsHref={localizePath('/terms', locale)}
                 onAction={({ name, amount, currency: selectedCurrency, tokens }) =>
                   handlePlanRequest({ name, price: amount, currency: selectedCurrency, tokens })
                 }
               />
             </motion.div>
-          ))}
+          );})}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -150,6 +217,7 @@ export default function PricingClient() {
             <CustomPlanCard
               currency={currency}
               exchangeRates={exchangeRates}
+              labels={{ ...copy.custom, termsHref: localizePath(copy.custom.termsHref, locale) }}
               onRequest={({ name, price, currency: selectedCurrency, tokens }) =>
                 handlePlanRequest({ name, price, currency: selectedCurrency, tokens })
               }

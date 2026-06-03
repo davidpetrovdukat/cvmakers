@@ -3,8 +3,12 @@
 import { motion } from 'framer-motion';
 import Section from '@/components/layout/Section';
 import { Star } from 'lucide-react';
+import { useI18n } from '@/i18n/LocaleProvider';
 
 export default function TrustStats() {
+  const { locale } = useI18n();
+  const isTr = locale === 'tr';
+
   return (
     <Section className="py-8">
       <motion.div
@@ -24,8 +28,17 @@ export default function TrustStats() {
           ))}
         </div>
         <p className="text-base sm:text-lg text-slate-600">
-          Trusted by <span className="font-semibold text-slate-900">16,000+</span> job seekers. Rated{' '}
-          <span className="font-semibold text-slate-900">4.9/5</span> based on user reviews.
+          {isTr ? (
+            <>
+              <span className="font-semibold text-slate-900">16.000+</span> iş arayan tarafından güveniliyor. Kullanıcı yorumlarına göre{' '}
+              <span className="font-semibold text-slate-900">4,9/5</span> puan aldı.
+            </>
+          ) : (
+            <>
+              Trusted by <span className="font-semibold text-slate-900">16,000+</span> job seekers. Rated{' '}
+              <span className="font-semibold text-slate-900">4.9/5</span> based on user reviews.
+            </>
+          )}
         </p>
       </motion.div>
     </Section>

@@ -4,28 +4,30 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { localizePath, stripLocaleFromPath } from '@/i18n/config';
+import { useI18n } from '@/i18n/LocaleProvider';
 
 const PRODUCT_LINKS = [
-  { label: 'Create my CV', href: '/create-cv' },
-  { label: 'Create my resume', href: '/create-resume' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Token Calculator', href: '/token-calculator' },
+  { key: 'nav.createCv', href: '/create-cv' },
+  { key: 'nav.createResume', href: '/create-resume' },
+  { key: 'nav.pricing', href: '/pricing' },
+  { key: 'nav.tokenCalculator', href: '/token-calculator' },
 ];
 
 const HELP_LINKS = [
-  { label: 'About', href: '/about' },
-  { label: 'FAQ', href: '/help/faq' },
-  { label: 'Getting Started', href: '/help/getting-started' },
-  { label: 'Billing & Tokens', href: '/help/billing-tokens' },
-  { label: 'Troubleshooting', href: '/help/troubleshooting' },
-  { label: 'Contact', href: '/contact' },
+  { key: 'footer.about', href: '/about' },
+  { key: 'footer.faq', href: '/help/faq' },
+  { key: 'footer.gettingStarted', href: '/help/getting-started' },
+  { key: 'footer.billingTokens', href: '/help/billing-tokens' },
+  { key: 'footer.troubleshooting', href: '/help/troubleshooting' },
+  { key: 'footer.contact', href: '/contact' },
 ];
 
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy', href: '/privacy' },
-  { label: 'Terms & Conditions', href: '/terms' },
-  { label: 'Cookies Policy', href: '/cookies' },
-  { label: 'Refund & Cancellation Policy', href: '/refund' },
+  { key: 'footer.privacy', href: '/privacy' },
+  { key: 'footer.terms', href: '/terms' },
+  { key: 'footer.cookies', href: '/cookies' },
+  { key: 'footer.refund', href: '/refund' },
 ];
 
 const SOCIAL_LINKS = [
@@ -43,8 +45,11 @@ const COMPANY_DETAILS = [
 
 export default function Footer() {
   const pathname = usePathname();
+  const { locale, t } = useI18n();
+  const normalizedPath = stripLocaleFromPath(pathname);
+  const href = (target: string) => localizePath(target, locale);
 
-  if (pathname?.startsWith('/print-resume')) {
+  if (normalizedPath.startsWith('/print-resume')) {
     return null;
   }
 
@@ -60,68 +65,12 @@ export default function Footer() {
     >
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 text-sm md:grid-cols-5">
-          <div>
-            <div className="font-semibold text-slate-900">Product</div>
-            <ul className="mt-3 grid gap-2 text-slate-700">
-              {PRODUCT_LINKS.map((item, index) => (
-                <motion.li
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  viewport={{ once: true }}
-                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
-                >
-                  <Link href={item.href} className="hover:underline">
-                    {item.label}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
+          <FooterColumn title={t('footer.product')} links={PRODUCT_LINKS.map((item) => ({ ...item, label: t(item.key) }))} href={href} />
+          <FooterColumn title={t('footer.help')} links={HELP_LINKS.map((item) => ({ ...item, label: t(item.key) }))} href={href} />
+          <FooterColumn title={t('footer.legal')} links={LEGAL_LINKS.map((item) => ({ ...item, label: t(item.key) }))} href={href} />
 
           <div>
-            <div className="font-semibold text-slate-900">Help</div>
-            <ul className="mt-3 grid gap-2 text-slate-700">
-              {HELP_LINKS.map((item, index) => (
-                <motion.li
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  viewport={{ once: true }}
-                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
-                >
-                  <Link href={item.href} className="hover:underline">
-                    {item.label}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <div className="font-semibold text-slate-900">Legal</div>
-            <ul className="mt-3 grid gap-2 text-slate-700">
-              {LEGAL_LINKS.map((item, index) => (
-                <motion.li
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  viewport={{ once: true }}
-                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
-                >
-                  <Link href={item.href} className="hover:underline">
-                    {item.label}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <div className="font-semibold text-slate-900">Company</div>
+            <div className="font-semibold text-slate-900">{t('footer.company')}</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {COMPANY_DETAILS.map((item, index) => (
                 <motion.li
@@ -145,7 +94,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <div className="font-semibold text-slate-900">Socials</div>
+            <div className="font-semibold text-slate-900">{t('footer.socials')}</div>
             <ul className="mt-3 grid gap-2 text-slate-700">
               {SOCIAL_LINKS.map((item, index) => (
                 <motion.li
@@ -166,26 +115,14 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-3 text-xs text-slate-600 sm:flex-row">
-          <div>© {year} WORKING AGENT LTD. All rights reserved.</div>
-          <div className="text-center">Registered in England & Wales</div>
+          <div>© {year} WORKING AGENT LTD. {t('footer.rights')}</div>
+          <div className="text-center">{t('footer.registered')}</div>
           <div className="flex items-center gap-4">
-            <Image
-              src="/visa-logo.svg"
-              alt="Visa"
-              width={60}
-              height={24}
-              className="h-6 w-auto"
-            />
-            <Image
-              src="/mastercard-logo.svg"
-              alt="MasterCard"
-              width={60}
-              height={24}
-              className="h-10 w-auto"
-            />
+            <Image src="/visa-logo.svg" alt="Visa" width={60} height={24} className="h-6 w-auto" />
+            <Image src="/mastercard-logo.svg" alt="MasterCard" width={60} height={24} className="h-10 w-auto" />
             <Image
               src="/pci-dss-compliant-logo-vector.svg"
-              alt="MasterCard"
+              alt="PCI DSS compliant"
               width={120}
               height={50}
               className="h-20 w-auto"
@@ -194,5 +131,37 @@ export default function Footer() {
         </div>
       </section>
     </motion.footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+  href,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+  href: (target: string) => string;
+}) {
+  return (
+    <div>
+      <div className="font-semibold text-slate-900">{title}</div>
+      <ul className="mt-3 grid gap-2 text-slate-700">
+        {links.map((item, index) => (
+          <motion.li
+            key={item.href}
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.3 }}
+            viewport={{ once: true }}
+            whileHover={{ x: 4, transition: { duration: 0.2 } }}
+          >
+            <Link href={href(item.href)} className="hover:underline">
+              {item.label}
+            </Link>
+          </motion.li>
+        ))}
+      </ul>
+    </div>
   );
 }

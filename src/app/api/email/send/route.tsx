@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { DocumentPDF } from "@/components/pdf/DocumentPDF";
+import { normalizeLocale } from "@/i18n/config";
+import { getTranslator } from "@/i18n/server";
 
 let resendClient: Resend | null | undefined;
 
@@ -21,8 +23,9 @@ function getResendClient(): Resend | null {
 
 export async function POST(req: Request) {
   try {
+    const fallbackT = getTranslator('en');
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ message: fallbackT('api.unauthorized') }, { status: 401 });
 
     const { email: toEmail, documentId } = await req.json();
     if (!toEmail || !documentId) return NextResponse.json({ message: "Recipient email and Document ID are required" }, { status: 400 });
@@ -34,11 +37,14 @@ export async function POST(req: Request) {
       include: { user: { include: { company: true } } } 
     });
     
-    if (!doc) return NextResponse.json({ message: "Document not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ message: fallbackT('api.notFound') }, { status: 404 });
 
     console.log(`[EMAIL_SEND] Generating PDF with @react-pdf/renderer`);
 
     const data = (doc.data || {}) as any;
+    const locale = normalizeLocale(data?.meta?.locale || data?.locale);
+    const t = getTranslator(locale);
+    const isTr = locale === 'tr';
 
     // Generate PDF with @react-pdf/renderer
     const pdfDoc = (
@@ -87,13 +93,13 @@ export async function POST(req: Request) {
       from: `CV Makers <${process.env.SMTP_USER || 'info@cv-makers.co.uk'}>`,
       to: toEmail,
       subject: `${doc.title} from ${doc.user?.company?.name || 'CV Makers'}`,
-      html: `<p>Please find your document attached.</p>`,
+      html: `<p>${isTr ? 'Belgenizi ekte bulabilirsiniz.' : 'Please find your document attached.'}</p>`,
       attachments: [{ filename: `${doc.title || 'Document'}.pdf`, content: pdfBuffer }],
     });
 
     console.log(`[EMAIL_SEND] Email sent successfully to ${toEmail}`);
 
-    return NextResponse.json({ message: 'Email sent successfully' });
+    return NextResponse.json({ message: t('api.emailSent') });
   } catch (error: any) {
     console.error('[EMAIL_SEND_ERROR]', error);
     console.error('[EMAIL_SEND_ERROR] Details:', {
@@ -101,7 +107,7 @@ export async function POST(req: Request) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
     return NextResponse.json({ 
-      message: error instanceof Error ? error.message : 'Internal Server Error' 
+      message: error instanceof Error ? error.message : getTranslator('en')('api.internalError')
     }, { status: 500 });
   }
 }

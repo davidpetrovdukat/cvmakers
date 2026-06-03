@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Document as DocxDocument, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import { Profile } from "@/components/resume";
+import { getTranslator } from "@/i18n/server";
+import { normalizeLocale } from "@/i18n/config";
 
 type HeadingType = (typeof HeadingLevel)[keyof typeof HeadingLevel];
 
@@ -84,6 +86,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!['cv', 'resume'].includes(doc.docType)) return NextResponse.json({ error: 'Unsupported document type' }, { status: 400 });
 
   const payload = (doc.data as any) ?? {};
+  const locale = normalizeLocale(payload?.meta?.locale);
+  const t = getTranslator(locale);
   const profile = coerceProfile(payload.profile ?? payload.data?.profile ?? payload);
 
   const docx = new DocxDocument({
@@ -93,10 +97,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           paragraph(profile.name || 'Untitled', { heading: HeadingLevel.TITLE, bold: true }),
           paragraph(profile.role || ''),
           paragraph([profile.contacts.email, profile.contacts.phone, profile.contacts.location].filter(Boolean).join(' - ')),
-          paragraph('Summary', { heading: HeadingLevel.HEADING_2 }),
+          paragraph(t('builder.summary'), { heading: HeadingLevel.HEADING_2 }),
           paragraph(profile.summary || ''),
           ...(profile.experience.length
-            ? [paragraph('Experience', { heading: HeadingLevel.HEADING_2 }),
+            ? [paragraph(t('builder.experience'), { heading: HeadingLevel.HEADING_2 }),
                ...profile.experience.flatMap((item) => [
                  paragraph(`${item.title}${item.company ? ` - ${item.company}` : ''}`, { bold: true }),
                  paragraph([item.start, item.end].filter(Boolean).join(' - ') + (item.location ? ` - ${item.location}` : '')),
@@ -104,14 +108,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                ])]
             : []),
           ...(profile.education.length
-            ? [paragraph('Education', { heading: HeadingLevel.HEADING_2 }),
+            ? [paragraph(t('builder.education'), { heading: HeadingLevel.HEADING_2 }),
                ...profile.education.flatMap((item) => [
                  paragraph(`${item.degree}${item.school ? ` - ${item.school}` : ''}`, { bold: true }),
                  paragraph([item.year, item.location].filter(Boolean).join(' - ')),
                ])]
             : []),
           ...(profile.skills.length
-            ? [paragraph('Skills', { heading: HeadingLevel.HEADING_2 }),
+            ? [paragraph(t('builder.skills'), { heading: HeadingLevel.HEADING_2 }),
                paragraph(profile.skills.join(', '))]
             : []),
         ],

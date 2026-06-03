@@ -2,7 +2,9 @@ import * as React from 'react';
 import { Profile } from '@/components/resume/types';
 import { ContactsBlock, Photo, Rule, Section, TwoCol, Item, Bullets, Tags } from '@/components/resume/ui';
 
-export default function ElegantSerif({ data }: { data: Profile }) {
+type Labels = Partial<Record<'profile' | 'experience' | 'skills' | 'education', string>>;
+
+export default function ElegantSerif({ data, labels = {} }: { data: Profile; labels?: Labels }) {
   return (
     <div className="h-full w-full p-8 font-serif">
       <div className="flex items-start justify-between gap-6">
@@ -16,11 +18,11 @@ export default function ElegantSerif({ data }: { data: Profile }) {
         </div>
       </div>
       <Rule />
-      <Section title="Profile">
+      <Section title={labels.profile || 'Profile'}>
         <p className="text-[10pt] leading-[1.5] text-slate-700">{data.summary}</p>
       </Section>
       <Rule />
-      <Section title="Professional Experience">
+      <Section title={labels.experience || 'Professional Experience'}>
         {data.experience.map((exp) => (
           <Item key={exp.id} title={`${exp.title} - ${exp.company}`} meta={`${exp.start} - ${exp.end} • ${exp.location}`}>
             <Bullets items={exp.points} />
@@ -29,10 +31,10 @@ export default function ElegantSerif({ data }: { data: Profile }) {
       </Section>
       <Rule />
       <TwoCol gap="10mm">
-        <Section title="Core Skills">
+        <Section title={labels.skills || 'Core Skills'}>
           <Tags items={data.skills} />
         </Section>
-        <Section title="Education">
+        <Section title={labels.education || 'Education'}>
           {data.education.map((ed) => (
             <Item key={ed.id} title={`${ed.degree}, ${ed.school}`} meta={`${ed.year} • ${ed.location}`} />
           ))}
@@ -41,4 +43,3 @@ export default function ElegantSerif({ data }: { data: Profile }) {
     </div>
   );
 }
-

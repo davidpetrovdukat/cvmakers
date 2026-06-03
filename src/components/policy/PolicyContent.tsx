@@ -12,9 +12,9 @@ export default function PolicyContent({ sections }: PolicyContentProps) {
   return (
     <Card className="p-6" padding="md">
       {sections.map((s, index) => (
-        <motion.section 
-          key={s.id} 
-          id={s.id} 
+        <motion.section
+          key={s.id}
+          id={s.id}
           className="scroll-mt-24"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -25,18 +25,17 @@ export default function PolicyContent({ sections }: PolicyContentProps) {
           {s.body && (
             <div className="mt-2 space-y-3 text-slate-700 text-sm">
               {s.body.split('\n\n').map((block, idx) => {
-                const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-                const isList = lines.length > 1 && lines.every((l) => l.startsWith('•'));
+                const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+                const isList = lines.length > 1 && lines.every((line) => line.startsWith('•'));
                 if (isList) {
                   return (
                     <ul key={idx} className="list-disc pl-5">
-                      {lines.map((l, i) => (
-                        <li key={i}>{l.replace(/^•\s?/, '')}</li>
+                      {lines.map((line, i) => (
+                        <li key={i}>{line.replace(/^•\s?/, '')}</li>
                       ))}
                     </ul>
                   );
                 }
-                // Handle single line breaks within paragraphs
                 if (lines.length > 1) {
                   return (
                     <div key={idx}>

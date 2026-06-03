@@ -2,7 +2,9 @@ import * as React from 'react';
 import { Profile } from '@/components/resume/types';
 import { ContactsBlock, Photo, Section, Item, Bullets, Tags } from '@/components/resume/ui';
 
-export default function ModernSplit({ data }: { data: Profile }) {
+type Labels = Partial<Record<'summary' | 'experience' | 'skills' | 'education', string>>;
+
+export default function ModernSplit({ data, labels = {} }: { data: Profile; labels?: Labels }) {
   return (
     <div className="h-full w-full p-0 [font-family:Inter,system-ui,sans-serif]">
       <div className="grid h-full grid-cols-[28%_1fr]">
@@ -15,20 +17,20 @@ export default function ModernSplit({ data }: { data: Profile }) {
             </div>
           </div>
           <ContactsBlock contacts={data.contacts} compact />
-          <Section title="Skills">
+          <Section title={labels.skills || 'Skills'}>
             <Tags items={data.skills} />
           </Section>
-          <Section title="Education">
+          <Section title={labels.education || 'Education'}>
             {data.education.map((ed) => (
               <Item key={ed.id} title={ed.school} meta={`${ed.degree} • ${ed.year}`} />
             ))}
           </Section>
         </aside>
         <main className="space-y-5 p-7">
-          <Section title="Summary">
+          <Section title={labels.summary || 'Summary'}>
             <p className="text-[10pt] leading-[1.4] text-slate-700">{data.summary}</p>
           </Section>
-          <Section title="Experience">
+          <Section title={labels.experience || 'Experience'}>
             {data.experience.map((exp) => (
               <Item key={exp.id} title={`${exp.title} - ${exp.company}`} meta={`${exp.start} - ${exp.end} • ${exp.location}`}>
                 <Bullets items={exp.points} />
@@ -40,4 +42,3 @@ export default function ModernSplit({ data }: { data: Profile }) {
     </div>
   );
 }
-

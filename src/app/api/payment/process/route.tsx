@@ -4,22 +4,31 @@ import { Resend } from "resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/pdf/InvoicePDF";
 import { isCurrency } from "@/lib/currency";
+import { normalizeLocale } from "@/i18n/config";
+import { getTranslator } from "@/i18n/server";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const locale = normalizeLocale(body.locale);
+    const t = getTranslator(locale);
+    const isTr = locale === "tr";
+    const topUpLabel = isTr ? "Token yükleme" : "Top-up";
+    const paymentLabel = isTr ? "Ödeme" : "Payment";
+    const invoiceLabel = t("documents.invoice");
+    const paymentSummaryLabel = t("documents.paymentSummary");
 
     // Валидация обязательных полей
     if (!body.email || !body.amount || !body.currency || !body.tokens) {
       return NextResponse.json(
-        { ok: false, error: "Missing required fields" },
+        { ok: false, error: t("api.missingRequiredFields") },
         { status: 400 }
       );
     }
 
     if (!isCurrency(body.currency)) {
       return NextResponse.json(
-        { ok: false, error: "Unsupported currency" },
+        { ok: false, error: t("api.unsupportedCurrency") },
         { status: 400 }
       );
     }
@@ -36,7 +45,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { ok: false, error: "User not found" },
+        { ok: false, error: t("api.userNotFound") },
         { status: 404 }
       );
     }
@@ -47,7 +56,7 @@ export async function POST(req: Request) {
         userEmail: body.email,
         amount: body.amount,
         currency: body.currency,
-        description: body.description || `Top-up: ${body.planId || "Payment"}`,
+        description: body.description || `${topUpLabel}: ${body.planId || paymentLabel}`,
         tokens: body.tokens ?? 0,
         orderMerchantId,
         status: "APPROVED",
@@ -109,13 +118,14 @@ export async function POST(req: Request) {
       const invoiceDoc = await prisma.document.create({
         data: {
           userId: user.id,
-          title: "Invoice",
+          title: invoiceLabel,
           docType: "invoice",
           status: "Ready",
           format: "pdf",
           data: {
             documentNo: invoiceNumber,
             documentDate: invoiceDate,
+            locale,
             sender: {
               company: company?.name || 'CV Makers',
               vat: company?.vat || '',
@@ -133,11 +143,16 @@ export async function POST(req: Request) {
             },
             content: [
               {
-                heading: "Payment Summary",
-                text: `Order ID: ${orderMerchantId}\n\nDescription: ${body.description || `Top-up: ${body.planId || "Payment"}`}\n\nTokens: ${tokensToAdd.toLocaleString()}\nTotal: ${body.currency} ${subtotal.toFixed(2)}`,
+                heading: paymentSummaryLabel,
+                text: isTr
+                  ? `Sipariş ID: ${orderMerchantId}\n\nAçıklama: ${body.description || `${topUpLabel}: ${body.planId || paymentLabel}`}\n\nTokenlar: ${tokensToAdd.toLocaleString()}\nToplam: ${body.currency} ${subtotal.toFixed(2)}`
+                  : `Order ID: ${orderMerchantId}\n\nDescription: ${body.description || `${topUpLabel}: ${body.planId || paymentLabel}`}\n\nTokens: ${tokensToAdd.toLocaleString()}\nTotal: ${body.currency} ${subtotal.toFixed(2)}`,
               },
             ],
-            notes: `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`,
+            notes: isTr
+              ? `Satın alma işleminiz için teşekkür ederiz. Hesabınıza ${tokensToAdd.toLocaleString()} token yüklenmiştir.`
+              : `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`,
+            meta: { locale },
           },
         },
       });
@@ -164,7 +179,7 @@ export async function POST(req: Request) {
                 invoiceNumber={invoiceNumber}
                 invoiceDate={invoiceDate}
                 orderMerchantId={orderMerchantId}
-                description={body.description || `Top-up: ${body.planId || "Payment"}`}
+                description={body.description || `${topUpLabel}: ${body.planId || paymentLabel}`}
                 sender={{
                   company: company?.name || 'CV Makers',
                   vat: company?.vat || '',
@@ -187,7 +202,9 @@ export async function POST(req: Request) {
                   currency: body.currency,
                   newBalance,
                 }}
-                notes={`Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`}
+                notes={isTr
+                  ? `Satın alma işleminiz için teşekkür ederiz. Hesabınıza ${tokensToAdd.toLocaleString()} token yüklenmiştir.`
+                  : `Thank you for your purchase. Your account has been credited with ${tokensToAdd.toLocaleString()} tokens.`}
               />
             );
 
@@ -206,7 +223,30 @@ export async function POST(req: Request) {
           }
 
           // Текстовая версия для лучшей доставляемости
-          const emailText = `Invoice ${invoiceNumber} - CV Makers
+          const emailText = isTr ? `Fatura ${invoiceNumber} - CV Makers
+
+Satın alma işleminiz için teşekkür ederiz.
+
+Ödemeniz başarıyla işlenmiş ve hesabınıza token yüklenmiştir.
+
+SİPARİŞ BİLGİLERİ
+Sipariş ID: ${orderMerchantId}
+Fatura Numarası: ${invoiceNumber}
+Tarih: ${invoiceDate}
+Açıklama: ${body.description || `${topUpLabel}: ${body.planId || paymentLabel}`}
+
+ÖDEME ÖZETİ
+Yüklenen token: ${tokensToAdd.toLocaleString()}
+Ödenen toplam: ${body.currency} ${subtotal.toFixed(2)}
+Yeni bakiye: ${newBalance.toLocaleString()} token
+
+Artık tokenlarınızı CV ve özgeçmiş oluşturmak için kullanabilirsiniz.
+
+Sorularınız için info@cv-makers.co.uk adresinden bizimle iletişime geçebilirsiniz.
+
+---
+CV Makers - Profesyonel CV ve Özgeçmiş Oluşturucu
+https://cv-makers.co.uk` : `Invoice ${invoiceNumber} - CV Makers
 
 Thank you for your purchase!
 
@@ -216,7 +256,7 @@ ORDER DETAILS
 Order ID: ${orderMerchantId}
 Invoice Number: ${invoiceNumber}
 Date: ${invoiceDate}
-Description: ${body.description || `Top-up: ${body.planId || "Payment"}`}
+Description: ${body.description || `${topUpLabel}: ${body.planId || paymentLabel}`}
 
 PAYMENT SUMMARY
 Tokens credited: ${tokensToAdd.toLocaleString()}
@@ -237,7 +277,7 @@ https://cv-makers.co.uk`;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice ${invoiceNumber}</title>
+  <title>${invoiceLabel} ${invoiceNumber}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
@@ -247,7 +287,7 @@ https://cv-makers.co.uk`;
           <!-- Header -->
           <tr>
             <td style="padding: 30px 30px 20px; background-color: #1e293b; color: #ffffff;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Invoice ${invoiceNumber}</h1>
+              <h1 style="margin: 0; font-size: 24px; font-weight: bold;">${invoiceLabel} ${invoiceNumber}</h1>
               <p style="margin: 5px 0 0; font-size: 14px; color: #cbd5e1;">CV Makers</p>
             </td>
           </tr>
@@ -263,7 +303,7 @@ https://cv-makers.co.uk`;
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f8fafc; border-radius: 6px; padding: 20px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #475569; font-weight: bold;">Order Details</h2>
+                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #475569; font-weight: bold;">${isTr ? 'Sipariş Bilgileri' : 'Order Details'}</h2>
                     <table width="100%" cellpadding="5" cellspacing="0">
                       <tr>
                         <td style="color: #64748b; font-size: 14px; width: 40%;">Order ID:</td>
@@ -290,7 +330,7 @@ https://cv-makers.co.uk`;
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #ecfdf5; border-radius: 6px; padding: 20px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #059669; font-weight: bold;">Payment Summary</h2>
+                    <h2 style="margin: 0 0 15px; font-size: 18px; color: #059669; font-weight: bold;">${paymentSummaryLabel}</h2>
                     <table width="100%" cellpadding="5" cellspacing="0">
                       <tr>
                         <td style="color: #64748b; font-size: 14px; width: 40%;">Tokens credited:</td>
@@ -347,7 +387,7 @@ https://cv-makers.co.uk`;
             from: `CV Makers <${process.env.SMTP_USER}>`,
             to: body.email,
             replyTo: 'info@cv-makers.co.uk',
-            subject: `Invoice ${invoiceNumber} - CV Makers`,
+            subject: `${invoiceLabel} ${invoiceNumber} - CV Makers`,
             text: emailText,
             html: emailHtml,
             ...(attachments && { attachments }),
@@ -407,7 +447,7 @@ https://cv-makers.co.uk`;
     });
 
     // Более детальные сообщения об ошибках для диагностики
-    let errorMessage = "Payment processing failed";
+    let errorMessage = getTranslator(normalizeLocale((err as any)?.locale || undefined))("api.paymentFailed");
     if (err.code === 'P2003') {
       errorMessage = "Database constraint violation. Please contact support.";
     } else if (err.code === 'P2002') {
