@@ -1,6 +1,9 @@
-export const SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'USD', 'TRY'] as const;
+export const SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'USD', 'TRY', 'JPY'] as const;
 
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
+
+export const ZERO_DECIMAL_CURRENCIES = ['JPY'] as const;
+export type ZeroDecimalCurrency = (typeof ZERO_DECIMAL_CURRENCIES)[number];
 
 export const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((currency) => ({
   label: currency,
@@ -9,6 +12,15 @@ export const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((currency) => ({
 
 export function isCurrency(value: unknown): value is Currency {
   return typeof value === 'string' && SUPPORTED_CURRENCIES.includes(value as Currency);
+}
+
+/** SSR-safe default before localStorage is read on the client. */
+export function getDefaultCurrencyForLocale(locale: string): Currency {
+  return locale === 'ja' ? 'JPY' : 'GBP';
+}
+
+export function isZeroDecimalCurrency(currency: Currency): currency is ZeroDecimalCurrency {
+  return (ZERO_DECIMAL_CURRENCIES as readonly string[]).includes(currency);
 }
 
 export const TOKENS_PER_GBP = 100;
@@ -29,6 +41,7 @@ export const DEFAULT_EXCHANGE_RATE_SNAPSHOT: ExchangeRateSnapshot = {
     GBP: 0.86438,
     USD: 1.1555,
     TRY: 0.86438 * GBP_TO_TRY_RATE,
+    JPY: 163,
   },
   asOf: '2026-05-25',
   fetchedAt: '2026-05-25T06:00:00.000Z',
@@ -92,14 +105,28 @@ export function convertTokensToCurrency(
   return convertCurrency(gbpAmount, 'GBP', currency, snapshot);
 }
 
+function getCurrencyLocale(currency: Currency): string {
+  switch (currency) {
+    case 'GBP':
+      return 'en-GB';
+    case 'EUR':
+      return 'en-IE';
+    case 'TRY':
+      return 'tr-TR';
+    case 'JPY':
+      return 'ja-JP';
+    default:
+      return 'en-US';
+  }
+}
+
 export function formatCurrency(amount: number, currency: Currency): string {
-  const locale =
-    currency === 'GBP' ? 'en-GB' : currency === 'EUR' ? 'en-IE' : currency === 'TRY' ? 'tr-TR' : 'en-US';
-  return new Intl.NumberFormat(locale, {
+  const zeroDecimal = isZeroDecimalCurrency(currency);
+  return new Intl.NumberFormat(getCurrencyLocale(currency), {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: zeroDecimal ? 0 : 2,
+    maximumFractionDigits: zeroDecimal ? 0 : 2,
   }).format(amount);
 }
 
@@ -113,6 +140,8 @@ export function getCurrencySymbol(currency: Currency): string {
       return '$';
     case 'TRY':
       return '₺';
+    case 'JPY':
+      return '¥';
   }
 }
 
@@ -177,7 +206,21 @@ export function getBundlePrice(
   currency: Currency,
   snapshot?: ExchangeRateSnapshot,
 ): number {
-  return Math.round(convertCurrency(bundle.gbpAmount, 'GBP', currency, snapshot) * 100) / 100;
+  const converted = convertCurrency(bundle.gbpAmount, 'GBP', currency, snapshot);
+  if (isZeroDecimalCurrency(currency)) {
+    return Math.round(converted);
+  }
+  return Math.round(converted * 100) / 100;
+}
+
+export function getMinimumTopUpAmount(currency: Currency, snapshot?: ExchangeRateSnapshot): number {
+  const gbpMin = 5;
+  const converted = getBundlePrice({ gbpAmount: gbpMin }, currency, snapshot);
+  return isZeroDecimalCurrency(currency) ? Math.ceil(converted) : converted;
+}
+
+export function toStoredAmount(amount: number, currency: Currency): number {
+  return isZeroDecimalCurrency(currency) ? Math.round(amount) : Math.round(amount * 100);
 }
 
 export const SERVICE_COSTS = {

@@ -41,6 +41,22 @@ const COPY = {
       tech: 'Teknik Kompakt',
     },
   },
+  ja: {
+    title: 'テンプレート',
+    resume: '職務経歴書（1ページ）',
+    cv: 'CV（複数ページ）',
+    mock: 'サンプルデータ',
+    empty: '空',
+    top: 'トップ',
+    openFull: '全体表示',
+    useTemplate: 'テンプレートを使用',
+    templateLabels: {
+      classic: 'クラシックATS',
+      split: 'モダンスプリット',
+      serif: 'エレガントセリフ',
+      tech: 'テックコンパクト',
+    },
+  },
 } as const;
 
 export default function TemplatesPage() {

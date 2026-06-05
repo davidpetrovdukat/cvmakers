@@ -173,6 +173,77 @@ const COPY = {
       },
     ] satisfies TroubleshootingIssue[],
   },
+  ja: {
+    title: 'トラブルシューティング',
+    subtitle: 'よくある問題への迅速な解決策。数分で問題を見つけて修正できます。',
+    searchPlaceholder: '問題を検索（例：支払い失敗、PDFの問題）',
+    noIssuesTitle: '該当する問題が見つかりません',
+    noIssuesBody: '別のキーワードで検索するか、カテゴリから探してください',
+    clearFilters: 'フィルターをクリア',
+    stillStuck: 'まだ解決しませんか？',
+    stillStuckBody: '解決策が見つからない場合は、サポートチームがお手伝いいたします。',
+    openTicket: 'チケットを開く',
+    emailSupport: 'メールでサポート',
+    solved: '解決済み',
+    solutionSteps: '解決手順：',
+    markSolved: '解決済みとしてマーク',
+    didSolve: 'この手順で問題は解決しましたか？',
+    categories: {
+      all: 'すべての問題',
+      payments: 'お支払い',
+      tokens: 'トークン',
+      'pdf-email': 'PDF/メール',
+      login: 'ログイン',
+      generator: 'ジェネレーター',
+    },
+    issues: [
+      {
+        id: 'payment-failed',
+        title: 'お支払いが失敗しました',
+        category: 'payments',
+        description: 'お支払いが拒否されたか、トークンがアカウントに追加されませんでした。',
+        steps: ['請求先住所がカードと一致しているか確認してください', '別のお支払い方法をお試しください', '処理のため2〜3分お待ちください', '課金されたのにトークンがない場合：10分以内に自動で追加されます', '10分経ってもトークンがない場合：領収書を添えてサポートまでご連絡ください'],
+        links: [{ text: '再試行', href: '/pricing' }, { text: 'サポートに連絡', href: '/contact' }],
+        tags: ['支払い', '拒否', '請求'],
+      },
+      {
+        id: 'not-enough-tokens',
+        title: 'トークンが不足しています',
+        category: 'tokens',
+        description: 'CVや職務経歴書を作成するのに十分なトークンがありません。',
+        steps: ['ダッシュボードでトークン残高を確認してください', 'CVや職務経歴書の下書き作成とプレビューは無料です', 'トークンは作成、改善、エクスポート、送信時のみ差し引かれます', 'アカウントにトークンを追加してください', `PDFの作成とエクスポートには${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF}トークンが必要です`],
+        links: [{ text: '残高を確認', href: '/dashboard' }, { text: 'トークンを購入', href: '/pricing' }],
+        tags: ['トークン', '残高', '不足'],
+      },
+      {
+        id: 'pdf-looks-wrong',
+        title: 'PDFの表示がおかしい',
+        category: 'pdf-email',
+        description: '生成されたPDFに書式の問題や欠落がある場合。',
+        steps: ['設定の氏名、メールアドレス、電話番号を確認してください', '写真の形式を確認してください（PNG/JPGを推奨）', '印刷時はブラウザの「ページに合わせて縮小」を無効にしてください', 'レイアウトが詰まりすぎている場合は別のテンプレートをお試しください', '必須項目がすべて入力されているか確認してください'],
+        links: [{ text: 'CVを作成', href: '/create-cv' }, { text: '設定', href: '/dashboard' }],
+        tags: ['pdf', '書式', 'レイアウト'],
+      },
+      {
+        id: 'login-issues',
+        title: 'ログインの問題',
+        category: 'login',
+        description: 'ログインできない、またはアカウントにアクセスできない場合。',
+        steps: ['メールアドレスとパスワードが正しいか確認してください', 'ブラウザのCookieとキャッシュをクリアしてください', '必須Cookieのブロックはしないでください', 'パスワードのリセットをお試しください', 'それでもアクセスできない場合はサポートまでご連絡ください'],
+        links: [{ text: 'ログイン', href: '/auth/signin' }, { text: 'アカウント復旧', href: '/contact' }],
+        tags: ['ログイン', 'パスワード', 'アカウント'],
+      },
+      {
+        id: 'slow-or-stuck',
+        title: '動作が遅い、または固まる',
+        category: 'generator',
+        description: 'アプリケーションの動作が遅い、またはフリーズしているように見える場合。',
+        steps: ['ブラウザのキャッシュとCookieをクリアしてください', 'ブラウザ拡張機能を一時的に無効にしてください', 'インターネット接続を確認してください', 'ページを再読み込みしてください', '問題が繰り返す場合はページのURLを添えてサポートまでご連絡ください'],
+        links: [{ text: '問題を報告', href: '/contact' }],
+        tags: ['遅い', 'パフォーマンス', 'フリーズ'],
+      },
+    ] satisfies TroubleshootingIssue[],
+  },
 } as const;
 
 export default function TroubleshootingPage() {
@@ -306,7 +377,7 @@ function IssueCard({
   categoryColor: string;
   isExpanded: boolean;
   isSolved: boolean;
-  copy: typeof COPY.en | typeof COPY.tr;
+  copy: (typeof COPY)[keyof typeof COPY];
   href: (path: string) => string;
   onToggle: () => void;
   onMarkSolved: () => void;

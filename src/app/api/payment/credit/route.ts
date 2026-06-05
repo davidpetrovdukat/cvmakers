@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isCurrency, toStoredAmount } from "@/lib/currency";
 
 export async function POST(req: Request) {
   try {
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
         delta: tokensToAdd,
         balanceAfter: newBalance,
         currency: order.currency,
-        amount: Math.round(baseAmount * 100),
+        amount: isCurrency(order.currency) ? toStoredAmount(baseAmount, order.currency) : Math.round(baseAmount * 100),
         receiptUrl: `order:${orderMerchantId}`,
       },
     });

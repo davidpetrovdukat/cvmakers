@@ -182,6 +182,81 @@ const COPY = {
       },
     ],
   },
+  ja: {
+    title: 'トークン計算機',
+    subtitle: '必要なトークン数を計算し、書類あたりの費用をご確認いただけます。',
+    calculateTitle: 'トークンを計算',
+    calculateDescription: '実行予定のアクション数を調整してください。各アクションはトークンコストで乗算されます。',
+    quantity: '数量',
+    tokens: 'トークン',
+    results: '結果',
+    totalTokens: '合計トークン',
+    estimatedCost: '推定コスト',
+    atRate: '{amount} = 100トークン',
+    suggestedTopUp: '推奨チャージ額',
+    goToTopUp: 'チャージページへ',
+    clear: '計算機をクリア',
+    examplesTitle: '例',
+    faqTitle: 'よくある質問',
+    actions: {
+      draft: {
+        label: '下書きを作成',
+        description: 'ダッシュボード内にCVまたは職務経歴書の下書きを作成します。',
+      },
+      pdf: {
+        label: '作成とPDFエクスポート',
+        description: 'ダウンロード可能なPDFを即座に生成します。',
+      },
+      docx: {
+        label: '作成とDOCXエクスポート',
+        description: 'さらに編集可能なDOCX版をエクスポートします。',
+      },
+      ai: {
+        label: 'AIで改善',
+        description: 'AIを使用して表現、構成、インパクトを磨きます。',
+      },
+      manager: {
+        label: '個人マネージャーへ送信',
+        description: '3〜6時間以内にフィードバック付きの専門家レビューです。',
+      },
+    },
+    faq: [
+      {
+        question: '計算機の仕組みは？',
+        answer: '必要なアクションを選択してください。計算機がトークンを合計し、相当するコストを表示します。他の通貨は現在の為替レートで換算されます。',
+      },
+      {
+        question: 'どのアクションを見積もれますか？',
+        answer: `下書き作成：${SERVICE_COSTS.CREATE_DRAFT}トークン。作成とPDFエクスポート：${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF}トークン。作成とDOCXエクスポート：${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_DOCX}トークン。AIで改善：${SERVICE_COSTS.AI_IMPROVE}トークン。個人マネージャーへ送信：${SERVICE_COSTS.PERSONAL_MANAGER}トークン。`,
+      },
+      {
+        question: '見積もりの精度は？',
+        answer: '計算時点の現在のレートを反映しています。VAT/税金は含まれておらず、該当する場合はチェックアウト時に追加されます。',
+      },
+    ],
+    examples: [
+      {
+        title: '仕上がったCV1枚',
+        description: '作成 + AIによる仕上げ + PDFエクスポート。',
+        actions: { draft: 1, ai: 1, pdf: 1 },
+      },
+      {
+        title: '就活週末プラン',
+        description: 'AIとPDFエクスポート付きの職務経歴書2枚。',
+        actions: { draft: 2, ai: 2, pdf: 2 },
+      },
+      {
+        title: 'マネージャー支援リニューアル',
+        description: '作成、AI改善、個人マネージャーへの送信。',
+        actions: { draft: 1, ai: 1, manager: 1 },
+      },
+      {
+        title: 'チーム一括リフレッシュ',
+        description: '小規模チーム向けの下書き5件とエクスポート4件。',
+        actions: { draft: 5, pdf: 4 },
+      },
+    ],
+  },
 } as const;
 
 export default function TokenCalculatorPage() {

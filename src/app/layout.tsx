@@ -1,17 +1,25 @@
-import { Plus_Jakarta_Sans, Manrope, JetBrains_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, Manrope, JetBrains_Mono, Noto_Sans_JP } from 'next/font/google';
 import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AuthProvider from '@/components/providers/AuthProvider';
 import LocaleProvider from '@/i18n/LocaleProvider';
+import { Locale } from '@/i18n/config';
 import { getRequestLocale, getTranslator } from '@/i18n/server';
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-plus-jakarta-sans', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-manrope', display: 'swap' });
 const jetBrainsMono = JetBrains_Mono({ subsets: ['latin', 'latin-ext'], variable: '--font-jetbrains-mono', display: 'swap' });
+const notoSansJp = Noto_Sans_JP({ subsets: ['latin'], variable: '--font-noto-sans-jp', display: 'swap' });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cv-makers.co.uk';
+
+const OG_LOCALE: Record<Locale, string> = {
+  en: 'en_GB',
+  tr: 'tr_TR',
+  ja: 'ja_JP',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
@@ -27,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
       languages: {
         en: `${appUrl}/en`,
         tr: `${appUrl}/tr`,
+        ja: `${appUrl}/ja`,
       },
     },
     icons: {
@@ -48,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t('metadata.title'),
       description: t('metadata.description'),
       type: 'website',
-      locale: locale === 'tr' ? 'tr_TR' : 'en_GB',
+      locale: OG_LOCALE[locale],
       url: `${appUrl}/${locale}`,
       siteName: 'CV Makers',
       images: [
@@ -81,8 +90,8 @@ export default async function RootLayout({
   const locale = await getRequestLocale();
 
   return (
-    <html lang={locale} className={`${plusJakartaSans.variable} ${manrope.variable} ${jetBrainsMono.variable}`}>
-      <body className="font-sans antialiased">
+    <html lang={locale} className={`${plusJakartaSans.variable} ${manrope.variable} ${jetBrainsMono.variable} ${notoSansJp.variable}`}>
+      <body className={locale === 'ja' ? 'font-japanese antialiased' : 'font-sans antialiased'}>
         <LocaleProvider locale={locale}>
           <AuthProvider>
             <Header />

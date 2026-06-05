@@ -9,7 +9,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { THEME } from '@/lib/theme';
 import Segmented from '@/components/ui/Segmented';
 import { useSession, signOut } from 'next-auth/react';
-import { CURRENCY_OPTIONS, Currency, isCurrency } from '@/lib/currency';
+import { CURRENCY_OPTIONS, Currency, getDefaultCurrencyForLocale, isCurrency } from '@/lib/currency';
 import { LOCALE_LABELS, LOCALES, Locale, getLocaleFromPath, localizePath, stripLocaleFromPath } from '@/i18n/config';
 import { useI18n } from '@/i18n/LocaleProvider';
 
@@ -22,14 +22,14 @@ export default function Header() {
   const bcRef = useRef<BroadcastChannel | null>(null);
   const [tokens, setTokens] = useState<number | null>(null);
   const normalizedPath = stripLocaleFromPath(pathname);
+  const activeLocale = getLocaleFromPath(pathname) ?? locale;
   const isPricing = normalizedPath === '/pricing';
   const isTokenCalc = normalizedPath === '/token-calculator';
   const isDashboard = normalizedPath === '/dashboard';
-  const [currency, setCurrency] = useState<Currency>('GBP');
+  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(activeLocale));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const activeLocale = getLocaleFromPath(pathname) ?? locale;
 
   const href = useCallback((target: string) => localizePath(target, activeLocale), [activeLocale]);
 
@@ -99,9 +99,11 @@ export default function Header() {
     // Read saved currency client-side to avoid SSR hydration mismatch
     try {
       const saved = localStorage.getItem('currency');
-      if (isCurrency(saved)) setCurrency(saved);
+      if (isCurrency(saved)) {
+        setCurrency(saved);
+      }
     } catch {}
-  }, []);
+  }, [activeLocale]);
 
   const onCurrencyChange = (next: Currency) => {
     setCurrency(next);

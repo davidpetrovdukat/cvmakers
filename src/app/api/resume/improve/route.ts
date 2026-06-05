@@ -4,7 +4,13 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getOpenAIClient, getDefaultOpenAIModel } from '@/lib/openai';
 import { getRequestLocale, getTranslator } from '@/i18n/server';
-import { normalizeLocale } from '@/i18n/config';
+import { normalizeLocale, type Locale } from '@/i18n/config';
+
+const DOC_SUFFIX: Record<Locale, { cv: string; resume: string }> = {
+  en: { cv: 'CV', resume: 'Resume' },
+  tr: { cv: 'CV', resume: 'Özgeçmiş' },
+  ja: { cv: 'CV', resume: '職務経歴書' },
+};
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -380,7 +386,7 @@ export async function POST(req: Request) {
           userId,
           title:
             improvedProfile.name && improvedProfile.name.trim()
-              ? `${improvedProfile.name.trim()} ${docType === 'cv' ? 'CV' : locale === 'tr' ? 'Özgeçmiş' : 'Resume'}`
+              ? `${improvedProfile.name.trim()} ${DOC_SUFFIX[locale][docType === 'cv' ? 'cv' : 'resume']}`
               : docType === 'cv'
               ? t('documents.cvDraft')
               : t('documents.resumeDraft'),

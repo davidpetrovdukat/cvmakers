@@ -28,6 +28,17 @@ const COPY = {
     orderId: 'Sipariş ID',
     pending: 'Bu sayfayı kapatmayın - işlem kontrol ediliyor...',
   },
+  ja: {
+    checking: 'お支払いを確認しています...',
+    orderMissing: '注文IDが見つかりません。',
+    success: 'お支払いが完了しました！',
+    processing: '処理中です...',
+    failed: 'お支払いに失敗したか、キャンセルされました。',
+    error: 'お支払いの確認中にエラーが発生しました。',
+    title: 'お支払いステータス',
+    orderId: '注文ID',
+    pending: 'このページを閉じないでください — 取引を確認しています...',
+  },
 } as const;
 
 export default function PaymentProcessingClient() {

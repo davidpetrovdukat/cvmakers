@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { Currency, SERVICE_COSTS } from '@/lib/currency';
+import { CURRENCY_OPTIONS, Currency, getMinimumTopUpAmount, SERVICE_COSTS } from '@/lib/currency';
 import { formatInteger } from '@/lib/format';
 import { useLocale } from '@/i18n/LocaleProvider';
 import { localizePath } from '@/i18n/config';
@@ -27,6 +27,9 @@ const TOKEN_PACKAGES = [
   { amount: 10, currency: 'TRY', tokens: 1000 },
   { amount: 50, currency: 'TRY', tokens: 5000 },
   { amount: 100, currency: 'TRY', tokens: 10000 },
+  { amount: 1000, currency: 'JPY', tokens: 1000 },
+  { amount: 5000, currency: 'JPY', tokens: 5000 },
+  { amount: 10000, currency: 'JPY', tokens: 10000 },
 ];
 
 const LEDGER_SAMPLE = [
@@ -144,6 +147,58 @@ const COPY = {
     contact: 'Destekle İletişime Geç',
     troubleshooting: 'Sorun Giderme',
   },
+  ja: {
+    title: 'お支払いとトークン',
+    subtitle: '従量課金モデル、トークン料金、請求システムについてご説明します。',
+    howItWorks: '仕組み',
+    modelCards: [
+      { icon: '£', title: '従量課金', desc: 'サブスクリプションや月額料金はありません', bg: 'bg-emerald-100' },
+      { icon: 'T', title: '1 {currency} = 100トークン', desc: 'シンプルな換算レート', bg: 'bg-indigo-100' },
+      { icon: 'PDF', title: `1件のドキュメント = ${TOKENS_PER_DOCUMENT}トークン`, desc: 'ドキュメントあたりの固定コスト', bg: 'bg-purple-100' },
+    ],
+    note: '注意 — トークンに有効期限はありません。',
+    calculator: 'トークン計算機',
+    amount: '金額',
+    tokens: 'トークン',
+    documents: 'CVまたは職務経歴書',
+    costPerDocument: 'ドキュメントあたりのコスト',
+    topUpTitle: 'チャージ方法',
+    customAmounts: '任意の金額',
+    customAmountsText: '{currency}5から{currency}10,000まで任意の金額でチャージできます。',
+    receiptsTitle: '領収書と記録',
+    receipts: [
+      { title: 'ダウンロード可能な領収書', body: '各チャージで領収書が発行され、ダッシュボードからダウンロードして経理にご利用いただけます。' },
+      { title: '利用履歴', body: 'チャージ、AI利用、下書き、エクスポートなど、すべてのトークン変動を検索可能な履歴で追跡できます。' },
+      { title: 'エクスポートオプション', body: '監査用の記録が必要ですか？履歴データをCSVでエクスポートするか、サポートに詳細な明細をご依頼ください。' },
+    ],
+    ledgerTitle: 'トークン履歴の例',
+    ledgerHeaders: ['日付', '種類', '変動', '残高'],
+    ledgerTypes: {
+      topup: 'チャージ',
+      cv: 'CV',
+      resume: '職務経歴書',
+      ai: 'AIアシスト',
+      manager: 'マネージャーアシスト',
+      draft: '下書き',
+    },
+    refundsTitle: '返金',
+    refundsBody: '未使用のトークンは購入から14日以内に返金できます。使用済みのトークンは返金できません。すべての返金は5〜10営業日以内に元のお支払い方法に処理されます。',
+    refundPolicy: '返金ポリシーを見る',
+    methodsTitle: 'お支払い方法と上限',
+    acceptedMethods: '対応している方法',
+    acceptedItems: ['クレジット/デビットカード（Visa、Mastercard、Amex）', 'Apple Pay', 'Google Pay', '銀行振込（大口の場合）'],
+    limitsTitle: '上限',
+    limits: ['最低：1回あたり{currency}5', '最高：1回あたり{currency}10,000', '1日の上限：{currency}25,000', '不正防止：自動モニタリング'],
+    paymentIssues: 'お支払いの問題',
+    paymentIssuesText: 'お支払いが拒否された場合は、カード情報と請求先住所をご確認ください。大口の場合は、銀行振込のオプションについてサポートまでご連絡ください。',
+    quickActions: 'クイックアクション',
+    topUpTokens: 'トークンをチャージ',
+    openCalculator: 'トークン計算機を開く',
+    needHelp: 'お困りですか？',
+    faq: 'FAQを見る',
+    contact: 'サポートに連絡',
+    troubleshooting: 'トラブルシューティング',
+  },
 } as const;
 
 export default function BillingTokensPage() {
@@ -174,6 +229,7 @@ export default function BillingTokensPage() {
   const calculateTokens = (amount: number) => Math.max(0, Math.round(amount * TOKENS_PER_CURRENCY_UNIT));
   const calculateDocuments = (tokens: number) => tokens / TOKENS_PER_DOCUMENT;
   const filteredPackages = TOKEN_PACKAGES.filter(pkg => pkg.currency === selectedCurrency);
+  const minimumTopUp = getMinimumTopUpAmount(selectedCurrency);
   const href = (path: string) => localizePath(path, locale);
 
   return (
@@ -227,7 +283,7 @@ export default function BillingTokensPage() {
                   <div className="flex gap-2">
                     <input
                       type="number"
-                      min="5"
+                      min={minimumTopUp}
                       step="1"
                       value={customAmount}
                       onChange={(e) => setCustomAmount(Number(e.target.value))}
@@ -238,10 +294,11 @@ export default function BillingTokensPage() {
                       onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
                       className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     >
-                      <option value="GBP">GBP</option>
-                      <option value="EUR">EUR</option>
-                      <option value="USD">USD</option>
-                      <option value="TRY">TRY</option>
+                      {CURRENCY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -274,7 +331,7 @@ export default function BillingTokensPage() {
                         {pkg.currency} {pkg.amount}
                       </div>
                       <div className="text-sm text-slate-600">
-                        {formatInteger(pkg.tokens)} {locale === 'tr' ? 'token' : 'tokens'}
+                        {formatInteger(pkg.tokens)} {copy.tokens}
                       </div>
                     </div>
                   </motion.div>
