@@ -37,6 +37,21 @@ const COPY = {
       { title: 'Faturalandırma', desc: 'Faturalar, KDV, iadeler.' },
     ],
   },
+  ja: {
+    title: 'お問い合わせ',
+    subtitle: '営業、サポート、請求に関するご質問にお答えいたします。',
+    details: '連絡先',
+    support: 'サポート',
+    phone: '電話',
+    hours: '受付時間：月〜金、09:00〜18:00（UK時間）。英国の祝日はサポートが制限されます。',
+    offices: 'オフィス',
+    uk: 'イギリス（本社）',
+    cards: [
+      { title: '営業', desc: 'デモ、見積もり、ボリューム料金について。' },
+      { title: 'サポート', desc: '製品に関するご質問とバグ報告。' },
+      { title: '請求', desc: '請求書、VAT、返金について。' },
+    ],
+  },
 } as const;
 
 export default function ContactPage() {

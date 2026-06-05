@@ -5,6 +5,7 @@ import Section from '@/components/layout/Section';
 import Card from '@/components/ui/Card';
 import { Zap, ShieldCheck, PenLine, Sparkles, Coins, Share2 } from 'lucide-react';
 import { useI18n } from '@/i18n/LocaleProvider';
+import type { Locale } from '@/i18n/config';
 
 const FEATURES = {
   en: [
@@ -73,7 +74,46 @@ const FEATURES = {
       desc: 'PDF/DOCX ve paylaşılabilir bağlantı ile özgeçmişinizi hemen gönderin.',
     },
   ],
+  ja: [
+    {
+      icon: Zap,
+      title: '10分で職務経歴書を作成',
+      desc: '数クリックでプロフェッショナルな書類を作成できます。明確な構成と説得力のある表現です。',
+    },
+    {
+      icon: ShieldCheck,
+      title: 'ATS対応テンプレート',
+      desc: '応募者追跡システムを通過し、採用担当者に好印象を与えるレイアウトです。',
+    },
+    {
+      icon: PenLine,
+      title: '事前作成済みコンテンツ',
+      desc: '人気の職種向けに厳選されたフレーズと箇条書きです。',
+    },
+    {
+      icon: Sparkles,
+      title: 'さりげないガイダンス',
+      badge: 'AI支援',
+      desc: 'スマートな提案がメモを明確な箇条書きと要約に変換します。',
+    },
+    {
+      icon: Coins,
+      title: '使った分だけお支払い',
+      desc: 'サブスクリプションの代わりにトークンを使用します。隠れた費用はありません。',
+    },
+    {
+      icon: Share2,
+      title: 'エクスポートと共有',
+      desc: 'PDF/DOCXと共有可能なリンクで、職務経歴書をすぐに送れます。',
+    },
+  ],
 } as const;
+
+const HEADING: Record<Locale, string> = {
+  en: 'Why choose us',
+  tr: 'Neden bizi seçmelisiniz',
+  ja: '私たちを選ぶ理由',
+};
 
 export default function WhyUs() {
   const { locale } = useI18n();
@@ -88,7 +128,7 @@ export default function WhyUs() {
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        <h2 className="text-2xl sm:text-3xl font-bold">{locale === 'tr' ? 'Neden bizi seçmelisiniz' : 'Why choose us'}</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold">{HEADING[locale]}</h2>
       </motion.div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature, index) => {

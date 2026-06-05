@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { SERVICE_COSTS } from '@/lib/currency';
-import { useLocale } from '@/i18n/LocaleProvider';
+import { useI18n, useLocale } from '@/i18n/LocaleProvider';
 import { localizePath } from '@/i18n/config';
 
 type FAQCategory = 'creation' | 'tools' | 'tokens' | 'export' | 'account' | 'troubleshooting';
@@ -309,6 +309,146 @@ const COPY = {
       },
     ] satisfies FAQItem[],
   },
+  ja: {
+    title: 'よくある質問',
+    subtitle: '従量課金のトークン制；英国・EU向けVAT対応',
+    searchPlaceholder: 'FAQを検索（例：トークン、返金、PDF）',
+    tryText: "検索例：「トークン」「PDF」「返金」",
+    all: 'すべて',
+    topQuestions: 'よくある質問',
+    noResultsTitle: '検索結果が見つかりません',
+    noResultsBody: '別のキーワードで検索するか、カテゴリから探してください',
+    clearFilters: 'フィルターをクリア',
+    stillNeedHelp: 'まだお困りですか？',
+    stillNeedHelpBody: 'お探しの情報が見つからない場合は、お気軽にお問い合わせください。',
+    createCv: 'CVを作成する',
+    topUpTokens: 'トークンをチャージ',
+    copyLink: 'FAQリンクをコピー',
+    didHelp: 'お役に立ちましたか？',
+    yes: 'はい',
+    no: 'いいえ',
+    contactTitle: 'まだお困りですか？',
+    emailPlaceholder: 'メールアドレス（任意）',
+    messagePlaceholder: 'お困りの内容をお聞かせください',
+    sendMessage: 'メッセージを送信',
+    contactSupport: 'サポートに連絡',
+    close: '閉じる',
+    categories: {
+      creation: 'CV・職務経歴書の作成',
+      tools: 'ライティングツール、AI・マネージャー',
+      tokens: 'トークンとお支払い',
+      export: 'エクスポートと共有',
+      account: 'アカウントとプライバシー',
+      troubleshooting: 'トラブルシューティング',
+    },
+    items: [
+      {
+        id: 'top-what-can-i-do',
+        question: 'ここでは何ができますか？',
+        answer: 'ゼロからCVや職務経歴書を作成したり、内蔵のライティングツールで下書きを改善したり、個人マネージャーに依頼してドキュメントを編集してもらうことができます。',
+        category: 'creation',
+        top: true,
+      },
+      {
+        id: 'top-pricing-model',
+        question: '料金体系はどのようになっていますか？',
+        answer: `トークンによる従量課金制です。主な操作：作成：${SERVICE_COSTS.CREATE_DRAFT}トークン、作成とPDFエクスポート：${SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PDF}トークン、AIで改善：${SERVICE_COSTS.AI_IMPROVE}トークン、個人マネージャーへ送信：${SERVICE_COSTS.PERSONAL_MANAGER}トークン。`,
+        category: 'tokens',
+        top: true,
+      },
+      {
+        id: 'top-drafting-cost',
+        question: '下書きの作成は無料ですか？',
+        answer: `下書きの作成には${SERVICE_COSTS.CREATE_DRAFT}トークンが必要で、ダッシュボードに追加されます。いつでも編集できます。`,
+        category: 'creation',
+        top: true,
+      },
+      {
+        id: 'create-ats-friendly',
+        question: 'ドキュメントはATS対応になりますか？',
+        answer: 'はい。テンプレートは明確な見出し、すっきりしたレイアウト、過度なグラフィックを使わない一般的なATSの読み取りパターンに沿って設計されています。',
+        category: 'creation',
+      },
+      {
+        id: 'create-templates',
+        question: 'さまざまなスタイルやテンプレートはありますか？',
+        answer: 'はい。複数のプロフェッショナルなテンプレートから選べ、エクスポート前にいつでもスタイルを変更できます。',
+        category: 'creation',
+      },
+      {
+        id: 'create-photo',
+        question: '写真を追加できますか？',
+        answer: '写真は任意です。各テンプレートには写真欄があり、残すことも削除することもできます。',
+        category: 'creation',
+      },
+      {
+        id: 'tools-improve-ai',
+        question: 'AIで改善とは何をしますか？',
+        answer: `要約、箇条書き、スキルなど選択したセクションを簡潔でプロフェッショナルな表現に書き直します。費用：1回あたり${SERVICE_COSTS.AI_IMPROVE}トークン。`,
+        category: 'tools',
+      },
+      {
+        id: 'tools-personal-manager',
+        question: '個人マネージャーとは誰で、何が受け取れますか？',
+        answer: `専門家が内容を確認し、パーソナライズされた編集とコメントをお送りします。費用：${SERVICE_COSTS.PERSONAL_MANAGER}トークン。初回の返信は3〜6時間以内です。`,
+        category: 'tools',
+      },
+      {
+        id: 'tokens-expire',
+        question: 'トークンに有効期限はありますか？',
+        answer: 'いいえ。トークンに有効期限はありません。',
+        category: 'tokens',
+      },
+      {
+        id: 'tokens-payment-methods',
+        question: 'どのお支払い方法に対応していますか？',
+        answer: '主要なクレジットカードや人気のウォレットに対応しています。大口のご注文については、ご要望に応じて銀行振込もご利用いただけます。',
+        category: 'tokens',
+      },
+      {
+        id: 'tokens-refunds',
+        question: '返金について',
+        answer: 'トークンのチャージは従量課金制であり、完了後の返金はできません。',
+        category: 'tokens',
+      },
+      {
+        id: 'export-formats',
+        question: 'どの形式でエクスポートできますか？',
+        answer: 'PDFとDOCXです。まず作成し、後からダッシュボードからエクスポートできます。',
+        category: 'export',
+      },
+      {
+        id: 'export-share',
+        question: 'CVをオンラインで共有できますか？',
+        answer: 'はい。ダッシュボードから非公開の共有リンクを生成できます。',
+        category: 'export',
+      },
+      {
+        id: 'account-card-storage',
+        question: 'カード情報は保存されますか？',
+        answer: 'いいえ。お支払いはPCI-DSS準拠のプロバイダーで処理されます。サーバーにカード番号の全文は保存しません。',
+        category: 'account',
+      },
+      {
+        id: 'account-delete',
+        question: 'アカウントやデータを削除するにはどうすればよいですか？',
+        answer: '削除をご希望の場合はサポートまでご連絡ください。会計・税務記録として保持が必要なものを除き、個人データを削除いたします。',
+        category: 'account',
+      },
+      {
+        id: 'troubleshooting-pdf',
+        question: 'PDFが想定と異なる表示になります。',
+        answer: 'PDFビューアで表示倍率を100%にし、印刷の余白を「なし」に設定してください。改善しない場合は別のテンプレートをお試しいただくか、サポートまでご連絡ください。',
+        category: 'troubleshooting',
+      },
+      {
+        id: 'troubleshooting-out-of-tokens',
+        question: 'トークンがなくなりました。どうすればよいですか？',
+        answer: 'チャージページからトークンを追加してください。計算機で選択した操作に必要なトークン数を確認できます。',
+        category: 'troubleshooting',
+      },
+    ] satisfies FAQItem[],
+  },
 } as const;
 
 function FAQContent() {
@@ -554,6 +694,7 @@ function FAQContent() {
 
 export default function FAQPage() {
   const locale = useLocale();
+  const { t } = useI18n();
   const copy = COPY[locale];
   return (
     <Suspense fallback={
@@ -561,7 +702,7 @@ export default function FAQPage() {
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-slate-900 mb-4">{copy.title}</h1>
-            <p className="text-lg text-slate-600">{locale === 'tr' ? 'Yükleniyor...' : 'Loading...'}</p>
+            <p className="text-lg text-slate-600">{t('common.loading')}</p>
           </div>
         </section>
       </main>
@@ -595,7 +736,7 @@ function FAQGroup(props: {
   showContactForm: string | null;
   contactEmail: string;
   contactMessage: string;
-  copy: typeof COPY.en | typeof COPY.tr;
+  copy: (typeof COPY)[keyof typeof COPY];
   highlightQuery: string;
   onToggle: (id: string) => void;
   onCopyLink: (id: string) => void;
@@ -675,7 +816,7 @@ function FAQCard({
   onCloseContact: () => void;
   highlightQuery: string;
   highlightText: (text: string, query: string) => React.ReactNode;
-  copy: typeof COPY.en | typeof COPY.tr;
+  copy: (typeof COPY)[keyof typeof COPY];
   href: (path: string) => string;
 }) {
   return (

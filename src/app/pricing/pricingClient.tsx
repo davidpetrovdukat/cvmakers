@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Section from "@/components/layout/Section";
 import Segmented from "@/components/ui/Segmented";
-import { CURRENCY_OPTIONS, Currency, getBundlePrice, isCurrency } from "@/lib/currency";
+import { CURRENCY_OPTIONS, Currency, getBundlePrice, getDefaultCurrencyForLocale, isCurrency } from "@/lib/currency";
 import { PRICING_PLANS } from "@/lib/data";
 import PlanCard from "@/components/pricing/PlanCard";
 import CustomPlanCard from "@/components/pricing/CustomPlanCard";
@@ -74,6 +74,32 @@ const COPY = {
       buyTokens: 'Token Satın Al',
     },
   },
+  ja: {
+    title: 'トークンチャージ',
+    subtitle: 'プランを選び、安全なチェックアウトへお進みください。',
+    tokenLabel: 'トークン',
+    popular: '人気',
+    termsLabel: '以下を読み、同意します：',
+    termsLinkLabel: '利用規約',
+    plans: {
+      'plan-starter': { name: 'クイックスタート', points: ['手動トークンチャージ', 'サブスクリプションなし', 'プレビュー込み'], cta: 'トークンを購入' },
+      'plan-pro': { name: 'ジョブハンター', points: ['手動トークンチャージ', 'ブランディングオプション', '優先サポート'], cta: 'トークンを購入' },
+      'plan-business': { name: 'キャリアブースト', points: ['手動トークンチャージ', 'チームアクセス', '連携機能のロードマップ'], cta: 'トークンを購入' },
+      'plan-annual': { name: '年間プロ', points: ['年間50,000トークン', 'トークン単価が最もお得', '優先サポート'], cta: '今すぐ購入' },
+    },
+    custom: {
+      custom: 'カスタム',
+      customPayloadName: 'カスタム',
+      ariaPrice: 'カスタム価格',
+      minimumAmount: '最低金額は{amount}です',
+      tokens: 'トークン',
+      bullets: ['手動トークンチャージを計画', 'サブスクリプションなし — 必要な分だけお支払い', '最低{amount}'],
+      termsLabel: '以下を読み、同意します：',
+      termsLinkLabel: '利用規約',
+      termsHref: '/terms',
+      buyTokens: 'トークンを購入',
+    },
+  },
 } as const;
 
 export default function PricingClient() {
@@ -81,15 +107,7 @@ export default function PricingClient() {
   const copy = COPY[locale];
   const bcRef = useRef<BroadcastChannel | null>(null);
   const { snapshot: exchangeRates } = useExchangeRates();
-  const [currency, setCurrency] = useState<Currency>(() => {
-    if (typeof window === "undefined") return "GBP";
-    try {
-      const saved = localStorage.getItem("currency");
-      return isCurrency(saved) ? saved : "GBP";
-    } catch {
-      return "GBP";
-    }
-  });
+  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(locale));
   const { status, data: session } = useSession();
   const router = useRouter();
   const signedIn = status === "authenticated";
@@ -105,6 +123,11 @@ export default function PricingClient() {
   };
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("currency");
+      if (isCurrency(saved)) setCurrency(saved);
+    } catch {}
+
     try {
       bcRef.current = new BroadcastChannel("app-events");
       bcRef.current.onmessage = (ev: MessageEvent) => {

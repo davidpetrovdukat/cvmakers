@@ -1,8 +1,9 @@
 import en from './en';
 import tr from './tr';
+import ja from './ja';
 import { Locale } from '../config';
 
-export const messages = { en, tr } as const;
+export const messages = { en, tr, ja } as const;
 
 export type Messages = typeof en;
 

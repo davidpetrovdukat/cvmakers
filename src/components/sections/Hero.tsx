@@ -25,6 +25,14 @@ const HERO_COPY = {
     cta: 'CV oluştur',
     imageAlt: 'Dizüstü bilgisayarda CV oluşturan kişi',
   },
+  ja: {
+    phrases: ['早期内定へ', 'リモートワークへ', '収入アップへ', '昇進へ'],
+    title1: '完璧なCVを作成しましょう。',
+    title2: '当ビルダーがあなたを',
+    body: 'テンプレートを選び、経験を追加するだけで、数分でクリーンでATS対応のCVを作成できます。PDFまたはDOCXでエクスポートできます。',
+    cta: 'CVを作成する',
+    imageAlt: 'ノートパソコンでCVを作成している人',
+  },
 } as const;
 
 export default function Hero() {

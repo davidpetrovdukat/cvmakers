@@ -1,4 +1,4 @@
-export const LOCALES = ['en', 'tr'] as const;
+export const LOCALES = ['en', 'tr', 'ja'] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -8,6 +8,7 @@ export const LOCALE_COOKIE = 'cv-makers-locale';
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'ENG',
   tr: 'TR',
+  ja: 'JP',
 };
 
 export function isLocale(value: unknown): value is Locale {

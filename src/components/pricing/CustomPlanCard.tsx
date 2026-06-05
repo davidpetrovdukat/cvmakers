@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { useState } from 'react';
 import type { Currency, ExchangeRateSnapshot } from '@/lib/currency';
-import { convertToTokens, formatCurrency, getCurrencySymbol } from '@/lib/currency';
+import { convertToTokens, formatCurrency, getCurrencySymbol, getMinimumTopUpAmount } from '@/lib/currency';
 import { formatInteger } from '@/lib/format';
 
 export type CustomPlanCardLabels = {
@@ -33,7 +33,7 @@ export default function CustomPlanCard({
 }) {
   const [priceInput, setPriceInput] = useState<string>('5');
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const min = 5;
+  const min = getMinimumTopUpAmount(currency, exchangeRates);
   const numericPrice = parseFloat(priceInput || '0');
   const validNumber = Number.isFinite(numericPrice);
 

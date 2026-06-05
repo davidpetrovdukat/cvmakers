@@ -18,6 +18,11 @@ const COPY = {
     body: 'Kariyerini CV Makers ile güçlendiren binlerce profesyonele katılın.',
     cta: 'CV oluştur',
   },
+  ja: {
+    heading: 'より早く内定を獲得しませんか？',
+    body: 'CV Makersでキャリアを強化した数千人のプロフェッショナルに参加してください。',
+    cta: 'CVを作成する',
+  },
 } as const;
 
 export default function CTAVisual() {

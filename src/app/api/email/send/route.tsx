@@ -5,7 +5,13 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { DocumentPDF } from "@/components/pdf/DocumentPDF";
-import { normalizeLocale } from "@/i18n/config";
+import { normalizeLocale, type Locale } from "@/i18n/config";
+
+const ATTACHMENT_MSG: Record<Locale, string> = {
+  en: 'Please find your document attached.',
+  tr: 'Belgenizi ekte bulabilirsiniz.',
+  ja: '添付ファイルにドキュメントをご確認ください。',
+};
 import { getTranslator } from "@/i18n/server";
 
 let resendClient: Resend | null | undefined;
@@ -44,8 +50,6 @@ export async function POST(req: Request) {
     const data = (doc.data || {}) as any;
     const locale = normalizeLocale(data?.meta?.locale || data?.locale);
     const t = getTranslator(locale);
-    const isTr = locale === 'tr';
-
     // Generate PDF with @react-pdf/renderer
     const pdfDoc = (
       <DocumentPDF
@@ -93,7 +97,7 @@ export async function POST(req: Request) {
       from: `CV Makers <${process.env.SMTP_USER || 'info@cv-makers.co.uk'}>`,
       to: toEmail,
       subject: `${doc.title} from ${doc.user?.company?.name || 'CV Makers'}`,
-      html: `<p>${isTr ? 'Belgenizi ekte bulabilirsiniz.' : 'Please find your document attached.'}</p>`,
+      html: `<p>${ATTACHMENT_MSG[locale]}</p>`,
       attachments: [{ filename: `${doc.title || 'Document'}.pdf`, content: pdfBuffer }],
     });
 

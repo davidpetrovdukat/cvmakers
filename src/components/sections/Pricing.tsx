@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { PRICING_PLANS } from '@/lib/data';
 import PlanCard from '@/components/pricing/PlanCard';
 import CustomPlanCard from '@/components/pricing/CustomPlanCard';
-import { Currency, getBundlePrice, isCurrency, SERVICE_COSTS } from '@/lib/currency';
+import { Currency, getBundlePrice, getDefaultCurrencyForLocale, isCurrency, SERVICE_COSTS } from '@/lib/currency';
 import { FileText, Download, FileDown, Sparkles, LayoutDashboard } from 'lucide-react';
 import { useExchangeRates } from '@/lib/useExchangeRates';
 import { useLocale } from '@/i18n/LocaleProvider';
@@ -125,6 +125,61 @@ const COPY = {
       manager: 'Yönetici',
     },
   },
+  ja: {
+    heading: 'トークンチャージプラン',
+    subheading: 'トークンはアクションごとに消費されます。サブスクリプションや隠れた費用はありません。',
+    costHeading: '各アクションのトークン消費量は？',
+    tokenLabel: 'トークン',
+    tokenUnit: 'トークン',
+    refundNote: 'トークンに有効期限はありません。エクスポートの返金は提供されません。',
+    depositNote: '購入後、ログイン済みユーザーのアカウントにトークンが入金されます。',
+    popular: '人気',
+    termsLabel: '以下を読み、同意します：',
+    termsLinkLabel: '利用規約',
+    termsHref: '/terms',
+    plans: {
+      'plan-starter': {
+        name: 'クイックスタート',
+        points: ['手動トークンチャージ', 'サブスクリプションなし', 'プレビュー込み'],
+        cta: 'トークンを購入',
+      },
+      'plan-pro': {
+        name: 'ジョブハンター',
+        points: ['手動トークンチャージ', 'ブランディングオプション', '優先サポート'],
+        cta: 'トークンを購入',
+      },
+      'plan-business': {
+        name: 'キャリアブースト',
+        points: ['手動トークンチャージ', 'チームアクセス', '連携機能のロードマップ'],
+        cta: 'トークンを購入',
+      },
+      'plan-annual': {
+        name: '年間プロ',
+        points: ['年間50,000トークン', 'トークン単価が最もお得', '優先サポート'],
+        cta: '今すぐ購入',
+      },
+    },
+    custom: {
+      custom: 'カスタム',
+      customPayloadName: 'カスタム',
+      ariaPrice: 'カスタム価格',
+      minimumAmount: '最低金額は{amount}です',
+      tokens: 'トークン',
+      bullets: ['手動トークンチャージを計画', 'サブスクリプションなし — 必要な分だけお支払い', '最低{amount}'],
+      termsLabel: '以下を読み、同意します：',
+      termsLinkLabel: '利用規約',
+      termsHref: '/terms',
+      buyTokens: 'トークンを購入',
+    },
+    actions: {
+      createCv: 'CVを作成',
+      createResume: '職務経歴書を作成',
+      exportPdf: 'PDFエクスポート',
+      exportDocx: 'DOCXエクスポート',
+      aiAssist: 'AI支援',
+      manager: 'マネージャー',
+    },
+  },
 } as const;
 
 export default function Pricing() {
@@ -132,7 +187,7 @@ export default function Pricing() {
   const copy = COPY[locale];
   const bcRef = useRef<BroadcastChannel | null>(null);
   const router = useRouter();
-  const [currency, setCurrency] = useState<Currency>('GBP');
+  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(locale));
   const { snapshot: exchangeRates } = useExchangeRates();
 
   useEffect(() => {

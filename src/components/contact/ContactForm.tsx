@@ -49,6 +49,24 @@ const COPY = {
     failed: 'Gönderilemedi',
     success: 'Teşekkürler! Talebiniz {id} alındı.',
   },
+  ja: {
+    title: 'メッセージを送信',
+    intro: 'フォームにご記入いただければ、メールでご返信いたします。',
+    name: 'お名前',
+    email: 'メールアドレス',
+    company: '会社名',
+    country: '国',
+    topic: '件名',
+    topics: ['営業', 'サポート', '請求', 'プライバシー'],
+    message: 'メッセージ',
+    messagePlaceholder: 'どのようなご用件でしょうか？',
+    consent: 'ご依頼内容についてご連絡いただくことに同意します。',
+    sending: '送信中です...',
+    send: '送信',
+    replyTime: '平均1営業日以内に返信いたします',
+    failed: '送信に失敗しました',
+    success: 'ありがとうございます。お問い合わせ{id}を受け付けました。',
+  },
 } as const;
 
 export default function ContactForm() {

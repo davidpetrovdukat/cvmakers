@@ -1,13 +1,20 @@
 import PolicyPage from '@/components/policy/PolicyPage';
 import { PolicySection } from '@/types/policy';
 import { getRequestLocale } from '@/i18n/server';
+import { Locale } from '@/i18n/config';
 
 export const metadata = {
   title: 'Cookies Policy - CV Makers',
   description: 'Details on how CV Makers uses cookies and similar technologies.',
 };
 
-const SECTIONS = {
+const PAGE_TITLES: Record<Locale, string> = {
+  en: 'Cookies Policy',
+  tr: 'Çerez Politikası',
+  ja: 'クッキーポリシー',
+};
+
+const SECTIONS: Record<Locale, PolicySection[]> = {
   en: [
     {
       id: 'overview',
@@ -72,13 +79,45 @@ const SECTIONS = {
       body: 'Çerezlerle ilgili sorularınızı info@cv-makers.co.uk adresine gönderebilirsiniz. Kayıtlı ofis: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.',
     },
   ],
-} satisfies Record<'en' | 'tr', PolicySection[]>;
+  ja: [
+    {
+      id: 'overview',
+      title: '1. 概要',
+      body: '本クッキーポリシーは、WORKING AGENT LTDが運営するcv-makers.co.ukにおける、クッキーおよびlocalStorage、sessionStorage、ピクセル、ローカル識別子などの類似技術の利用について説明するものです。本ポリシーは、プライバシーポリシーを補完するものです。',
+    },
+    {
+      id: 'what-are-cookies',
+      title: '2. クッキーとは',
+      body: 'クッキーとは、ウェブサイトを訪問した際にお客様のデバイスに保存される小さなテキストファイルまたはブラウザ上の記録です。サイトの機能維持、ログイン状態の保持、設定の記憶、パフォーマンスの向上、ならびに同意を得た場合の分析およびマーケティングに使用されます。',
+    },
+    {
+      id: 'categories',
+      title: '3. 使用するクッキーの種類',
+      body: '必須クッキーは、ログイン、セッション管理、セキュリティを支えます。機能クッキーは、言語やUI設定などの設定を記憶します。パフォーマンスクッキーは、信頼性および利用状況の把握に役立ちます。マーケティングクッキーは、同意を得た場合にのみ使用します。セキュリティクッキーは、不審な行動や不正の検知に役立ちます。',
+    },
+    {
+      id: 'consent',
+      title: '4. 同意および法的根拠',
+      body: '必須クッキーは、サービスの運営に必要であるため使用されます。必須ではないクッキーは、必要な場合には同意を得た後にのみ設定されます。法的根拠には、契約の履行、同意、ならびにセキュリティおよび不正防止などの正当な利益が含まれる場合があります。',
+    },
+    {
+      id: 'manage',
+      title: '5. クッキーの管理方法',
+      body: 'クッキーバナーまたは設定パネルから、必須ではないクッキーの受け入れ、拒否、またはカスタマイズができます。ブラウザからクッキーを削除することも可能です。一部のクッキーを無効にすると、機能が制限される場合があります。',
+    },
+    {
+      id: 'contact',
+      title: '6. お問い合わせ',
+      body: 'クッキーに関するご質問は、info@cv-makers.co.ukまでお送りください。Registered office: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.',
+    },
+  ],
+};
 
 export default async function CookiesPage() {
   const locale = await getRequestLocale();
   return (
     <PolicyPage
-      title={locale === 'tr' ? 'Çerez Politikası' : 'Cookies Policy'}
+      title={PAGE_TITLES[locale]}
       sections={SECTIONS[locale]}
       effectiveDate="06.10.2025"
       lastUpdated="06.10.2025"

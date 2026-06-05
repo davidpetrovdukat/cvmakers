@@ -1,7 +1,14 @@
 'use client';
 
 import Card from '@/components/ui/Card';
+import { Locale } from '@/i18n/config';
 import { useLocale } from '@/i18n/LocaleProvider';
+
+const LABELS: Record<Locale, { effective: string; updated: string; version: string; law: string }> = {
+  en: { effective: 'Effective', updated: 'Last updated', version: 'Version', law: 'Governing law' },
+  tr: { effective: 'Yürürlük', updated: 'Son güncelleme', version: 'Sürüm', law: 'Geçerli hukuk' },
+  ja: { effective: '発効日', updated: '最終更新', version: 'バージョン', law: '準拠法' },
+};
 
 interface PolicyMetaProps {
   effectiveDate?: string;
@@ -21,9 +28,7 @@ function MetaRow({ label, value }: { label: string; value?: string }) {
 
 export default function PolicyMeta({ effectiveDate, lastUpdated, version, lawText }: PolicyMetaProps) {
   const locale = useLocale();
-  const labels = locale === 'tr'
-    ? { effective: 'Yürürlük', updated: 'Son güncelleme', version: 'Sürüm', law: 'Geçerli hukuk' }
-    : { effective: 'Effective', updated: 'Last updated', version: 'Version', law: 'Governing law' };
+  const labels = LABELS[locale];
 
   return (
     <Card className="p-6" padding="md">
