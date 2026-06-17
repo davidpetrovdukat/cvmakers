@@ -42,6 +42,7 @@ export const CURRENCY_BY_COUNTRY: CurrencyData = {
   "Ukraine": "UAH",
   "Georgia": "GEL",
   "Turkey": "TRY",
+  "Japan": "JPY",
   "Andorra": "EUR",
   "Monaco": "EUR",
   "San Marino": "EUR",

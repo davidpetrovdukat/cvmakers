@@ -3,8 +3,37 @@
 import { motion } from 'framer-motion';
 import Section from '@/components/layout/Section';
 import { Star } from 'lucide-react';
+import { useI18n } from '@/i18n/LocaleProvider';
+import { Locale } from '@/i18n/config';
+
+const STATS_COPY: Record<Locale, { prefix: string; count: string; middle: string; rating: string; suffix: string }> = {
+  en: {
+    prefix: 'Trusted by',
+    count: '16,000+',
+    middle: 'job seekers. Rated',
+    rating: '4.9/5',
+    suffix: 'based on user reviews.',
+  },
+  tr: {
+    prefix: '',
+    count: '16.000+',
+    middle: 'iş arayan tarafından güveniliyor. Kullanıcı yorumlarına göre',
+    rating: '4,9/5',
+    suffix: 'puan aldı.',
+  },
+  ja: {
+    prefix: '',
+    count: '16,000人以上',
+    middle: 'の求職者にご利用いただいています。ユーザーレビューによる評価は',
+    rating: '4.9/5',
+    suffix: 'です。',
+  },
+};
 
 export default function TrustStats() {
+  const { locale } = useI18n();
+  const copy = STATS_COPY[locale];
+
   return (
     <Section className="py-8">
       <motion.div
@@ -24,8 +53,11 @@ export default function TrustStats() {
           ))}
         </div>
         <p className="text-base sm:text-lg text-slate-600">
-          Trusted by <span className="font-semibold text-slate-900">16,000+</span> job seekers. Rated{' '}
-          <span className="font-semibold text-slate-900">4.9/5</span> based on user reviews.
+          {copy.prefix && <>{copy.prefix} </>}
+          <span className="font-semibold text-slate-900">{copy.count}</span>{' '}
+          {copy.middle}{' '}
+          <span className="font-semibold text-slate-900">{copy.rating}</span>{' '}
+          {copy.suffix}
         </p>
       </motion.div>
     </Section>

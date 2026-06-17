@@ -1,87 +1,124 @@
 import PolicyPage from '@/components/policy/PolicyPage';
 import { PolicySection } from '@/types/policy';
+import { getRequestLocale } from '@/i18n/server';
+import { Locale } from '@/i18n/config';
 
 export const metadata = {
   title: 'Cookies Policy - CV Makers',
   description: 'Details on how CV Makers uses cookies and similar technologies.',
 };
 
-const sections: PolicySection[] = [
-  {
-    id: 'overview',
-    title: '1. Overview',
-    body: `This Cookies Policy explains how cv-makers.co.uk, operated by WORKING AGENT LTD (Company No. 15957326, registered office: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF), uses cookies and similar technologies (for example localStorage, sessionStorage, pixels, and other local identifiers) on our website and services. This Policy complements our Privacy Policy. By using the site or interacting with the cookie banner, you can manage or give consent to non-essential cookies as described below.`
-  },
-  {
-    id: 'what-are-cookies',
-    title: '2. What are cookies?',
-    body: `Cookies are small text files or browser entries placed on your device when you visit websites. They help the site function properly (for example, keeping you logged in), remember your preferences, improve performance, and — with your consent — enable analytics and marketing features.`
-  },
-  {
-    id: 'categories',
-    title: '3. Categories of cookies we use',
-    body: `We use cookies for limited purposes. Main categories include:
-• Essential / Necessary — required for core platform functions (login, session management, basic security). These are strictly necessary and do not require consent.
-• Functional — remember preferences and UI settings (language, layout, display options).
-• Performance / Analytics — collect aggregated usage data (page views, load times, errors) to improve reliability. These may operate under legitimate interests or consent depending on the tool.
-• Marketing / Advertising — used only with your consent: campaign tracking, remarketing, personalised content.
-• Security / Anti-abuse — help detect suspicious activity, fraud, bots, and misuse of the site.`
-  },
-  {
-    id: 'examples',
-    title: '4. Typical cookies (examples)',
-    body: `Cookie names, lifetimes, and providers may change. Current details are available in the cookie control panel on the website. Typical examples include:
-Cookie name	Purpose	Category	Typical lifetime
-session_id	Keeps you signed in / session	Essential	Session
-csrf_token	CSRF protection	Essential	Session
-cookie_consent	Stores your cookie choices	Functional	6–12 months
-ui_prefs	Saves language or UI settings	Functional	~6 months
-_ga, _gid	Basic aggregated analytics	Performance/Analytics	1–24 months
-campaign_src	Tracks campaign attribution	Marketing	30–90 days`
-  },
-  {
-    id: 'consent',
-    title: '5. Consent and lawful basis',
-    body: `• Essential cookies are used without consent because they are required for the Service to function.
-• Non-essential cookies (functional, analytics, marketing) are only set after you give consent via our cookie banner or settings, except where we rely on legitimate interests for limited analytics or security.
-• Legal bases include performance of contract, consent, and legitimate interests (e.g., preventing fraud, improving service, defending against disputes).`
-  },
-  {
-    id: 'records',
-    title: '6. How we record and retain consent',
-    body: `When you provide consent, we record the version of the consent text shown, the timestamp, your IP address, and browser information as evidence of your choice. Consent records are kept for at least 24 months and up to 6 years for enterprise or disputed matters, consistent with our Privacy Policy.`
-  },
-  {
-    id: 'third-parties',
-    title: '7. Third parties and international transfers',
-    body: `We work with third-party providers (payment processors, hosting/cloud services, analytics, marketing, customer support platforms) that may set cookies or similar identifiers. Some providers operate outside the UK/EEA. Where data is transferred internationally, we rely on safeguards such as UK adequacy decisions, Standard Contractual Clauses (SCCs), or equivalent lawful mechanisms. A list of active providers is available in the cookie settings panel.`
-  },
-  {
-    id: 'manage',
-    title: '8. How to manage or withdraw cookie consent',
-    body: `• Use the cookie banner or cookie settings panel on the site to accept, decline, or customise non-essential cookies.
-• You can withdraw or change consent at any time via the cookie settings link in the site footer.
-• You can also clear cookies through your browser or use private/incognito mode. Please note: disabling some cookies may reduce functionality (for example, you may be logged out or preferences may not be saved).`
-  },
-  {
-    id: 'changes',
-    title: '9. Changes to this Policy',
-    body: `We may update this Cookies Policy from time to time (for example, if new tools are integrated). Material changes will be communicated by a notice on the website or by email to registered users. The effective date will always be updated accordingly.`
-  },
-  {
-    id: 'contact',
-    title: '10. Contact',
-    body: `If you have questions about cookies or this Policy, contact us at:
-📧 info@cv-makers.co.uk
-📍 WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF`
-  },
-];
+const PAGE_TITLES: Record<Locale, string> = {
+  en: 'Cookies Policy',
+  tr: 'Çerez Politikası',
+  ja: 'クッキーポリシー',
+};
 
-export default function CookiesPage() {
+const SECTIONS: Record<Locale, PolicySection[]> = {
+  en: [
+    {
+      id: 'overview',
+      title: '1. Overview',
+      body: 'This Cookies Policy explains how cv-makers.co.uk, operated by WORKING AGENT LTD, uses cookies and similar technologies such as localStorage, sessionStorage, pixels, and local identifiers. This Policy complements our Privacy Policy.',
+    },
+    {
+      id: 'what-are-cookies',
+      title: '2. What are cookies?',
+      body: 'Cookies are small text files or browser entries placed on your device when you visit websites. They help the site function, keep you logged in, remember preferences, improve performance, and, with consent, support analytics and marketing.',
+    },
+    {
+      id: 'categories',
+      title: '3. Categories of cookies we use',
+      body: 'Essential cookies support login, session management, and security. Functional cookies remember preferences such as language and UI settings. Performance cookies help us understand reliability and usage. Marketing cookies are used only with consent. Security cookies help detect suspicious activity and fraud.',
+    },
+    {
+      id: 'consent',
+      title: '4. Consent and lawful basis',
+      body: 'Essential cookies are used because they are required for the Service to function. Non-essential cookies are set only after consent where required. Legal bases may include performance of contract, consent, and legitimate interests such as security and fraud prevention.',
+    },
+    {
+      id: 'manage',
+      title: '5. How to manage cookies',
+      body: 'You can accept, decline, or customise non-essential cookies through the cookie banner or settings panel. You can also clear cookies through your browser. Disabling some cookies may reduce functionality.',
+    },
+    {
+      id: 'contact',
+      title: '6. Contact',
+      body: 'Questions about cookies can be sent to info@cv-makers.co.uk. Registered office: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.',
+    },
+  ],
+  tr: [
+    {
+      id: 'overview',
+      title: '1. Genel bakış',
+      body: 'Bu Çerez Politikası, WORKING AGENT LTD tarafından işletilen cv-makers.co.uk sitesinin çerezleri ve localStorage, sessionStorage, pikseller ve yerel tanımlayıcılar gibi benzer teknolojileri nasıl kullandığını açıklar. Bu Politika, Gizlilik Politikamızı tamamlar.',
+    },
+    {
+      id: 'what-are-cookies',
+      title: '2. Çerez nedir?',
+      body: 'Çerezler, web sitelerini ziyaret ettiğinizde cihazınıza yerleştirilen küçük metin dosyaları veya tarayıcı kayıtlarıdır. Sitenin çalışmasına, oturumun açık kalmasına, tercihlerin hatırlanmasına, performansın iyileştirilmesine ve onayınızla analiz/pazarlama kullanımına yardımcı olur.',
+    },
+    {
+      id: 'categories',
+      title: '3. Kullandığımız çerez kategorileri',
+      body: 'Zorunlu çerezler giriş, oturum yönetimi ve güvenliği destekler. İşlevsel çerezler dil ve arayüz tercihlerini hatırlar. Performans çerezleri güvenilirlik ve kullanım verilerini anlamamıza yardımcı olur. Pazarlama çerezleri yalnızca onayınızla kullanılır. Güvenlik çerezleri şüpheli aktivite ve dolandırıcılığı tespit etmeye yardımcı olur.',
+    },
+    {
+      id: 'consent',
+      title: '4. Onay ve hukuki dayanak',
+      body: 'Zorunlu çerezler Hizmetin çalışması için gerekli olduğundan kullanılır. Zorunlu olmayan çerezler, gerektiğinde yalnızca onayınızdan sonra ayarlanır. Hukuki dayanaklar sözleşmenin ifası, onay ve güvenlik/dolandırıcılık önleme gibi meşru menfaatleri içerebilir.',
+    },
+    {
+      id: 'manage',
+      title: '5. Çerezleri nasıl yönetebilirsiniz?',
+      body: 'Çerez bannerı veya ayarlar paneli üzerinden zorunlu olmayan çerezleri kabul edebilir, reddedebilir veya özelleştirebilirsiniz. Tarayıcınız üzerinden çerezleri temizleyebilirsiniz. Bazı çerezleri devre dışı bırakmak işlevselliği azaltabilir.',
+    },
+    {
+      id: 'contact',
+      title: '6. İletişim',
+      body: 'Çerezlerle ilgili sorularınızı info@cv-makers.co.uk adresine gönderebilirsiniz. Kayıtlı ofis: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.',
+    },
+  ],
+  ja: [
+    {
+      id: 'overview',
+      title: '1. 概要',
+      body: '本クッキーポリシーは、WORKING AGENT LTDが運営するcv-makers.co.ukにおける、クッキーおよびlocalStorage、sessionStorage、ピクセル、ローカル識別子などの類似技術の利用について説明するものです。本ポリシーは、プライバシーポリシーを補完するものです。',
+    },
+    {
+      id: 'what-are-cookies',
+      title: '2. クッキーとは',
+      body: 'クッキーとは、ウェブサイトを訪問した際にお客様のデバイスに保存される小さなテキストファイルまたはブラウザ上の記録です。サイトの機能維持、ログイン状態の保持、設定の記憶、パフォーマンスの向上、ならびに同意を得た場合の分析およびマーケティングに使用されます。',
+    },
+    {
+      id: 'categories',
+      title: '3. 使用するクッキーの種類',
+      body: '必須クッキーは、ログイン、セッション管理、セキュリティを支えます。機能クッキーは、言語やUI設定などの設定を記憶します。パフォーマンスクッキーは、信頼性および利用状況の把握に役立ちます。マーケティングクッキーは、同意を得た場合にのみ使用します。セキュリティクッキーは、不審な行動や不正の検知に役立ちます。',
+    },
+    {
+      id: 'consent',
+      title: '4. 同意および法的根拠',
+      body: '必須クッキーは、サービスの運営に必要であるため使用されます。必須ではないクッキーは、必要な場合には同意を得た後にのみ設定されます。法的根拠には、契約の履行、同意、ならびにセキュリティおよび不正防止などの正当な利益が含まれる場合があります。',
+    },
+    {
+      id: 'manage',
+      title: '5. クッキーの管理方法',
+      body: 'クッキーバナーまたは設定パネルから、必須ではないクッキーの受け入れ、拒否、またはカスタマイズができます。ブラウザからクッキーを削除することも可能です。一部のクッキーを無効にすると、機能が制限される場合があります。',
+    },
+    {
+      id: 'contact',
+      title: '6. お問い合わせ',
+      body: 'クッキーに関するご質問は、info@cv-makers.co.ukまでお送りください。Registered office: WORKING AGENT LTD, Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF.',
+    },
+  ],
+};
+
+export default async function CookiesPage() {
+  const locale = await getRequestLocale();
   return (
     <PolicyPage
-      title="Cookies Policy"
-      sections={sections}
+      title={PAGE_TITLES[locale]}
+      sections={SECTIONS[locale]}
       effectiveDate="06.10.2025"
       lastUpdated="06.10.2025"
       version="v1.0.6"

@@ -71,3 +71,17 @@ html {
   }
 }
 
+.font-japanese,
+.font-japanese h1,
+.font-japanese h2,
+.font-japanese h3,
+.font-japanese h4,
+.font-japanese h5,
+.font-japanese h6 {
+  font-family: var(--font-noto-sans-jp), 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+}
+
+.font-japanese {
+  font-family: var(--font-noto-sans-jp), 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+}
+

@@ -4,25 +4,54 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { useState } from 'react';
 import type { Currency, ExchangeRateSnapshot } from '@/lib/currency';
-import { convertToTokens } from '@/lib/currency';
+import { convertToTokens, formatCurrency, getCurrencySymbol, getMinimumTopUpAmount } from '@/lib/currency';
+import { formatInteger } from '@/lib/format';
+
+export type CustomPlanCardLabels = {
+  custom: string;
+  customPayloadName: string;
+  ariaPrice: string;
+  minimumAmount: string;
+  tokens: string;
+  bullets: readonly string[];
+  termsLabel: string;
+  termsLinkLabel: string;
+  termsHref: string;
+  buyTokens: string;
+};
 
 export default function CustomPlanCard({
   currency,
   exchangeRates,
   onRequest,
+  labels,
 }: {
   currency: Currency;
   exchangeRates?: ExchangeRateSnapshot;
   onRequest: (data: { name: string; price: number; currency: Currency; tokens: number }) => void;
+  labels?: CustomPlanCardLabels;
 }) {
   const [priceInput, setPriceInput] = useState<string>('5');
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const min = 0.01;
+  const min = getMinimumTopUpAmount(currency, exchangeRates);
   const numericPrice = parseFloat(priceInput || '0');
   const validNumber = Number.isFinite(numericPrice);
 
   const tokens = validNumber ? convertToTokens(numericPrice, currency, exchangeRates).tokens : 0;
   const reduceMotion = useReducedMotion();
+
+  const copy = labels ?? {
+    custom: 'Custom',
+    customPayloadName: 'Custom',
+    ariaPrice: 'Custom price',
+    minimumAmount: 'Minimum amount is {amount}',
+    tokens: 'tokens',
+    bullets: ['Plan a manual top-up', 'No subscription - pay what you need', 'Minimum {amount}'],
+    termsLabel: 'I have read and agree to the',
+    termsLinkLabel: 'Terms and Conditions',
+    termsHref: '/terms',
+    buyTokens: 'Buy Tokens',
+  };
 
   const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     setPriceInput(e.target.value);
@@ -31,15 +60,16 @@ export default function CustomPlanCard({
   const handleRequest = () => {
     if (validNumber && numericPrice >= min) {
       onRequest({
-        name: 'Custom',
+        name: copy.customPayloadName,
         price: numericPrice,
-        currency: currency,
+        currency,
         tokens,
       });
     }
   };
 
-  const currencyLabel = currency === 'GBP' ? String.fromCharCode(163) : currency === 'EUR' ? String.fromCharCode(8364) : '$';
+  const currencyLabel = getCurrencySymbol(currency);
+  const minimumAmount = formatCurrency(min, currency);
 
   return (
     <motion.div
@@ -51,10 +81,7 @@ export default function CustomPlanCard({
       transition={{ duration: 0.4 }}
       viewport={{ once: true }}
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Top-Up</h3>
-        <span className="text-xs rounded-full px-2 py-1 bg-slate-100 border border-[#E2E8F0] text-slate-700">EARLY / SUPPORTER</span>
-      </div>
+      <h3 className="text-lg font-semibold">{copy.custom}</h3>
       <div className="mt-3 flex items-center gap-2">
         <span className="text-3xl font-bold">{currencyLabel}</span>
         <input
@@ -63,18 +90,17 @@ export default function CustomPlanCard({
           value={priceInput}
           onChange={onChange}
           className="w-24 text-3xl font-bold bg-transparent border-b border-[#E2E8F0] focus:outline-none focus:ring-0"
-          aria-label="Custom price"
+          aria-label={copy.ariaPrice}
         />
-        <span className="text-base font-normal text-slate-500">/one-time</span>
       </div>
       {(!validNumber || numericPrice < min) && (
-        <div className="mt-1 text-[11px] text-red-600">Minimum amount is {currencyLabel}0.01</div>
+        <div className="mt-1 text-[11px] text-red-600">{copy.minimumAmount.replace('{amount}', minimumAmount)}</div>
       )}
-      <div className="mt-1 text-xs text-slate-600">= {tokens} tokens</div>
+      <div className="mt-1 text-xs text-slate-600">= {formatInteger(tokens)} {copy.tokens}</div>
       <ul className="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
-        <li>Plan a manual top-up</li>
-        <li>No subscription - pay what you need</li>
-        <li>Minimum {currencyLabel}0.01</li>
+        {copy.bullets.map((bullet) => (
+          <li key={bullet}>{bullet.replace('{amount}', minimumAmount)}</li>
+        ))}
       </ul>
       <div className="mt-6 space-y-3">
         <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
@@ -85,19 +111,16 @@ export default function CustomPlanCard({
             className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
           />
           <span>
-            I have read and agree to the{' '}
-            <a href="/terms" target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
-              Terms and Conditions
+            {copy.termsLabel}{' '}
+            <a href={copy.termsHref} target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
+              {copy.termsLinkLabel}
             </a>
           </span>
         </label>
         <Button className="w-full" size="lg" onClick={handleRequest} disabled={!validNumber || numericPrice < min || !agreeTerms}>
-          Buy Tokens
+          {copy.buyTokens}
         </Button>
       </div>
     </motion.div>
   );
 }
-
-
-

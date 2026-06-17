@@ -4,33 +4,78 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { THEME } from '@/lib/theme';
 import Segmented from '@/components/ui/Segmented';
 import { useSession, signOut } from 'next-auth/react';
+import { CURRENCY_OPTIONS, Currency, getDefaultCurrencyForLocale, isCurrency } from '@/lib/currency';
+import { LOCALE_LABELS, LOCALES, Locale, getLocaleFromPath, localizePath, stripLocaleFromPath } from '@/i18n/config';
+import { useI18n } from '@/i18n/LocaleProvider';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { locale, setLocale, t } = useI18n();
   const { data: session, status } = useSession();
   const signedIn = status === 'authenticated';
   const bcRef = useRef<BroadcastChannel | null>(null);
   const [tokens, setTokens] = useState<number | null>(null);
-  const isHome = pathname === '/';
-  const isPricing = pathname === '/pricing';
-  const isTokenCalc = pathname === '/token-calculator';
-  const isAbout = pathname === '/about';
-  const isDashboard = pathname === '/dashboard';
-  const [currency, setCurrency] = useState<'GBP' | 'EUR' | 'USD'>('GBP');
-  const [helpOpen, setHelpOpen] = useState(false);
+  const normalizedPath = stripLocaleFromPath(pathname);
+  const activeLocale = getLocaleFromPath(pathname) ?? locale;
+  const isPricing = normalizedPath === '/pricing';
+  const isTokenCalc = normalizedPath === '/token-calculator';
+  const isDashboard = normalizedPath === '/dashboard';
+  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(activeLocale));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const href = useCallback((target: string) => localizePath(target, activeLocale), [activeLocale]);
+
+  const refreshTokens = useCallback(async () => {
+    if (status !== 'authenticated') {
+      setTokens(null);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/me', { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await response.json().catch(() => null);
+      const tokenBalance = payload?.user?.tokenBalance;
+      if (typeof tokenBalance === 'number') {
+        setTokens(tokenBalance);
+      }
+    } catch {}
+  }, [status]);
+
   useEffect(() => {
     const t = (session?.user as any)?.tokenBalance;
-    if (typeof t === 'number') setTokens(t);
-  }, [session]);
+    if (typeof t === 'number' && tokens === null) setTokens(t);
+  }, [session, tokens]);
+
+  useEffect(() => {
+    refreshTokens();
+  }, [pathname, refreshTokens]);
+
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const onFocus = () => {
+      refreshTokens();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshTokens();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [refreshTokens, status]);
 
   useEffect(() => {
     try {
@@ -40,7 +85,7 @@ export default function Header() {
         if (data.type === 'tokens-updated' && typeof data.tokenBalance === 'number') {
           setTokens(data.tokenBalance);
         }
-        if (data.type === 'currency-updated' && (data.currency === 'GBP' || data.currency === 'EUR' || data.currency === 'USD')) {
+        if (data.type === 'currency-updated' && isCurrency(data.currency)) {
           setCurrency(data.currency);
           try { localStorage.setItem('currency', data.currency); } catch {}
         }
@@ -54,26 +99,32 @@ export default function Header() {
     // Read saved currency client-side to avoid SSR hydration mismatch
     try {
       const saved = localStorage.getItem('currency');
-      if (saved === 'GBP' || saved === 'EUR' || saved === 'USD') setCurrency(saved);
+      if (isCurrency(saved)) {
+        setCurrency(saved);
+      }
     } catch {}
-  }, []);
+  }, [activeLocale]);
 
-  const onCurrencyChange = (next: 'GBP'|'EUR'|'USD') => {
+  const onCurrencyChange = (next: Currency) => {
     setCurrency(next);
     try { localStorage.setItem('currency', next); } catch {}
     try { bcRef.current?.postMessage({ type: 'currency-updated', currency: next }); } catch {}
   };
 
-  const closeHelp = () => setHelpOpen(false);
-  const toggleHelp = () => setHelpOpen((v)=>!v);
-  const onKeyDownHelp: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
-    if (e.key === 'Escape') setHelpOpen(false);
+  const onLanguageChange = (next: string) => {
+    const nextLocale = next as Locale;
+    const query = typeof window !== 'undefined' ? window.location.search.replace(/^\?/, '') : '';
+    const target = `${localizePath(normalizedPath, nextLocale)}${query ? `?${query}` : ''}`;
+    setLocale(nextLocale);
+    try {
+      localStorage.setItem('cv-makers-locale', nextLocale);
+      document.cookie = `cv-makers-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+    } catch {}
+    router.push(target);
   };
 
-  const openMobile = () => setMobileOpen(true);
   const closeMobile = () => setMobileOpen(false);
   const toggleMobile = () => setMobileOpen((v)=>!v);
-  const toggleMobileHelp = () => setMobileHelpOpen((v)=>!v);
 
   // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); setMobileHelpOpen(false); }, [pathname]);
@@ -99,7 +150,7 @@ export default function Header() {
     return () => { try { document.body.style.overflow = ''; } catch {} };
   }, [mobileOpen, mounted]);
 
-  if (pathname?.startsWith('/print-resume')) {
+  if (normalizedPath.startsWith('/print-resume')) {
     return null;
   }
 
@@ -112,7 +163,7 @@ export default function Header() {
     >
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/" className={`flex items-center gap-2 font-semibold ${THEME.text}`} aria-label="Go to homepage">
+          <Link href={href('/')} className={`flex items-center gap-2 font-semibold ${THEME.text}`} aria-label="Go to homepage">
             <motion.span
               whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -130,50 +181,55 @@ export default function Header() {
           </Link>
           
           <nav className="hidden sm:flex items-center gap-2 text-sm relative">
-            <a href={signedIn ? '/create-cv' : '/auth/signin?mode=login'} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 transition-colors">Create my CV</a>
-            <a href={signedIn ? '/create-resume' : '/auth/signin?mode=login'} className="rounded-xl border border-[#E2E8F0] hover:bg-[#E2E8F0] px-3 py-2 transition-colors">Create my resume</a>
+            <a href={signedIn ? href('/create-cv') : href('/auth/signin?mode=login')} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 transition-colors">{t('nav.createCv')}</a>
+            <a href={signedIn ? href('/create-resume') : href('/auth/signin?mode=login')} className="rounded-xl border border-[#E2E8F0] hover:bg-[#E2E8F0] px-3 py-2 transition-colors">{t('nav.createResume')}</a>
             {signedIn && (
-              <a href="/dashboard" className={`rounded-xl px-3 py-2 transition-colors ${isDashboard ? 'bg-black/5' : 'hover:bg-black/5'}`}>Dashboard</a>
+              <a href={href('/dashboard')} className={`rounded-xl px-3 py-2 transition-colors ${isDashboard ? 'bg-black/5' : 'hover:bg-black/5'}`}>{t('nav.dashboard')}</a>
             )}
-            <a href="/pricing" className={`rounded-xl px-3 py-2 transition-colors ${isPricing ? 'bg-black/5' : 'hover:bg-black/5'}`}>Top-Up</a>
-            <a href="/token-calculator" className={`rounded-xl px-3 py-2 transition-colors ${isTokenCalc ? 'bg-black/5' : 'hover:bg-black/5'}`}>Token Calculator</a>
+            <a href={href('/pricing')} className={`rounded-xl px-3 py-2 transition-colors ${isPricing ? 'bg-black/5' : 'hover:bg-black/5'}`}>{t('nav.pricing')}</a>
+            <a href={href('/token-calculator')} className={`rounded-xl px-3 py-2 transition-colors ${isTokenCalc ? 'bg-black/5' : 'hover:bg-black/5'}`}>{t('nav.tokenCalculator')}</a>
           </nav>
         </div>
         
         <div className="hidden sm:flex items-center gap-3">
+          <Segmented
+            options={LOCALES.map((item) => ({ label: LOCALE_LABELS[item], value: item }))}
+            value={activeLocale}
+            onChange={onLanguageChange}
+          />
           <div className="hidden md:block">
             <Segmented
-              options={[{ label: 'GBP', value: 'GBP' }, { label: 'EUR', value: 'EUR' }, { label: 'USD', value: 'USD' }]}
+              options={CURRENCY_OPTIONS}
               value={currency}
-              onChange={(v)=>onCurrencyChange(v as 'GBP'|'EUR'|'USD')}
+              onChange={(v)=>onCurrencyChange(v as Currency)}
             />
           </div>
           {!signedIn ? (
             <>
               <Link
-                href="/auth/signin?mode=login"
+                href={href('/auth/signin?mode=login')}
                 className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm transition-colors"
               >
-                Log in
+                {t('nav.login')}
               </Link>
               <Link
-                href="/auth/signin?mode=signup"
+                href={href('/auth/signin?mode=signup')}
                 className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm transition-colors"
               >
-                Sign up
+                {t('nav.signup')}
               </Link>
             </>
           ) : (
             <div className="flex items-center gap-2">
               <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-slate-700">
-                Tokens: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
+                {t('nav.tokens')}: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
               </div>
-              <Link href="/pricing" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-sm transition-colors">Top-Up</Link>
+              <Link href={href('/pricing')} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-sm transition-colors">{t('nav.pricing')}</Link>
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: href('/') })}
                 className="rounded-xl bg-slate-900 hover:bg-black text-white px-4 py-2 text-sm transition-colors"
               >
-                Sign out
+                {t('nav.signout')}
               </button>
             </div>
           )}
@@ -182,7 +238,7 @@ export default function Header() {
         {/* Burger button (mobile only) */}
         <div className="sm:hidden">
           <button
-            aria-label="Open menu"
+            aria-label={t('common.openMenu')}
             className="rounded-xl border border-[#E2E8F0] bg-white p-2 text-slate-700 hover:bg-slate-50"
             onClick={toggleMobile}
           >
@@ -217,8 +273,8 @@ export default function Header() {
                 transition={{ type: 'tween', duration: 0.25 }}
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0]">
-                  <div className="text-sm font-semibold">Menu</div>
-                  <button aria-label="Close menu" onClick={closeMobile} className="rounded-xl p-2 hover:bg-slate-50">
+                  <div className="text-sm font-semibold">{t('common.menu')}</div>
+                  <button aria-label={t('common.closeMenu')} onClick={closeMobile} className="rounded-xl p-2 hover:bg-slate-50">
                     <svg className="h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
@@ -228,41 +284,50 @@ export default function Header() {
 
                 <div className="flex-1 overflow-y-auto px-4 py-3 text-sm">
                   <nav className="grid gap-1">
-                    <Link href={signedIn ? '/create-cv' : '/auth/signin?mode=login'} className={`rounded-xl px-3 py-2 hover:bg-slate-50`} onClick={closeMobile}>Create my CV</Link>
-                    <Link href={signedIn ? '/create-resume' : '/auth/signin?mode=login'} className={`rounded-xl px-3 py-2 hover:bg-slate-50`} onClick={closeMobile}>Create my resume</Link>
+                    <Link href={signedIn ? href('/create-cv') : href('/auth/signin?mode=login')} className={`rounded-xl px-3 py-2 hover:bg-slate-50`} onClick={closeMobile}>{t('nav.createCv')}</Link>
+                    <Link href={signedIn ? href('/create-resume') : href('/auth/signin?mode=login')} className={`rounded-xl px-3 py-2 hover:bg-slate-50`} onClick={closeMobile}>{t('nav.createResume')}</Link>
                     {signedIn && (
-                      <Link href="/dashboard" className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isDashboard ? 'bg-black/5' : ''}`} onClick={closeMobile}>Dashboard</Link>
+                      <Link href={href('/dashboard')} className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isDashboard ? 'bg-black/5' : ''}`} onClick={closeMobile}>{t('nav.dashboard')}</Link>
                     )}
-                    <Link href="/pricing" className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isPricing ? 'bg-black/5' : ''}`} onClick={closeMobile}>Top-Up</Link>
-                    <Link href="/token-calculator" className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isTokenCalc ? 'bg-black/5' : ''}`} onClick={closeMobile}>Token Calculator</Link>
+                    <Link href={href('/pricing')} className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isPricing ? 'bg-black/5' : ''}`} onClick={closeMobile}>{t('nav.pricing')}</Link>
+                    <Link href={href('/token-calculator')} className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isTokenCalc ? 'bg-black/5' : ''}`} onClick={closeMobile}>{t('nav.tokenCalculator')}</Link>
                   </nav>
 
                   <div className="mt-4">
-                    <div className="mb-2 text-xs text-slate-500">Currency</div>
+                    <div className="mb-2 text-xs text-slate-500">{t('common.language')}</div>
                     <Segmented
-                      options={[{ label: 'GBP', value: 'GBP' }, { label: 'EUR', value: 'EUR' }, { label: 'USD', value: 'USD' }]}
+                      options={LOCALES.map((item) => ({ label: LOCALE_LABELS[item], value: item }))}
+                      value={activeLocale}
+                      onChange={onLanguageChange}
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="mb-2 text-xs text-slate-500">{t('common.currency')}</div>
+                    <Segmented
+                      options={CURRENCY_OPTIONS}
                       value={currency}
-                      onChange={(v)=>onCurrencyChange(v as 'GBP'|'EUR'|'USD')}
+                      onChange={(v)=>onCurrencyChange(v as Currency)}
                     />
                   </div>
 
                   <div className="mt-4 grid gap-2">
                     {!signedIn ? (
                       <>
-                        <Link href="/auth/signin?mode=login" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Log in</Link>
-                        <Link href="/auth/signin?mode=signup" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Sign up</Link>
+                        <Link href={href('/auth/signin?mode=login')} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>{t('nav.login')}</Link>
+                        <Link href={href('/auth/signin?mode=signup')} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>{t('nav.signup')}</Link>
                       </>
                     ) : (
                       <>
                         <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-slate-700">
-                          Tokens: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
+                          {t('nav.tokens')}: {typeof tokens === 'number' ? tokens : ((session?.user as any)?.tokenBalance ?? 0)}
                         </div>
-                        <Link href="/pricing" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>Top-Up</Link>
+                        <Link href={href('/pricing')} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm text-center" onClick={closeMobile}>{t('nav.pricing')}</Link>
                         <button
-                          onClick={() => { closeMobile(); signOut({ callbackUrl: '/' }); }}
+                          onClick={() => { closeMobile(); signOut({ callbackUrl: href('/') }); }}
                           className="rounded-xl bg-slate-900 hover:bg-black text-white px-4 py-2 text-sm"
                         >
-                          Sign out
+                          {t('nav.signout')}
                         </button>
                       </>
                     )}

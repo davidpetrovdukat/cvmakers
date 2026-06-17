@@ -2,186 +2,221 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Loader2, CreditCard, ShieldCheck, Mail, ArrowRight } from "lucide-react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useLocale } from "@/i18n/LocaleProvider";
+import { localizePath } from "@/i18n/config";
+
+const COPY = {
+  en: {
+    paymentDetails: 'Payment details',
+    cardNumber: 'Card number',
+    expiry: 'Expiry',
+    cvv: 'CVV',
+    namePlaceholder: 'John Doe',
+    addressPlaceholder: '123 Main Street',
+    cityPlaceholder: 'London',
+    postalPlaceholder: 'E1 6AN',
+    success: 'Payment successful!',
+    redirecting: 'Redirecting to dashboard...',
+    processing: 'Processing...',
+    pay: 'Pay',
+    orderSummary: 'Order Summary',
+    plan: 'Plan',
+    price: 'Price',
+    total: 'Total',
+    invoice: 'Invoice will be sent to',
+    failed: 'Payment failed. Please try again.',
+    processingFailed: 'Payment processing failed. Please try again.',
+    validation: {
+      digits: 'Only digits allowed',
+      card: 'Invalid card number',
+      required: 'Required',
+      expiry: 'MM/YY',
+      cvv: 'Invalid CVV',
+    },
+  },
+  tr: {
+    paymentDetails: 'Ödeme bilgileri',
+    cardNumber: 'Kart numarası',
+    expiry: 'Son kullanma',
+    cvv: 'CVV',
+    namePlaceholder: 'Ad Soyad',
+    addressPlaceholder: 'Adres',
+    cityPlaceholder: 'Şehir',
+    postalPlaceholder: 'Posta kodu',
+    success: 'Ödeme başarılı!',
+    redirecting: 'Dashboard sayfasına yönlendiriliyor...',
+    processing: 'İşleniyor...',
+    pay: 'Öde',
+    orderSummary: 'Sipariş Özeti',
+    plan: 'Plan',
+    price: 'Fiyat',
+    total: 'Toplam',
+    invoice: 'Fatura şu adrese gönderilecek:',
+    failed: 'Ödeme başarısız. Lütfen tekrar deneyin.',
+    processingFailed: 'Ödeme işlenemedi. Lütfen tekrar deneyin.',
+    validation: {
+      digits: 'Yalnızca rakam kullanılabilir',
+      card: 'Geçersiz kart numarası',
+      required: 'Zorunlu',
+      expiry: 'AA/YY',
+      cvv: 'Geçersiz CVV',
+    },
+  },
+  ja: {
+    paymentDetails: 'お支払い情報',
+    cardNumber: 'カード番号',
+    expiry: '有効期限',
+    cvv: 'CVV',
+    namePlaceholder: '山田 太郎',
+    addressPlaceholder: '東京都渋谷区1-2-3',
+    cityPlaceholder: '東京',
+    postalPlaceholder: '100-0001',
+    success: 'お支払いが完了しました！',
+    redirecting: 'ダッシュボードへリダイレクトしています...',
+    processing: '処理中です...',
+    pay: '支払う',
+    orderSummary: '注文概要',
+    plan: 'プラン',
+    price: '価格',
+    total: '合計',
+    invoice: '請求書は以下の宛先に送信されます：',
+    failed: 'お支払いに失敗しました。もう一度お試しください。',
+    processingFailed: 'お支払いの処理に失敗しました。もう一度お試しください。',
+    validation: {
+      digits: '数字のみ入力できます',
+      card: 'カード番号が無効です',
+      required: '必須項目です',
+      expiry: 'MM/YY',
+      cvv: 'CVVが無効です',
+    },
+  },
+} as const;
 
 export default function CheckoutClient() {
   const router = useRouter();
+  const locale = useLocale();
+  const copy = COPY[locale];
   const [checkout, setCheckout] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  // Load checkout details from localStorage
   useEffect(() => {
     const data = localStorage.getItem("checkoutData");
-    if (!data) {
-      router.push("/pricing");
-    } else {
-      setCheckout(JSON.parse(data));
-    }
-  }, [router]);
+    if (!data) router.push(localizePath("/pricing", locale));
+    else setCheckout(JSON.parse(data));
+  }, [router, locale]);
 
   if (!checkout) return null;
 
-  // Handle Checkout submission and redirect
-  const handleProceedToPayment = async () => {
+  const validationSchema = Yup.object({
+    cardNumber: Yup.string().matches(/^[0-9 ]+$/, copy.validation.digits).min(19, copy.validation.card).required(copy.validation.required),
+    expiry: Yup.string().matches(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, copy.validation.expiry).required(copy.validation.required),
+    cvv: Yup.string().matches(/^[0-9]{3,4}$/, copy.validation.cvv).required(copy.validation.required),
+    name: Yup.string().required(copy.validation.required),
+    address: Yup.string().required(copy.validation.required),
+    city: Yup.string().required(copy.validation.required),
+    postalCode: Yup.string().required(copy.validation.required),
+  });
+
+  const formatCardNumber = (value: string) => value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+  const formatExpiry = (value: string) => value.replace(/\D/g, "").slice(0, 4).replace(/(\d{2})(?=\d)/, "$1/").trim();
+
+  const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       setLoading(true);
-      setError(null);
-
+      const payload = { ...checkout, card: values, locale };
       const res = await fetch("/api/payment/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: checkout.email,
-          amount: checkout.amount,
-          currency: checkout.currency,
-          tokens: checkout.tokens,
-          planId: checkout.planId,
-          description: checkout.description,
-        }),
+        body: JSON.stringify(payload),
       });
-
       const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to initiate payment redirect.");
+      if (!data.ok) {
+        alert(data.error || copy.failed);
+        return;
       }
-
-      // Store orderMerchantId for status checking on return
-      if (data.orderMerchantId) {
-        localStorage.setItem("orderMerchantId", data.orderMerchantId);
-      }
-
-      // Clear the local checkout data since payment is now pending/in-progress
+      if (data.orderMerchantId) localStorage.setItem("orderMerchantId", data.orderMerchantId);
+      setSuccess(true);
       localStorage.removeItem("checkoutData");
-
-      // Redirect user's browser to the hosted PionPay payment link
-      window.location.href = data.redirectUrl;
-    } catch (err: any) {
-      console.error("❌ Payment redirection failed:", err);
-      setError(err.message || "Something went wrong while redirecting to the payment gateway.");
+      setTimeout(() => router.push(localizePath("/dashboard", locale)), 2000);
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert(copy.processingFailed);
+    } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 flex justify-center items-center py-12 px-4">
-      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 grid md:grid-cols-12 overflow-hidden transform transition duration-500 hover:scale-[1.01]">
-        
-        {/* Left Side: Checkout overview */}
-        <div className="p-8 md:p-12 md:col-span-7 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm tracking-wide uppercase">
-              <ShieldCheck className="h-5 w-5" />
-              Secure Checkout
-            </div>
-            
-            <h1 className="text-3xl font-bold text-gray-900 mt-3 mb-6">
-              Confirm your order
-            </h1>
-
-            <p className="text-gray-600 leading-relaxed mb-8">
-              We are transferring you to our secure payment gateway partner, <strong>PionPay</strong>, to safely handle your transaction. No card details are processed or stored on our servers.
-            </p>
-
-            <div className="space-y-6">
-              {/* Receipt info */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                <Mail className="h-6 w-6 text-indigo-500 shrink-0 mt-0.5" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex justify-center items-center py-12 px-4">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-100 grid md:grid-cols-2 overflow-hidden">
+        <div className="p-8 md:p-10">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-8">{copy.paymentDetails}</h1>
+          <Formik
+            initialValues={{ cardNumber: "", expiry: "", cvv: "", name: "", address: "", city: "", postalCode: "" }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ isSubmitting, setFieldValue, values }) => (
+              <Form className="space-y-5">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-800">Email Receipt</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    A confirmation invoice will be sent to:
-                  </p>
-                  <p className="text-sm font-semibold text-indigo-600 mt-1">
-                    {checkout.email}
-                  </p>
+                  <label className="text-sm text-gray-600">{copy.cardNumber}</label>
+                  <Field name="cardNumber" value={values.cardNumber} onChange={(e: any) => setFieldValue("cardNumber", formatCardNumber(e.target.value))} placeholder="1234 5678 9012 3456" maxLength={19} className="border border-gray-300 p-3 mt-1 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                  <ErrorMessage name="cardNumber" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
-              </div>
 
-              {/* Secure payment info */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-emerald-50/50 border border-emerald-100/50">
-                <CreditCard className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-semibold text-emerald-800">PCI-DSS Compliant</h3>
-                  <p className="text-sm text-emerald-600 mt-0.5">
-                    Payments are fully encrypted and protected using industry-standard SSL security protocols.
-                  </p>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="text-sm text-gray-600">{copy.expiry}</label>
+                    <Field name="expiry" value={values.expiry} onChange={(e: any) => setFieldValue("expiry", formatExpiry(e.target.value))} placeholder="MM/YY" maxLength={5} className="border border-gray-300 p-3 mt-1 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                    <ErrorMessage name="expiry" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm text-gray-600">{copy.cvv}</label>
+                    <Field name="cvv" type="password" placeholder="123" maxLength={4} className="border border-gray-300 p-3 mt-1 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                    <ErrorMessage name="cvv" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="mt-10">
-            {error && (
-              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-600 font-medium">
-                ⚠️ {error}
-              </div>
+                <Field name="name" placeholder={copy.namePlaceholder} className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                <Field name="address" placeholder={copy.addressPlaceholder} className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                <div className="flex gap-4">
+                  <Field name="city" placeholder={copy.cityPlaceholder} className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                  <Field name="postalCode" placeholder={copy.postalPlaceholder} className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 transition" />
+                </div>
+
+                {success ? (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <p className="text-green-800 font-semibold">{copy.success}</p>
+                    <p className="text-green-600 text-sm mt-1">{copy.redirecting}</p>
+                  </div>
+                ) : (
+                  <Button type="submit" className="w-full flex justify-center items-center gap-2 mt-4" size="lg" disabled={isSubmitting || loading}>
+                    {loading ? <><Loader2 className="h-5 w-5 animate-spin" />{copy.processing}</> : <>{copy.pay} {checkout.total.toFixed(2)} {checkout.currency}</>}
+                  </Button>
+                )}
+              </Form>
             )}
-
-            <Button
-              onClick={handleProceedToPayment}
-              className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl shadow-lg flex justify-center items-center gap-2 group transition-all duration-300"
-              size="lg"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Redirecting to PionPay...
-                </>
-              ) : (
-                <>
-                  Proceed to Payment
-                  <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-                </>
-              )}
-            </Button>
-          </div>
+          </Formik>
         </div>
 
-        {/* Right Side: Order Summary */}
-        <div className="bg-slate-50 border-t md:border-t-0 md:border-l border-slate-100 p-8 md:p-12 md:col-span-5 flex flex-col justify-between">
+        <div className="bg-gray-50 border-l border-gray-100 p-8 md:p-10 flex flex-col justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-            
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Plan Description</span>
-                <span className="font-semibold text-gray-800">{checkout.planId}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Amount</span>
-                <span className="font-semibold text-gray-800">
-                  {checkout.amount.toFixed(2)} {checkout.currency}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Tokens Included</span>
-                <span className="font-bold text-indigo-600">
-                  +{checkout.tokens.toLocaleString()} tokens
-                </span>
-              </div>
-              
-              <div className="border-t border-slate-100 my-4"></div>
-              
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-xs text-gray-400 block uppercase font-bold tracking-wider">Total Due</span>
-                  <span className="text-2xl font-black text-gray-900 leading-none">
-                    {checkout.total.toFixed(2)} {checkout.currency}
-                  </span>
-                </div>
-              </div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">{copy.orderSummary}</h2>
+            <div className="space-y-3 text-gray-700">
+              <div className="flex justify-between"><span>{copy.plan}</span><span className="font-medium">{checkout.planId}</span></div>
+              <div className="flex justify-between"><span>{copy.price}</span><span>{checkout.amount.toFixed(2)} {checkout.currency}</span></div>
+              <div className="border-t border-gray-300 my-3" />
+              <div className="flex justify-between font-semibold text-lg"><span>{copy.total}</span><span>{checkout.total.toFixed(2)} {checkout.currency}</span></div>
             </div>
-          </div>
-
-          <div className="mt-8 text-center text-xs text-gray-400">
-            By proceeding, you agree to our Terms of Service and Privacy Policy.
+            <p className="mt-5 text-sm text-gray-500">{copy.invoice} <b>{checkout.email}</b>.</p>
           </div>
         </div>
-
       </div>
     </div>
   );

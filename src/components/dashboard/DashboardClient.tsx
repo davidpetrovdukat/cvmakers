@@ -12,12 +12,12 @@ import InvoiceA4 from '@/components/pdf/InvoiceA4';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Currency, getCurrencySymbol } from '@/lib/currency';
+import { useI18n } from '@/i18n/LocaleProvider';
 
 
 
 // ТИПЫ И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-
-type Currency = 'GBP' | 'EUR' | 'USD';
 
 type Document = { id: string; title: string; updatedAt: string; status?: "Draft" | "Ready"; format?: string; docType?: string; data?: any };
 
@@ -31,9 +31,177 @@ type MarkReadyResult = { ok: boolean; err?: string; document?: any };
 
 type ProfileForm = { firstName: string; lastName: string; email: string; phone: string; photo: string };
 
+const DASHBOARD_COPY = {
+  en: {
+    hello: 'Hello',
+    intro: 'Manage your CV and resume, token balance, and token history.',
+    balance: 'Balance',
+    tokens: 'tokens',
+    settings: 'My settings',
+    recentDocuments: 'Recent documents',
+    viewAll: 'View all',
+    title: 'Title',
+    updated: 'Updated',
+    status: 'Status',
+    actions: 'Actions',
+    document: 'Document',
+    draft: 'Draft',
+    view: 'View',
+    hide: 'Hide',
+    edit: 'Edit',
+    download: 'Download',
+    tokenHistory: 'Token history',
+    date: 'Date',
+    type: 'Type',
+    delta: 'Delta',
+    profileIntro: 'These details personalise your CV and resume.',
+    name: 'Name',
+    surname: 'Surname',
+    email: 'E-mail',
+    phone: 'Phone',
+    photo: 'Photo',
+    profileAlt: 'Profile',
+    remove: 'Remove',
+    saving: 'Saving...',
+    saveProfile: 'Save profile',
+    savedProfile: 'Profile saved. CV and resume will use these details.',
+    failedProfile: 'Failed to save profile',
+    notFound: 'Document not found',
+    exportNotReady: 'This draft is not export-ready yet. Use export actions to generate a file.',
+    managerPending: 'within the next few hours',
+    managerWorking: (date: string) => `Personal manager is still working on it. Expected by ${date}.`,
+    managerWorkingShort: 'Personal manager is still working on it. Please try again later.',
+    finalizeFailed: 'Unable to finalize manager document',
+    failed: 'Failed',
+    pdfFailed: 'Failed to download PDF',
+    newDocument: 'New Document',
+    section: 'Section',
+    text: 'Text',
+    createFailed: 'Error creating document',
+    topUpFailed: 'Top-up failed',
+    promptEmail: "Please enter the recipient's email address:",
+    emailFailed: 'Failed to send email.',
+    emailSent: 'Email sent successfully!',
+    emailError: 'Error sending email. Please try again.',
+    saveFailed: 'Failed to save',
+    resume: 'Resume',
+    cv: 'CV',
+  },
+  tr: {
+    hello: 'Merhaba',
+    intro: 'CV ve özgeçmişlerinizi, token bakiyenizi ve token geçmişinizi yönetin.',
+    balance: 'Bakiye',
+    tokens: 'token',
+    settings: 'Ayarlarım',
+    recentDocuments: 'Son belgeler',
+    viewAll: 'Tümünü görüntüle',
+    title: 'Başlık',
+    updated: 'Güncellendi',
+    status: 'Durum',
+    actions: 'İşlemler',
+    document: 'Belge',
+    draft: 'Taslak',
+    view: 'Görüntüle',
+    hide: 'Gizle',
+    edit: 'Düzenle',
+    download: 'İndir',
+    tokenHistory: 'Token geçmişi',
+    date: 'Tarih',
+    type: 'Tür',
+    delta: 'Değişim',
+    profileIntro: 'Bu bilgiler CV ve özgeçmişlerinizi kişiselleştirir.',
+    name: 'Ad',
+    surname: 'Soyad',
+    email: 'E-posta',
+    phone: 'Telefon',
+    photo: 'Fotoğraf',
+    profileAlt: 'Profil',
+    remove: 'Kaldır',
+    saving: 'Kaydediliyor...',
+    saveProfile: 'Profili kaydet',
+    savedProfile: 'Profil kaydedildi. CV ve özgeçmişler bu bilgileri kullanacak.',
+    failedProfile: 'Profil kaydedilemedi',
+    notFound: 'Belge bulunamadı',
+    exportNotReady: 'Bu taslak henüz dışa aktarmaya hazır değil. Dosya oluşturmak için dışa aktarma işlemlerini kullanın.',
+    managerPending: 'önümüzdeki birkaç saat içinde',
+    managerWorking: (date: string) => `Kişisel yönetici hâlâ belge üzerinde çalışıyor. Beklenen zaman: ${date}.`,
+    managerWorkingShort: 'Kişisel yönetici hâlâ belge üzerinde çalışıyor. Lütfen daha sonra tekrar deneyin.',
+    finalizeFailed: 'Yönetici belgesi tamamlanamadı',
+    failed: 'Başarısız',
+    pdfFailed: 'PDF indirilemedi',
+    newDocument: 'Yeni Belge',
+    section: 'Bölüm',
+    text: 'Metin',
+    createFailed: 'Belge oluşturulurken hata oluştu',
+    topUpFailed: 'Token yükleme başarısız oldu',
+    promptEmail: 'Lütfen alıcının e-posta adresini girin:',
+    emailFailed: 'E-posta gönderilemedi.',
+    emailSent: 'E-posta başarıyla gönderildi!',
+    emailError: 'E-posta gönderilirken hata oluştu. Lütfen tekrar deneyin.',
+    saveFailed: 'Kaydedilemedi',
+    resume: 'Özgeçmiş',
+    cv: 'CV',
+  },
+  ja: {
+    hello: 'こんにちは',
+    intro: 'CV・職務経歴書、トークン残高、トークン履歴を管理できます。',
+    balance: '残高',
+    tokens: 'トークン',
+    settings: '設定',
+    recentDocuments: '最近のドキュメント',
+    viewAll: 'すべて表示',
+    title: 'タイトル',
+    updated: '更新日',
+    status: 'ステータス',
+    actions: '操作',
+    document: 'ドキュメント',
+    draft: '下書き',
+    view: '表示',
+    hide: '非表示',
+    edit: '編集',
+    download: 'ダウンロード',
+    tokenHistory: 'トークン履歴',
+    date: '日付',
+    type: '種類',
+    delta: '増減',
+    profileIntro: 'これらの情報はCVと職務経歴書をパーソナライズするために使用されます。',
+    name: '名',
+    surname: '姓',
+    email: 'メール',
+    phone: '電話',
+    photo: '写真',
+    profileAlt: 'プロフィール',
+    remove: '削除',
+    saving: '保存中...',
+    saveProfile: 'プロフィールを保存',
+    savedProfile: 'プロフィールを保存しました。CVと職務経歴書にこれらの情報が反映されます。',
+    failedProfile: 'プロフィールの保存に失敗しました',
+    notFound: 'ドキュメントが見つかりません',
+    exportNotReady: 'この下書きはまだエクスポートできません。エクスポート操作を使用してファイルを生成してください。',
+    managerPending: '数時間以内',
+    managerWorking: (date: string) => `担当マネージャーがまだ作業中です。${date}までにお届け予定です。`,
+    managerWorkingShort: '担当マネージャーがまだ作業中です。後でもう一度お試しください。',
+    finalizeFailed: 'マネージャードキュメントの確定に失敗しました',
+    failed: '失敗',
+    pdfFailed: 'PDFのダウンロードに失敗しました',
+    newDocument: '新規ドキュメント',
+    section: 'セクション',
+    text: 'テキスト',
+    createFailed: 'ドキュメントの作成中にエラーが発生しました',
+    topUpFailed: 'トークンのチャージに失敗しました',
+    promptEmail: '受信者のメールアドレスを入力してください：',
+    emailFailed: 'メールの送信に失敗しました。',
+    emailSent: 'メールを正常に送信しました！',
+    emailError: 'メール送信中にエラーが発生しました。もう一度お試しください。',
+    saveFailed: '保存に失敗しました',
+    resume: '職務経歴書',
+    cv: 'CV',
+  },
+} as const;
 
 
-const currencySym = (c: Currency) => (c === 'GBP' ? 'GBP ' : c === 'EUR' ? 'EUR ' : 'USD ');
+
+const currencySym = (c: Currency) => `${c} `;
 
 const fmtMoney = (n: number, c: Currency) => {
 
@@ -51,7 +219,7 @@ const fmtMoney = (n: number, c: Currency) => {
 
 function money(n: number, c: Currency) {
 
-  const sym = c === 'GBP' ? '?' : c === 'EUR' ? '€' : '$';
+  const sym = getCurrencySymbol(c);
 
   const abs = Math.abs(n);
 
@@ -78,6 +246,8 @@ function int(n: number) { try { return new Intl.NumberFormat().format(Math.round
 export default function DashboardClient() {
 
   const router = useRouter();
+  const { locale } = useI18n();
+  const copy = DASHBOARD_COPY[locale];
   const bcRef = useRef<BroadcastChannel | null>(null);
 
   const [me, setMe] = useState<Me | null>(null);
@@ -208,7 +378,7 @@ export default function DashboardClient() {
 
     const inv = await fetchInvoice(id);
 
-    if (!inv) { alert('Document not found'); return; }
+    if (!inv) { alert(copy.notFound); return; }
 
     setViewId(id);
 
@@ -219,7 +389,7 @@ export default function DashboardClient() {
 
 
   const markReadyIfDraft = async (document: any): Promise<MarkReadyResult> => {
-    if (!document) return { ok: false, err: 'Document not found' };
+    if (!document) return { ok: false, err: copy.notFound };
     const docType = String((document as any).docType ?? '').toLowerCase();
     const statusRaw = String((document as any).status ?? '').toLowerCase();
 
@@ -227,7 +397,7 @@ export default function DashboardClient() {
     if (!isResumeDoc) return { ok: true, document };
 
     if (statusRaw === 'draft') {
-      return { ok: false, err: 'This draft is not export-ready yet. Use export actions to generate a file.' };
+      return { ok: false, err: copy.exportNotReady };
     }
 
     if (statusRaw === 'sent') {
@@ -239,15 +409,15 @@ export default function DashboardClient() {
           if (releaseAtIso) {
             const releaseAt = new Date(releaseAtIso);
             const formatted = Number.isNaN(releaseAt.getTime())
-              ? 'within the next few hours'
+              ? copy.managerPending
               : releaseAt.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-            return { ok: false, err: `Personal manager is still working on it. Expected by ${formatted}.` };
+            return { ok: false, err: copy.managerWorking(formatted) };
           }
-          return { ok: false, err: 'Personal manager is still working on it. Please try again later.' };
+          return { ok: false, err: copy.managerWorkingShort };
         }
         if (!res.ok) {
           const errorPayload = await res.json().catch(() => ({}));
-          return { ok: false, err: errorPayload?.error || 'Unable to finalize manager document' };
+          return { ok: false, err: errorPayload?.error || copy.finalizeFailed };
         }
         const payload = await res.json().catch(() => ({}));
         const updated = payload?.document ?? document;
@@ -255,7 +425,7 @@ export default function DashboardClient() {
         if (viewInv?.id === updated.id) setViewInv(updated);
         return { ok: true, document: updated };
       } catch (error) {
-        return { ok: false, err: error instanceof Error ? error.message : 'Unable to finalize manager document' };
+        return { ok: false, err: error instanceof Error ? error.message : copy.finalizeFailed };
       }
     }
 
@@ -268,20 +438,25 @@ export default function DashboardClient() {
 
     const invFull = await fetchInvoice(id);
 
-    if (!invFull) { alert('Document not found'); return; }
+    if (!invFull) { alert(copy.notFound); return; }
 
     const mark = await markReadyIfDraft(invFull);
-    if (!mark.ok) { alert(mark.err || 'Failed'); return; }
+    if (!mark.ok) { alert(mark.err || copy.failed); return; }
     const resolvedDoc = mark.document ?? invFull;
     const docType = (resolvedDoc as any).docType;
     const isResumeDocument = docType === 'cv' || docType === 'resume';
-    const downloadPath = isResumeDocument ? `/api/resume/pdf/${id}` : `/api/pdf/${id}`;
-    const fallbackName = (resolvedDoc as any).title || (isResumeDocument ? (docType === 'cv' ? 'CV' : 'Resume') : 'Document');
+    const documentId = (resolvedDoc as any).id || id;
+    const downloadPath = isResumeDocument ? `/api/resume/pdf/${documentId}` : `/api/pdf/${documentId}`;
+    const fallbackName = (resolvedDoc as any).title || (isResumeDocument ? (docType === 'cv' ? copy.cv : copy.resume) : copy.document);
 
     try {
       const res = await fetch(downloadPath);
 
-      if (!res.ok) throw new Error('Server PDF failed');
+      if (!res.ok) {
+        const details = await res.json().catch(() => null);
+        const message = [details?.error, details?.details, details?.hint].filter(Boolean).join(': ');
+        throw new Error(message || `PDF download failed with status ${res.status}`);
+      }
 
       const blob = await res.blob();
 
@@ -295,7 +470,7 @@ export default function DashboardClient() {
 
     } catch (e) {
 
-      alert('Failed to download PDF');
+      alert(e instanceof Error ? e.message : copy.pdfFailed);
 
     }
 
@@ -342,7 +517,7 @@ export default function DashboardClient() {
 
     if (me.tokenBalance < 10) { alert('Недостаточно токенов. Пополните баланс.'); return; }
 
-    const res = await fetch('/api/documents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Document', data: { content: [{ heading: 'Section', text: 'Text' }] } }) });
+    const res = await fetch('/api/documents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: copy.newDocument, data: { content: [{ heading: copy.section, text: copy.text }] }, locale }) });
 
     if (res.ok) {
 
@@ -368,7 +543,7 @@ export default function DashboardClient() {
 
       const j = await res.json().catch(()=>({ error:'Error'}));
 
-      alert(j.error || 'Error creating document');
+      alert(j.error || copy.createFailed);
 
     }
 
@@ -402,7 +577,7 @@ export default function DashboardClient() {
 
     } else {
 
-      alert('Top-up failed');
+      alert(copy.topUpFailed);
 
     }
 
@@ -478,7 +653,7 @@ export default function DashboardClient() {
 
       setErrorBanner(null);
 
-      setSavedBanner('Profile saved. CV and resume will use these details.');
+      setSavedBanner(copy.savedProfile);
 
       try { bcRef.current?.postMessage({ type: 'profile-updated', company }); } catch {}
 
@@ -488,7 +663,7 @@ export default function DashboardClient() {
 
       setSavingProfile(false);
 
-      let message = 'Failed to save profile';
+      let message = copy.failedProfile;
 
       try {
 
@@ -552,17 +727,17 @@ export default function DashboardClient() {
 
           <div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Hello, {userName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{copy.hello}, {userName}</h1>
 
-            <p className="mt-1 text-slate-600">Manage your CV and resume, token balance, and token history.</p>
+            <p className="mt-1 text-slate-600">{copy.intro}</p>
 
           </div>
 
           <div className="flex items-center gap-2">
 
-            <div className="inline-flex items-center gap-2 text-sm rounded-full border border-black/10 bg-white px-3 py-1">Balance: <b>{int(tokenBalance)}</b> tokens</div>
+            <div className="inline-flex items-center gap-2 text-sm rounded-full border border-black/10 bg-white px-3 py-1">{copy.balance}: <b>{int(tokenBalance)}</b> {copy.tokens}</div>
 
-            <a href="#profile-settings" className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm">My settings</a>
+            <a href="#profile-settings" className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm">{copy.settings}</a>
 
           </div>
 
@@ -576,9 +751,9 @@ export default function DashboardClient() {
 
               <div className="flex items-center justify-between">
 
-                <div className="text-base font-semibold">Recent documents</div>
+                <div className="text-base font-semibold">{copy.recentDocuments}</div>
 
-                <a className="text-sm underline" href="#">View all</a>
+                <a className="text-sm underline" href="#">{copy.viewAll}</a>
 
               </div>
 
@@ -590,13 +765,13 @@ export default function DashboardClient() {
 
                     <tr>
 
-                      <th className="text-left px-3 py-2">Title</th>
+                      <th className="text-left px-3 py-2">{copy.title}</th>
 
-                      <th className="text-left px-3 py-2">Updated</th>
-                      <th className="text-left px-3 py-2">Status</th>
+                      <th className="text-left px-3 py-2">{copy.updated}</th>
+                      <th className="text-left px-3 py-2">{copy.status}</th>
 
 
-                      <th className="text-right px-3 py-2">Actions</th>
+                      <th className="text-right px-3 py-2">{copy.actions}</th>
 
                     </tr>
 
@@ -605,8 +780,8 @@ export default function DashboardClient() {
                   <tbody>
 
                     {invView.map((inv) => {
-                      const rawStatus = ((inv as any).status ?? (inv as any).statusMessage ?? inv.status ?? 'Draft') as string;
-                      const statusLabel = typeof rawStatus === 'string' ? rawStatus : 'Draft';
+                      const rawStatus = ((inv as any).status ?? (inv as any).statusMessage ?? inv.status ?? copy.draft) as string;
+                      const statusLabel = typeof rawStatus === 'string' ? rawStatus : copy.draft;
                       const docType = (inv as any).docType;
                       const isResumeDocument = docType === 'cv' || docType === 'resume';
                       const normalizedStatus = statusLabel.toString().trim().toLowerCase();
@@ -618,7 +793,7 @@ export default function DashboardClient() {
 
                         <tr className={`border-t ${viewId===inv.id ? 'border-black' : 'border-black/10'}`}>
 
-                          <td className={`px-3 py-2 font-mono text-[12px] ${viewId===inv.id ? 'border-t-2 border-l-2 border-black rounded-tl-xl' : ''}`}>{(inv as any).title || 'Document'}</td>
+                          <td className={`px-3 py-2 font-mono text-[12px] ${viewId===inv.id ? 'border-t-2 border-l-2 border-black rounded-tl-xl' : ''}`}>{(inv as any).title || copy.document}</td>
 
                           <td className={`px-3 py-2 ${viewId===inv.id ? 'border-t-2 border-black' : ''}`}>{new Date(inv.updatedAt).toISOString().slice(0,10)}</td>
 
@@ -630,76 +805,22 @@ export default function DashboardClient() {
                                 className="text-sm underline"
                                 onClick={() => handleViewDocument(inv)}
                               >
-                                {(inv as any).docType === 'cv' || (inv as any).docType === 'resume' ? 'View' : (viewId===inv.id ? 'Hide' : 'View')}
+                                {(inv as any).docType === 'cv' || (inv as any).docType === 'resume' ? copy.view : (viewId===inv.id ? copy.hide : copy.view)}
                               </button>
                               {isDraft ? (
                                 <button
                                   className="text-sm underline"
                                   onClick={() => handleEditDocument(inv)}
                                 >
-                                  Edit
+                                  {copy.edit}
                                 </button>
                               ) : (
-                                <button className="text-sm underline" onClick={() => ensureReadyAndDownload(inv.id)}>Download</button>
+                                <button className="text-sm underline" onClick={() => ensureReadyAndDownload(inv.id)}>{copy.download}</button>
                               )}
                             </div>
                           </td>
 
                         </tr>
-
-                        {viewId===inv.id && viewInv && (
-
-                          <tr className={`bg-white ${viewId===inv.id ? '' : 'border-t border-black/10'}`}>
-
-                            <td className={`px-3 py-3 ${viewId===inv.id ? 'border-l-2 border-r-2 border-b-2 border-black rounded-b-xl' : ''}`} colSpan={4}>
-
-                              <div className="p-2">
-
-                                <ModalInvoiceView
-
-                                  invoice={viewInv}
-
-                                  onClose={()=>{ setViewId(null); setViewInv(null); }}
-
-                                  onRefresh={async(id)=>{ const iv = await fetchInvoice(id); if(iv) setViewInv(iv); }}
-
-                                  onDownload={()=>ensureReadyAndDownload(viewInv.id)}
-
-                                  onSendEmail={async()=>{
-
-                                    const current = viewInv as any;
-
-                                    const defaultEmail = current?.data?.recipient?.email || '';
-
-                                    const to = prompt('Recipient email:', defaultEmail);
-
-                                    if (!to) return;
-
-                                    const r = await fetch('/api/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: to, documentId: current.id }) });
-
-                                    if (!r.ok) alert('Email send failed'); else alert('Email sent successfully!');
-
-                                  }}
-
-                                  onSave={async(next)=>{
-
-                                    const res = await fetch(`/api/documents/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
-
-                                    if (res.ok) { const j = await res.json(); setViewInv(j.document); setInvoices(prev=>prev.map(x=>x.id===j.document.id? j.document : x)); }
-
-                                    else { const j = await res.json().catch(()=>({error:'Failed'})); alert(j.error||'Failed to save'); }
-
-                                  }}
-
-                                />
-
-                              </div>
-
-                            </td>
-
-                          </tr>
-
-                        )}
 
                       </React.Fragment>
 
@@ -722,7 +843,7 @@ export default function DashboardClient() {
 
           <Card padding="sm" data-reveal>
 
-              <div className="text-base font-semibold">Token history</div>
+              <div className="text-base font-semibold">{copy.tokenHistory}</div>
 
               <div className="mt-3 overflow-hidden rounded-xl border border-black/10">
 
@@ -732,14 +853,14 @@ export default function DashboardClient() {
 
                     <tr>
 
-                      <th className="text-left px-3 py-2">Date</th>
+                      <th className="text-left px-3 py-2">{copy.date}</th>
 
-                      <th className="text-left px-3 py-2">Type</th>
+                      <th className="text-left px-3 py-2">{copy.type}</th>
 
 
-                      <th className="text-right px-3 py-2">Delta</th>
+                      <th className="text-right px-3 py-2">{copy.delta}</th>
 
-                      <th className="text-right px-3 py-2">Balance</th>
+                      <th className="text-right px-3 py-2">{copy.balance}</th>
 
 
                     </tr>
@@ -757,7 +878,7 @@ export default function DashboardClient() {
                         <td className="px-3 py-2">{row.type}</td>
 
 
-                        <td className={`px-3 py-2 text-right ${row.delta>0?'text-emerald-700':'text-slate-900'}`}>{row.delta>0? `+${int(row.delta)}` : `-${int(Math.abs(row.delta))}`} tokens</td>
+                        <td className={`px-3 py-2 text-right ${row.delta>0?'text-emerald-700':'text-slate-900'}`}>{row.delta>0? `+${int(row.delta)}` : `-${int(Math.abs(row.delta))}`} {copy.tokens}</td>
 
                         <td className="px-3 py-2 text-right">{int(row.balanceAfter)}</td>
 
@@ -784,9 +905,9 @@ export default function DashboardClient() {
 
             <Card padding="sm">
 
-              <div className="text-base font-semibold">My settings</div>
+              <div className="text-base font-semibold">{copy.settings}</div>
 
-              <p className="text-sm text-slate-600 mt-1">These details personalise your CV and resume.</p>
+              <p className="text-sm text-slate-600 mt-1">{copy.profileIntro}</p>
 
               {savedBanner && <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm p-3">{savedBanner}</div>}
 
@@ -794,25 +915,25 @@ export default function DashboardClient() {
 
               <form className="mt-4 grid gap-3" onSubmit={(e)=>{e.preventDefault(); saveProfile(profile);}}>
 
-                <Input label="Name" value={profile.firstName} onChange={(e)=>setProfile({ ...profile, firstName: e.target.value })} required />
+                <Input label={copy.name} value={profile.firstName} onChange={(e)=>setProfile({ ...profile, firstName: e.target.value })} required />
 
-                <Input label="Surname" value={profile.lastName} onChange={(e)=>setProfile({ ...profile, lastName: e.target.value })} />
+                <Input label={copy.surname} value={profile.lastName} onChange={(e)=>setProfile({ ...profile, lastName: e.target.value })} />
 
-                <Input label="E-mail" type="email" value={profile.email} onChange={(e)=>setProfile({ ...profile, email: e.target.value })} required />
+                <Input label={copy.email} type="email" value={profile.email} onChange={(e)=>setProfile({ ...profile, email: e.target.value })} required />
 
-                <Input label="Phone" value={profile.phone} onChange={(e)=>setProfile({ ...profile, phone: e.target.value })} />
+                <Input label={copy.phone} value={profile.phone} onChange={(e)=>setProfile({ ...profile, phone: e.target.value })} />
 
                 <div className="grid gap-2">
 
-                  <label className="text-xs text-[#475569] font-medium">Photo</label>
+                  <label className="text-xs text-[#475569] font-medium">{copy.photo}</label>
 
                   {profile.photo && (
 
                     <div className="flex items-center gap-3">
 
-                      <img src={profile.photo} alt="Profile" className="h-16 w-16 rounded-full object-cover border border-black/10" />
+                      <img src={profile.photo} alt={copy.profileAlt} className="h-16 w-16 rounded-full object-cover border border-black/10" />
 
-                      <Button type="button" size="sm" variant="outline" onClick={()=>setProfile({ ...profile, photo: '' })}>Remove</Button>
+                      <Button type="button" size="sm" variant="outline" onClick={()=>setProfile({ ...profile, photo: '' })}>{copy.remove}</Button>
 
                     </div>
 
@@ -824,7 +945,7 @@ export default function DashboardClient() {
 
                 <div className="mt-2">
 
-                  <Button disabled={savingProfile} variant="primary" type="submit">{savingProfile? 'Saving...' : 'Save profile'}</Button>
+                  <Button disabled={savingProfile} variant="primary" type="submit">{savingProfile? copy.saving : copy.saveProfile}</Button>
 
                 </div>
 
@@ -888,69 +1009,36 @@ export default function DashboardClient() {
 
               onSendEmail={async () => {
 
-                const clientEmail = (viewInv.clientMeta?.email as string) || '';
-
-                
-
-                if (!clientEmail) {
-
-                  alert('Please add client email address first in the Edit mode.');
-
-                  return;
-
-                }
-
-
-
-                const recipientEmail = prompt("Please enter the recipient's email address:", clientEmail);
-
+                const current = viewInv as any;
+                const defaultEmail = current?.data?.recipient?.email || '';
+                const recipientEmail = prompt(copy.promptEmail, defaultEmail);
                 if (!recipientEmail) return;
 
-
-
-                const r = await markReadyIfDraft(viewInv);
-
-                if (r.ok) {
-
-                  try {
-
-                    const res = await fetch(`/api/invoices/send`, {
-
-                      method: 'POST',
-
-                      headers: { 'Content-Type': 'application/json' },
-
-                      body: JSON.stringify({ email: recipientEmail, invoiceId: viewInv.id }),
-
-                    });
-
-                    if (!res.ok) throw new Error('Failed to send email.');
-
-                    alert('Email sent successfully!');
-
-                  } catch (error) {
-
-                    console.error('Email send error:', error);
-
-                    alert('Error sending email. Please try again.');
-
+                try {
+                  const res = await fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: recipientEmail, documentId: current.id }),
+                  });
+                  if (!res.ok) {
+                    const payload = await res.json().catch(() => ({}));
+                    throw new Error(payload?.error || copy.emailFailed);
                   }
-
-                } else {
-
-                  alert(r.err || 'Failed to prepare invoice for sending.');
-
+                  alert(copy.emailSent);
+                } catch (error) {
+                  console.error('Email send error:', error);
+                  alert(error instanceof Error ? error.message : copy.emailError);
                 }
 
               }}
 
               onSave={async(next)=>{
 
-                const res = await fetch(`/api/invoices/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
+                const res = await fetch(`/api/documents/${viewInv.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
 
-                if (res.ok) { const j = await res.json(); setViewInv(j.invoice); setInvoices(prev=>prev.map(x=>x.id===j.invoice.id? { ...x, client: j.invoice.client, subtotal: j.invoice.subtotal, tax: j.invoice.tax, total: j.invoice.total } : x)); }
+                if (res.ok) { const j = await res.json(); setViewInv(j.document); setInvoices(prev=>prev.map(x=>x.id===j.document.id? j.document : x)); }
 
-                else { const j = await res.json().catch(()=>({error:'Failed'})); alert(j.error||'Failed to save'); }
+                else { const j = await res.json().catch(()=>({error: copy.failed})); alert(j.error||copy.saveFailed); }
 
               }}
 
@@ -1044,27 +1132,37 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
   onRefresh: (id: string) => Promise<void>;
 
-  onSave: (next: { client?: string; subtotal?: number; tax?: number; total?: number }) => Promise<void>;
+  onSave: (next: Record<string, any>) => Promise<void>;
 
 }) {
 
   const [editing, setEditing] = useState(false);
+  const invoiceData = (invoice.data || {}) as any;
+  const initialItems = Array.isArray(invoice.items) ? invoice.items : Array.isArray(invoiceData.items) ? invoiceData.items : [];
+  const displayDate = (() => {
+    const value = invoice.date || invoiceData.documentDate || invoice.createdAt || invoice.updatedAt;
+    if (!value) return '';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toISOString().slice(0, 10);
+  })();
+  const displayRecipient = invoice.clientMeta || invoiceData.recipient || {};
+  const displayCurrency = invoice.currency || invoiceData.currency || 'GBP';
 
   const [form, setForm] = useState<{ client: string; subtotal: number; tax: number; total: number }>({ client: invoice.client, subtotal: invoice.subtotal, tax: invoice.tax, total: invoice.total });
 
   const [client, setClient] = useState<{ name: string; vat: string; address: string; city: string; country: string; email: string }>({
 
-    name: invoice.client || '',
+    name: invoice.client || displayRecipient.name || displayRecipient.company || '',
 
-    vat: (invoice.clientMeta?.vat as string) || '',
+    vat: (displayRecipient?.vat as string) || '',
 
-    address: (invoice.clientMeta?.address as string) || '',
+    address: (displayRecipient?.address as string) || '',
 
-    city: (invoice.clientMeta?.city as string) || '',
+    city: (displayRecipient?.city as string) || '',
 
-    country: (invoice.clientMeta?.country as string) || '',
+    country: (displayRecipient?.country as string) || '',
 
-    email: (invoice.clientMeta?.email as string) || '',
+    email: (displayRecipient?.email as string) || '',
 
   });
 
@@ -1092,13 +1190,13 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
   const [items, setItems] = useState<Array<{ desc: string; qty: number; rate: number; tax: number }>>(
 
-    (invoice.items || []).map((it: any) => ({ desc: it.description, qty: it.quantity, rate: Number(it.rate), tax: it.tax }))
+    initialItems.map((it: any) => ({ desc: it.description ?? it.desc ?? '', qty: it.quantity ?? it.qty ?? 0, rate: Number(it.rate), tax: it.tax ?? 0 }))
 
   );
 
   const [rateInputs, setRateInputs] = useState<string[]>(
 
-    (invoice.items || []).map((it: any) => {
+    initialItems.map((it: any) => {
 
       const v = Number(it.rate ?? 0);
 
@@ -1126,19 +1224,22 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
     setForm({ client: invoice.client, subtotal: invoice.subtotal, tax: invoice.tax, total: invoice.total });
 
+    const nextData = (invoice.data || {}) as any;
+    const nextRecipient = invoice.clientMeta || nextData.recipient || {};
+
     setClient({
 
-      name: invoice.client || '',
+      name: invoice.client || nextRecipient.name || nextRecipient.company || '',
 
-      vat: (invoice.clientMeta?.vat as string) || '',
+      vat: (nextRecipient?.vat as string) || '',
 
-      address: (invoice.clientMeta?.address as string) || '',
+      address: (nextRecipient?.address as string) || '',
 
-      city: (invoice.clientMeta?.city as string) || '',
+      city: (nextRecipient?.city as string) || '',
 
-      country: (invoice.clientMeta?.country as string) || '',
+      country: (nextRecipient?.country as string) || '',
 
-      email: (invoice.clientMeta?.email as string) || '',
+      email: (nextRecipient?.email as string) || '',
 
     });
 
@@ -1164,9 +1265,10 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
     });
 
-    setItems((invoice.items || []).map((it: any) => ({ desc: it.description, qty: it.quantity, rate: Number(it.rate), tax: it.tax })));
+    const nextItems = Array.isArray(invoice.items) ? invoice.items : Array.isArray(nextData.items) ? nextData.items : [];
+    setItems(nextItems.map((it: any) => ({ desc: it.description ?? it.desc ?? '', qty: it.quantity ?? it.qty ?? 0, rate: Number(it.rate), tax: it.tax ?? 0 })));
 
-    setRateInputs((invoice.items || []).map((it: any) => {
+    setRateInputs(nextItems.map((it: any) => {
 
       const v = Number(it.rate ?? 0);
 
@@ -1214,7 +1316,7 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
             <div className="flex flex-wrap items-center gap-3 w-full">
 
-              <div className="text-sm text-slate-700">Totals: Subtotal <b>{fmtMoney(totals.subtotal, invoice.currency)}</b> · Tax <b>{fmtMoney(totals.tax, invoice.currency)}</b> · Total <b>{fmtMoney(totals.total, invoice.currency)}</b></div>
+              <div className="text-sm text-slate-700">Totals: Subtotal <b>{fmtMoney(totals.subtotal, displayCurrency)}</b> · Tax <b>{fmtMoney(totals.tax, displayCurrency)}</b> · Total <b>{fmtMoney(totals.total, displayCurrency)}</b></div>
 
               <div className="ml-auto flex items-center gap-2">
 
@@ -1222,22 +1324,23 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
                   await fetch('/api/company', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(company) });
 
-                  await fetch(`/api/invoices/${invoice.id}`, {
-
-                    method: 'PATCH',
-
-                    headers: { 'Content-Type': 'application/json' },
-
-                    body: JSON.stringify({
-
-                      client: client.name,
-
-                      clientMeta: { vat: client.vat, address: client.address, city: client.city, country: client.country, email: client.email, iban: (client as any).iban || '', bankName: (client as any).bankName || '', bic: (client as any).bic || '' },
-
-                      items: items.map(it=>({ description: it.desc, quantity: it.qty, rate: it.rate, tax: it.tax }))
-
-                    })
-
+                  await onSave({
+                    data: {
+                      ...(invoice.data || {}),
+                      recipient: {
+                        ...(invoice.data?.recipient || {}),
+                        name: client.name,
+                        vat: client.vat,
+                        address: client.address,
+                        city: client.city,
+                        country: client.country,
+                        email: client.email,
+                        iban: (client as any).iban || '',
+                        bankName: (client as any).bankName || '',
+                        bic: (client as any).bic || '',
+                      },
+                      items: items.map(it=>({ description: it.desc, quantity: it.qty, rate: it.rate, tax: it.tax })),
+                    },
                   });
 
                   setEditing(false);
@@ -1268,23 +1371,23 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
 
             <InvoiceA4
 
-              currency={invoice.currency}
+              currency={displayCurrency}
 
-              items={(invoice.items||[]).map((it:any)=>({ desc: it.description, qty: it.quantity, rate: it.rate, tax: it.tax }))}
+              items={items.map((it:any)=>({ desc: it.desc, qty: it.qty, rate: it.rate, tax: it.tax }))}
 
-              subtotal={invoice.subtotal}
+              subtotal={invoice.subtotal ?? totals.subtotal}
 
-              taxTotal={invoice.tax}
+              taxTotal={invoice.tax ?? totals.tax}
 
-              total={invoice.total}
+              total={invoice.total ?? totals.total}
 
               sender={{ company: invoice.user?.company?.name || 'Company', vat: invoice.user?.company?.vat, address: invoice.user?.company?.address1, city: invoice.user?.company?.city, country: invoice.user?.company?.country, iban: invoice.user?.company?.iban, bankName: invoice.user?.company?.bankName, bic: invoice.user?.company?.bic }}
 
-              client={{ name: invoice.client, vat: (invoice.clientMeta?.vat as string) || undefined, address: (invoice.clientMeta?.address as string) || undefined, city: (invoice.clientMeta?.city as string) || undefined, country: (invoice.clientMeta?.country as string) || undefined }}
+              client={{ name: invoice.client || displayRecipient.name || displayRecipient.company, vat: (displayRecipient?.vat as string) || undefined, address: (displayRecipient?.address as string) || undefined, city: (displayRecipient?.city as string) || undefined, country: (displayRecipient?.country as string) || undefined }}
 
-              invoiceNo={invoice.number}
+              invoiceNo={invoice.number || invoiceData.documentNo}
 
-              invoiceDate={new Date(invoice.date).toISOString().slice(0,10)}
+              invoiceDate={displayDate}
 
               invoiceDue={''}
 

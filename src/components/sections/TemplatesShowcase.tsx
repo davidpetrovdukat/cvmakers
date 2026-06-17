@@ -8,10 +8,50 @@ import Button from '@/components/ui/Button';
 import Segmented from '@/components/ui/Segmented';
 import { ScaledA4 } from '@/components/resume/ui';
 import { ResumeTemplates, type ResumeTemplateKey, sampleResumeData, sampleCVData } from '@/components/resume';
+import { useLocale } from '@/i18n/LocaleProvider';
+import { localizePath } from '@/i18n/config';
 
 const TEMPLATE_KEYS: ResumeTemplateKey[] = ['classic', 'split', 'serif', 'tech'];
 
+const COPY = {
+  en: {
+    heading: 'Resume & CV templates',
+    subheading: 'Formal, universal and creative - for any industry.',
+    resume: 'Resume',
+    cv: 'CV',
+    ats: 'ATS-friendly - 1-2 pages',
+    languages: 'EN/TR/JP',
+    preview: 'Preview',
+    useTemplate: 'Use template',
+    close: 'Close',
+  },
+  tr: {
+    heading: 'Özgeçmiş ve CV şablonları',
+    subheading: 'Resmi, evrensel ve yaratıcı - her sektör için.',
+    resume: 'Özgeçmiş',
+    cv: 'CV',
+    ats: 'ATS uyumlu - 1-2 sayfa',
+    languages: 'EN/TR/JP',
+    preview: 'Önizle',
+    useTemplate: 'Şablonu kullan',
+    close: 'Kapat',
+  },
+  ja: {
+    heading: '職務経歴書とCVテンプレート',
+    subheading: 'フォーマル、ユニバーサル、クリエイティブ — あらゆる業界に対応しています。',
+    resume: '職務経歴書',
+    cv: 'CV',
+    ats: 'ATS対応 — 1〜2ページ',
+    languages: 'EN/TR/JP',
+    preview: 'プレビュー',
+    useTemplate: 'テンプレートを使用',
+    close: '閉じる',
+  },
+} as const;
+
 export default function TemplatesShowcase() {
+  const locale = useLocale();
+  const copy = COPY[locale];
   const [docType, setDocType] = useState<'resume' | 'cv'>('resume');
   const [modal, setModal] = useState<{ open: boolean; key?: ResumeTemplateKey }>({ open: false });
   const reduceMotion = useReducedMotion();
@@ -27,11 +67,11 @@ export default function TemplatesShowcase() {
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        <h2 className="text-2xl sm:text-3xl font-bold">Resume & CV templates</h2>
-        <p className="mt-2 text-slate-600">Formal, universal and creative — for any industry.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold">{copy.heading}</h2>
+        <p className="mt-2 text-slate-600">{copy.subheading}</p>
         <div className="mt-4 flex justify-center">
           <Segmented
-            options={[{ label: 'Resume', value: 'resume' }, { label: 'CV', value: 'cv' }]}
+            options={[{ label: copy.resume, value: 'resume' }, { label: copy.cv, value: 'cv' }]}
             value={docType}
             onChange={(v) => setDocType(v as 'resume' | 'cv')}
           />
@@ -60,12 +100,12 @@ export default function TemplatesShowcase() {
                   </ScaledA4>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                  <span>ATS-friendly - 1-2 pages</span>
-                  <span>EN/LV/RU</span>
+                  <span>{copy.ats}</span>
+                  <span>{copy.languages}</span>
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => setModal({ open: true, key })}>Preview</Button>
-                  <a className="flex-1" href="/auth/signin?mode=login"><Button variant="secondary" className="w-full">Use template</Button></a>
+                  <Button variant="outline" className="flex-1" onClick={() => setModal({ open: true, key })}>{copy.preview}</Button>
+                  <a className="flex-1" href={`${localizePath('/auth/signin', locale)}?mode=login`}><Button variant="secondary" className="w-full">{copy.useTemplate}</Button></a>
                 </div>
               </Card>
             </motion.div>
@@ -78,12 +118,12 @@ export default function TemplatesShowcase() {
           onClose={() => setModal({ open: false })}
           docType={docType}
           templateKey={modal.key}
+          closeLabel={copy.close}
         />
       )}
     </Section>
   );
 }
-
 
 function labelForTemplate(k: ResumeTemplateKey) {
   switch (k) {
@@ -95,7 +135,17 @@ function labelForTemplate(k: ResumeTemplateKey) {
   }
 }
 
-function TemplatePreviewModal({ onClose, docType, templateKey }: { onClose: () => void; docType: 'resume' | 'cv'; templateKey: ResumeTemplateKey }) {
+function TemplatePreviewModal({
+  onClose,
+  docType,
+  templateKey,
+  closeLabel,
+}: {
+  onClose: () => void;
+  docType: 'resume' | 'cv';
+  templateKey: ResumeTemplateKey;
+  closeLabel: string;
+}) {
   const T = ResumeTemplates[templateKey];
   const data = docType === 'resume' ? sampleResumeData : sampleCVData;
   return (
@@ -107,7 +157,7 @@ function TemplatePreviewModal({ onClose, docType, templateKey }: { onClose: () =
           style={{ width: 'min(95vw, calc(90vh * 0.707))', maxHeight: '90vh' }}
         >
           <button
-            aria-label="Close"
+            aria-label={closeLabel}
             onClick={onClose}
             className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-slate-600 hover:bg-slate-100"
             type="button"
@@ -115,7 +165,7 @@ function TemplatePreviewModal({ onClose, docType, templateKey }: { onClose: () =
             X
           </button>
           <div className="mb-2 pr-8 text-sm font-semibold text-slate-700">
-            {labelForTemplate(templateKey)} — {docType.toUpperCase()}
+            {labelForTemplate(templateKey)} - {docType.toUpperCase()}
           </div>
           <div className="rounded-lg border border-slate-200 p-2">
             <ScaledA4 maxScale={1}>

@@ -28,6 +28,16 @@ export const PRICING_PLANS: PricingPlan[] = [
     cta: 'Buy Tokens',
     popular: false,
   },
+  {
+    id: 'plan-annual',
+    name: 'Annual Pro',
+    gbpAmount: 500,
+    tokens: 50000,
+    points: ['50,000 tokens for the year', 'Best value per token', 'Priority support'],
+    cta: 'Buy Now',
+    popular: false,
+    billing: 'annual',
+  },
 ];
 
 export const TESTIMONIALS: Testimonial[] = [

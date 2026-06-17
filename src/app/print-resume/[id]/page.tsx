@@ -1,9 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { ResumeTemplates, ResumeTemplateKey, Profile } from '@/components/resume';
+import { Locale, normalizeLocale } from '@/i18n/config';
+import { getTranslator } from '@/i18n/server';
 
 export const dynamic = 'force-dynamic';
 
 const FALLBACK_TEMPLATE: ResumeTemplateKey = 'classic';
+
+const PROFILE_LABEL: Record<Locale, string> = {
+  en: 'Profile',
+  tr: 'Profil',
+  ja: 'プロフィール',
+};
 
 const isTemplateKey = (value: unknown): value is ResumeTemplateKey =>
   typeof value === 'string' && value in ResumeTemplates;
@@ -69,15 +77,24 @@ export default async function PrintResumePage({ params }: { params: Promise<{ id
   }
 
   const raw = (doc.data as any) ?? {};
+  const locale = normalizeLocale(raw?.meta?.locale);
+  const t = getTranslator(locale);
   const templateKeyCandidate = raw.template ?? raw.templateKey ?? raw.resumeTemplate;
   const templateKey = isTemplateKey(templateKeyCandidate) ? templateKeyCandidate : FALLBACK_TEMPLATE;
   const Template = ResumeTemplates[templateKey] ?? ResumeTemplates[FALLBACK_TEMPLATE];
   const profile = coerceProfile(raw.profile ?? raw.data?.profile ?? raw);
+  const labels = {
+    summary: t('builder.summary'),
+    profile: PROFILE_LABEL[locale],
+    experience: t('builder.experience'),
+    skills: t('builder.skills'),
+    education: t('builder.education'),
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <main className="mx-auto max-w-[210mm] p-12">
-        <Template data={profile} />
+        <Template data={profile} labels={labels as any} />
       </main>
     </div>
   );

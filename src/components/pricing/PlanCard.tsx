@@ -5,16 +5,21 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { motion, useReducedMotion } from "framer-motion";
 import { Currency, formatCurrency } from "@/lib/currency";
+import { formatInteger } from "@/lib/format";
 
 export type PlanCardProps = {
   name: string;
   popular?: boolean;
   badgeText?: string;
-  bullets: string[];
+  bullets: readonly string[];
   cta: string;
   amount: number;
   currency: Currency;
   tokens: number;
+  tokenLabel?: string;
+  termsLabel?: string;
+  termsLinkLabel?: string;
+  termsHref?: string;
   onAction?: (payload: { name: string; amount: number; currency: Currency; tokens: number }) => void;
 };
 
@@ -27,6 +32,10 @@ export default function PlanCard({
   amount,
   currency,
   tokens,
+  tokenLabel = "tokens",
+  termsLabel = "I have read and agree to the",
+  termsLinkLabel = "Terms and Conditions",
+  termsHref = "/terms",
   onAction,
 }: PlanCardProps) {
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -76,10 +85,9 @@ export default function PlanCard({
 
           <div className="mt-3 text-3xl font-bold text-slate-900">
             {formatCurrency(amount, currency)}
-            <span className="text-base font-normal text-slate-500">/one-time</span>
           </div>
 
-          <div className="mt-1 text-sm text-slate-600">{tokens.toLocaleString()} tokens</div>
+          <div className="mt-1 text-sm text-slate-600">{formatInteger(tokens)} {tokenLabel}</div>
 
           <ul className="mt-4 space-y-2 text-sm text-slate-700">
             {bullets.map((point) => (
@@ -100,9 +108,9 @@ export default function PlanCard({
               className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <span>
-              I have read and agree to the{" "}
-              <a href="/terms" target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
-                Terms and Conditions
+              {termsLabel}{" "}
+              <a href={termsHref} target="_blank" className="text-indigo-600 underline hover:text-indigo-800">
+                {termsLinkLabel}
               </a>
             </span>
           </label>

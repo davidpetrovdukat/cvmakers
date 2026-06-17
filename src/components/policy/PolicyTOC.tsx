@@ -1,6 +1,14 @@
 'use client';
 
 import { Heading } from '@/types/policy';
+import { Locale } from '@/i18n/config';
+import { useLocale } from '@/i18n/LocaleProvider';
+
+const LABELS: Record<Locale, { ariaLabel: string; onThisPage: string }> = {
+  en: { ariaLabel: 'Table of contents', onThisPage: 'On this page' },
+  tr: { ariaLabel: 'İçindekiler', onThisPage: 'Bu sayfada' },
+  ja: { ariaLabel: '目次', onThisPage: 'このページの内容' },
+};
 
 interface PolicyTOCProps {
   headings: Heading[];
@@ -9,9 +17,11 @@ interface PolicyTOCProps {
 }
 
 export default function PolicyTOC({ headings, current, onJump }: PolicyTOCProps) {
+  const locale = useLocale();
+  const labels = LABELS[locale];
   return (
-    <nav aria-label="Table of contents" className="text-sm">
-      <div className="text-xs font-semibold text-slate-500 mb-2">On this page</div>
+    <nav aria-label={labels.ariaLabel} className="text-sm">
+      <div className="text-xs font-semibold text-slate-500 mb-2">{labels.onThisPage}</div>
       <ul className="space-y-1">
         {headings.map((h) => (
           <li key={h.id}>
@@ -29,4 +39,3 @@ export default function PolicyTOC({ headings, current, onJump }: PolicyTOCProps)
     </nav>
   );
 }
-

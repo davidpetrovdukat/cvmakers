@@ -12,6 +12,8 @@ enum Currency {
   GBP
   EUR
   USD
+  TRY
+  JPY
 }
 
 enum InvoiceStatus {
