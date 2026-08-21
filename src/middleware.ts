@@ -30,6 +30,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (pathLocale !== DEFAULT_LOCALE) {
+    const url = request.nextUrl.clone();
+    url.pathname = localizePath(stripLocaleFromPath(pathname), DEFAULT_LOCALE);
+    return NextResponse.redirect(url);
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-cv-makers-locale', pathLocale);
 

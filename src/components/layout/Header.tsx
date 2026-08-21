@@ -5,18 +5,17 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { THEME } from '@/lib/theme';
 import Segmented from '@/components/ui/Segmented';
 import { useSession, signOut } from 'next-auth/react';
 import { CURRENCY_OPTIONS, Currency, getDefaultCurrencyForLocale, isCurrency } from '@/lib/currency';
-import { LOCALE_LABELS, LOCALES, Locale, getLocaleFromPath, localizePath, stripLocaleFromPath } from '@/i18n/config';
+import { getLocaleFromPath, localizePath, stripLocaleFromPath } from '@/i18n/config';
 import { useI18n } from '@/i18n/LocaleProvider';
 
 export default function Header() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { locale, setLocale, t } = useI18n();
+  const { locale, t } = useI18n();
   const { data: session, status } = useSession();
   const signedIn = status === 'authenticated';
   const bcRef = useRef<BroadcastChannel | null>(null);
@@ -111,18 +110,6 @@ export default function Header() {
     try { bcRef.current?.postMessage({ type: 'currency-updated', currency: next }); } catch {}
   };
 
-  const onLanguageChange = (next: string) => {
-    const nextLocale = next as Locale;
-    const query = typeof window !== 'undefined' ? window.location.search.replace(/^\?/, '') : '';
-    const target = `${localizePath(normalizedPath, nextLocale)}${query ? `?${query}` : ''}`;
-    setLocale(nextLocale);
-    try {
-      localStorage.setItem('cv-makers-locale', nextLocale);
-      document.cookie = `cv-makers-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
-    } catch {}
-    router.push(target);
-  };
-
   const closeMobile = () => setMobileOpen(false);
   const toggleMobile = () => setMobileOpen((v)=>!v);
 
@@ -192,11 +179,6 @@ export default function Header() {
         </div>
         
         <div className="hidden sm:flex items-center gap-3">
-          <Segmented
-            options={LOCALES.map((item) => ({ label: LOCALE_LABELS[item], value: item }))}
-            value={activeLocale}
-            onChange={onLanguageChange}
-          />
           <div className="hidden md:block">
             <Segmented
               options={CURRENCY_OPTIONS}
@@ -294,15 +276,6 @@ export default function Header() {
                   </nav>
 
                   <div className="mt-4">
-                    <div className="mb-2 text-xs text-slate-500">{t('common.language')}</div>
-                    <Segmented
-                      options={LOCALES.map((item) => ({ label: LOCALE_LABELS[item], value: item }))}
-                      value={activeLocale}
-                      onChange={onLanguageChange}
-                    />
-                  </div>
-
-                  <div className="mt-4">
                     <div className="mb-2 text-xs text-slate-500">{t('common.currency')}</div>
                     <Segmented
                       options={CURRENCY_OPTIONS}
@@ -342,4 +315,3 @@ export default function Header() {
     </motion.header>
   );
 }
-

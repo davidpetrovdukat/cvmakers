@@ -1,3 +1,4 @@
+// Keep legacy locale paths recognizable so bookmarked URLs can redirect to English.
 export const LOCALES = ['en', 'tr', 'ja'] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -36,6 +37,7 @@ export function localizePath(pathname: string, locale: Locale): string {
   return base === '/' ? `/${locale}` : `/${locale}${base}`;
 }
 
-export function normalizeLocale(value?: string | null): Locale {
-  return isLocale(value) ? value : DEFAULT_LOCALE;
+export function normalizeLocale(_value?: string | null): Locale {
+  // Translation resources remain for stored documents, but the live app is English-only.
+  return DEFAULT_LOCALE;
 }

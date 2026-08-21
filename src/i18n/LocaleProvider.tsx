@@ -29,8 +29,9 @@ export default function LocaleProvider({
 
   useEffect(() => {
     const pathLocale = getLocaleFromPath(pathname);
-    if (pathLocale && pathLocale !== activeLocale) {
-      setActiveLocale(pathLocale);
+    const normalizedPathLocale = normalizeLocale(pathLocale);
+    if (normalizedPathLocale !== activeLocale) {
+      setActiveLocale(normalizedPathLocale);
     }
   }, [pathname, activeLocale]);
 
@@ -44,7 +45,7 @@ export default function LocaleProvider({
   const value = useMemo(
     () => ({
       locale: activeLocale,
-      setLocale: setActiveLocale,
+      setLocale: (nextLocale: Locale) => setActiveLocale(normalizeLocale(nextLocale)),
       t: translate,
     }),
     [activeLocale],
