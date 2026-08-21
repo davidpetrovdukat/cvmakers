@@ -1,8 +1,8 @@
-export const SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'USD', 'TRY', 'JPY'] as const;
+export const SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'USD'] as const;
 
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
-export const ZERO_DECIMAL_CURRENCIES = ['JPY'] as const;
+export const ZERO_DECIMAL_CURRENCIES = [] as const;
 export type ZeroDecimalCurrency = (typeof ZERO_DECIMAL_CURRENCIES)[number];
 
 export const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((currency) => ({
@@ -15,8 +15,8 @@ export function isCurrency(value: unknown): value is Currency {
 }
 
 /** SSR-safe default before localStorage is read on the client. */
-export function getDefaultCurrencyForLocale(locale: string): Currency {
-  return locale === 'ja' ? 'JPY' : 'GBP';
+export function getDefaultCurrencyForLocale(_locale: string): Currency {
+  return 'GBP';
 }
 
 export function isZeroDecimalCurrency(currency: Currency): currency is ZeroDecimalCurrency {
@@ -24,7 +24,6 @@ export function isZeroDecimalCurrency(currency: Currency): currency is ZeroDecim
 }
 
 export const TOKENS_PER_GBP = 100;
-export const GBP_TO_TRY_RATE = 61.6353;
 
 export type ExchangeRateSnapshot = {
   base: 'EUR';
@@ -40,8 +39,6 @@ export const DEFAULT_EXCHANGE_RATE_SNAPSHOT: ExchangeRateSnapshot = {
     EUR: 1,
     GBP: 0.86438,
     USD: 1.1555,
-    TRY: 0.86438 * GBP_TO_TRY_RATE,
-    JPY: 163,
   },
   asOf: '2026-05-25',
   fetchedAt: '2026-05-25T06:00:00.000Z',
@@ -111,10 +108,6 @@ function getCurrencyLocale(currency: Currency): string {
       return 'en-GB';
     case 'EUR':
       return 'en-IE';
-    case 'TRY':
-      return 'tr-TR';
-    case 'JPY':
-      return 'ja-JP';
     default:
       return 'en-US';
   }
@@ -138,10 +131,6 @@ export function getCurrencySymbol(currency: Currency): string {
       return '€';
     case 'USD':
       return '$';
-    case 'TRY':
-      return '₺';
-    case 'JPY':
-      return '¥';
   }
 }
 

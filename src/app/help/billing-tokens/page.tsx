@@ -24,12 +24,6 @@ const TOKEN_PACKAGES = [
   { amount: 10, currency: 'USD', tokens: 1000 },
   { amount: 50, currency: 'USD', tokens: 5000 },
   { amount: 100, currency: 'USD', tokens: 10000 },
-  { amount: 10, currency: 'TRY', tokens: 1000 },
-  { amount: 50, currency: 'TRY', tokens: 5000 },
-  { amount: 100, currency: 'TRY', tokens: 10000 },
-  { amount: 1000, currency: 'JPY', tokens: 1000 },
-  { amount: 5000, currency: 'JPY', tokens: 5000 },
-  { amount: 10000, currency: 'JPY', tokens: 10000 },
 ];
 
 const LEDGER_SAMPLE = [

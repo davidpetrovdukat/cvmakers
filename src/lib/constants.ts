@@ -41,8 +41,6 @@ export const CURRENCY_BY_COUNTRY: CurrencyData = {
   "Moldova": "MDL",
   "Ukraine": "UAH",
   "Georgia": "GEL",
-  "Turkey": "TRY",
-  "Japan": "JPY",
   "Andorra": "EUR",
   "Monaco": "EUR",
   "San Marino": "EUR",
@@ -212,6 +210,5 @@ export const RESTRICTED_COUNTRIES = [
   "Iran",
   "North Korea"
 ];
-
 
 

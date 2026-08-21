@@ -2,7 +2,6 @@ import {
   Currency,
   DEFAULT_EXCHANGE_RATE_SNAPSHOT,
   ExchangeRateSnapshot,
-  GBP_TO_TRY_RATE,
   SUPPORTED_CURRENCIES,
 } from '@/lib/currency';
 
@@ -46,8 +45,6 @@ export async function getExchangeRateSnapshot(): Promise<ExchangeRateSnapshot> {
       acc[currency] = rate;
       return acc;
     }, {} as Record<Currency, number>);
-    rates.TRY = rates.GBP * GBP_TO_TRY_RATE;
-
     return {
       base: 'EUR',
       rates,
