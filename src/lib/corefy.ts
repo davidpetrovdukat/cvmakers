@@ -187,15 +187,10 @@ export class CorefyClient {
     const isTestMode =
       params.testMode !== undefined ? params.testMode : this.defaultTestMode;
 
-    // Enforce required customer metadata: shop = workingagent
-    const customerMetadata = {
-      shop: "workingagent",
-      ...(params.customer.metadata || {}),
-    };
+    const customerMetadata = params.customer.metadata;
 
     const topMetadata = {
       order_id: params.referenceId,
-      shop: "workingagent",
       ...(params.metadata || {}),
     };
 
@@ -243,7 +238,7 @@ export class CorefyClient {
             surname: params.customer.surname,
             phone: params.customer.phone,
             address: sanitizedAddress,
-            metadata: customerMetadata,
+            ...(customerMetadata ? { metadata: customerMetadata } : {}),
           },
           metadata: topMetadata,
         },

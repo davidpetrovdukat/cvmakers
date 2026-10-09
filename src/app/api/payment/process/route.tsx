@@ -101,14 +101,10 @@ export async function POST(req: Request) {
         first_name: user.firstName || undefined,
         surname: user.lastName || undefined,
         address: customerAddress,
-        metadata: {
-          shop: "workingagent",
-        },
       },
       metadata: {
         order_id: orderMerchantId,
         user_id: user.id,
-        shop: "workingagent",
         tokens: body.tokens,
       },
     });
