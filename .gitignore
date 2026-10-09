@@ -18,9 +18,10 @@ yarn-error.log*
 console.log
 error.log
 
-# OS files
+# OS & IDE files
 .DS_Store
 Thumbs.db
+.idea/
 
 # Prisma
 prisma/dev.db

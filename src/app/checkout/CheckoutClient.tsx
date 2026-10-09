@@ -79,7 +79,7 @@ export default function CheckoutClient() {
       localStorage.setItem("orderMerchantId", data.orderMerchantId);
       localStorage.removeItem("checkoutData");
 
-      // Redirect to PionPay hosted payment page
+      // Redirect to Sterling Pay (Corefy) hosted payment page
       setRedirecting(true);
       window.location.href = data.redirectUrl;
     } catch (err) {

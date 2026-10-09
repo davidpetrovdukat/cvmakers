@@ -97,15 +97,14 @@ export default function PaymentProcessingClient() {
 
     setOrderId(finalId);
 
-    // 2. Read status returned by PionPay in the redirect URL
-    // PionPay encodes "&" as "&amp;" so "status" arrives as "amp;status"
-    const pionStatus =
+    // 2. Read status returned in the redirect URL
+    const returnStatus =
       getRawParam(rawSearch, "status") ||
       params.get("status");
 
-    console.log("🔍 PionPay redirect status:", pionStatus, "| orderId:", finalId);
+    console.log("🔍 Payment redirect status:", returnStatus, "| orderId:", finalId);
 
-    if (pionStatus === "failure" || pionStatus === "cancel") {
+    if (returnStatus === "failure" || returnStatus === "cancel" || returnStatus === "fail" || returnStatus === "declined") {
       // Immediate failure — no need to poll
       setStatus("failed");
       setMessage(copy.failed);
@@ -113,7 +112,7 @@ export default function PaymentProcessingClient() {
       return;
     }
 
-    if (pionStatus === "success" || pionStatus === "pending" || !pionStatus) {
+    if (returnStatus === "success" || returnStatus === "pending" || !returnStatus) {
       // Poll the credit endpoint to confirm token crediting
       setStatus("pending");
       setMessage(copy.processing);
