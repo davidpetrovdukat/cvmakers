@@ -7,18 +7,19 @@ import { motion } from "framer-motion";
 import Section from "@/components/layout/Section";
 import Segmented from "@/components/ui/Segmented";
 import { CURRENCY_OPTIONS, Currency, getBundlePrice, getDefaultCurrencyForLocale, isCurrency } from "@/lib/currency";
-import { PRICING_PLANS } from "@/lib/data";
+import { CUSTOM_PLAN_ID, PRICING_PLANS } from "@/lib/data";
 import PlanCard from "@/components/pricing/PlanCard";
 import CustomPlanCard from "@/components/pricing/CustomPlanCard";
 import { useExchangeRates } from "@/lib/useExchangeRates";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { localizePath } from "@/i18n/config";
 
+// Only the choice goes to checkout; the server prices it.
 type CheckoutPayload = {
+  planId: string;
   name: string;
-  price: number;
   currency: Currency;
-  tokens: number;
+  customAmount?: number;
 };
 
 const COPY = {
@@ -108,7 +109,7 @@ export default function PricingClient() {
   const bcRef = useRef<BroadcastChannel | null>(null);
   const { snapshot: exchangeRates } = useExchangeRates();
   const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(locale));
-  const { status, data: session } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const signedIn = status === "authenticated";
 
@@ -157,18 +158,8 @@ export default function PricingClient() {
       return;
     }
 
-    const checkoutData = {
-      email: session?.user?.email || "",
-      planId: plan.name,
-      description: `Top-up: ${plan.name}`,
-      amount: plan.price,
-      currency: plan.currency,
-      tokens: plan.tokens,
-      total: plan.price,
-      locale,
-    };
-
-    localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+    localStorage.removeItem("checkoutData");
+    localStorage.setItem("checkoutRequest", JSON.stringify(plan));
     router.push(localizePath('/checkout', locale));
   };
 
@@ -226,8 +217,8 @@ export default function PricingClient() {
                 termsLabel={copy.termsLabel}
                 termsLinkLabel={copy.termsLinkLabel}
                 termsHref={localizePath('/terms', locale)}
-                onAction={({ name, amount, currency: selectedCurrency, tokens }) =>
-                  handlePlanRequest({ name, price: amount, currency: selectedCurrency, tokens })
+                onAction={({ name, currency: selectedCurrency }) =>
+                  handlePlanRequest({ planId: plan.id, name, currency: selectedCurrency })
                 }
               />
             </motion.div>
@@ -241,8 +232,8 @@ export default function PricingClient() {
               currency={currency}
               exchangeRates={exchangeRates}
               labels={{ ...copy.custom, termsHref: localizePath(copy.custom.termsHref, locale) }}
-              onRequest={({ name, price, currency: selectedCurrency, tokens }) =>
-                handlePlanRequest({ name, price, currency: selectedCurrency, tokens })
+              onRequest={({ name, price, currency: selectedCurrency }) =>
+                handlePlanRequest({ planId: CUSTOM_PLAN_ID, name, currency: selectedCurrency, customAmount: price })
               }
             />
           </motion.div>

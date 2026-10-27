@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -11,6 +12,7 @@ const COPY = {
   en: {
     orderSummary: 'Order Summary',
     plan: 'Plan',
+    tokens: 'Tokens',
     price: 'Price',
     total: 'Total',
     invoice: 'Invoice will be sent to',
@@ -22,6 +24,7 @@ const COPY = {
   tr: {
     orderSummary: 'Sipariş Özeti',
     plan: 'Plan',
+    tokens: 'Token',
     price: 'Fiyat',
     total: 'Toplam',
     invoice: 'Fatura şu adrese gönderilecek:',
@@ -33,6 +36,7 @@ const COPY = {
   ja: {
     orderSummary: '注文概要',
     plan: 'プラン',
+    tokens: 'トークン',
     price: '価格',
     total: '合計',
     invoice: '請求書は以下の宛先に送信されます：',
@@ -43,26 +47,65 @@ const COPY = {
   },
 } as const;
 
+type CheckoutRequest = {
+  planId: string;
+  name: string;
+  currency: string;
+  customAmount?: number;
+};
+
+type Quote = {
+  amount: number;
+  currency: string;
+  tokens: number;
+};
+
 export default function CheckoutClient() {
   const router = useRouter();
   const locale = useLocale();
   const copy = COPY[locale];
-  const [checkout, setCheckout] = useState<any>(null);
+  const { data: session } = useSession();
+  const [request, setRequest] = useState<CheckoutRequest | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem("checkoutData");
-    if (!data) router.push(localizePath("/pricing", locale));
-    else setCheckout(JSON.parse(data));
+    const backToPricing = () => router.push(localizePath("/pricing", locale));
+    let parsed: CheckoutRequest | null = null;
+    try {
+      parsed = JSON.parse(localStorage.getItem("checkoutRequest") || "null");
+    } catch {}
+    if (!parsed?.planId || !parsed.currency) {
+      backToPricing();
+      return;
+    }
+    setRequest(parsed);
+
+    // Show the amount the server will actually charge
+    fetch("/api/payment/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) setQuote(data.item);
+        else backToPricing();
+      })
+      .catch(backToPricing);
   }, [router, locale]);
 
-  if (!checkout) return null;
+  if (!request || !quote) return null;
 
   const handlePayment = async () => {
     try {
       setLoading(true);
-      const payload = { ...checkout, locale };
+      const payload = {
+        planId: request.planId,
+        customAmount: request.customAmount,
+        currency: request.currency,
+      };
       const res = await fetch("/api/payment/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +120,7 @@ export default function CheckoutClient() {
 
       // Save orderMerchantId for status polling on return
       localStorage.setItem("orderMerchantId", data.orderMerchantId);
-      localStorage.removeItem("checkoutData");
+      localStorage.removeItem("checkoutRequest");
 
       // Redirect to Sterling Pay (Corefy) hosted payment page
       setRedirecting(true);
@@ -98,21 +141,25 @@ export default function CheckoutClient() {
         <div className="space-y-3 text-gray-700 mb-8">
           <div className="flex justify-between">
             <span>{copy.plan}</span>
-            <span className="font-medium">{checkout.planId}</span>
+            <span className="font-medium">{request.name}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>{copy.tokens}</span>
+            <span>{quote.tokens.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span>{copy.price}</span>
-            <span>{checkout.amount.toFixed(2)} {checkout.currency}</span>
+            <span>{quote.amount.toFixed(2)} {quote.currency}</span>
           </div>
           <div className="border-t border-gray-200 my-3" />
           <div className="flex justify-between font-semibold text-lg">
             <span>{copy.total}</span>
-            <span>{checkout.total.toFixed(2)} {checkout.currency}</span>
+            <span>{quote.amount.toFixed(2)} {quote.currency}</span>
           </div>
         </div>
 
         <p className="mb-6 text-sm text-gray-500">
-          {copy.invoice} <b>{checkout.email}</b>.
+          {copy.invoice} <b>{session?.user?.email}</b>.
         </p>
 
         {redirecting ? (
@@ -130,7 +177,7 @@ export default function CheckoutClient() {
           >
             {loading
               ? <><Loader2 className="h-5 w-5 animate-spin" />{copy.processing}</>
-              : <>{copy.pay} — {checkout.total.toFixed(2)} {checkout.currency}</>
+              : <>{copy.pay} — {quote.amount.toFixed(2)} {quote.currency}</>
             }
           </Button>
         )}

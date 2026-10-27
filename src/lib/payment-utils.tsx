@@ -1,87 +1,170 @@
 import { prisma } from "@/lib/prisma";
+import { corefyClient } from "@/lib/corefy";
 import { Resend } from "resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/pdf/InvoicePDF";
+import type { Order, User } from "@prisma/client";
 import React from "react";
 
+export type SettlementState = "APPROVED" | "DECLINED" | "PROCESSING" | "REFUNDED" | "REVIEW";
+
+export type SettlementResult = {
+  state: SettlementState;
+  alreadyApproved?: boolean;
+  tokensAdded?: number;
+  newBalance?: number;
+  invoiceCreated?: boolean;
+  invoiceSent?: boolean;
+};
+
+// Orders in these states may still turn out paid (e.g. a retry after a failed attempt).
+const SETTLEABLE_STATUSES = ["PROCESSING", "DECLINED", "EXPIRED"];
+const FAILED_INVOICE_STATUSES = ["process_failed", "authorize_failed"];
+
+function sameAmount(a: unknown, b: number) {
+  const n = Number(a);
+  return Number.isFinite(n) && Math.abs(n - b) < 0.005;
+}
+
 /**
- * Safely marks an order as APPROVED, credits the user's token balance,
- * creates a ledger entry, and generates/sends the invoice via Resend.
- * Incorporates double-crediting protection.
+ * Settles an order against the invoice as Corefy reports it through its API.
+ * Webhook bodies and redirect parameters are never trusted on their own: the
+ * order is credited only when Corefy says the invoice is processed and its
+ * amount, currency and reference match the order. Crediting is atomic, so a
+ * webhook and the status poll racing each other credit the order once.
  */
-export async function approveAndCreditOrder(
-  orderMerchantId: string,
-  transactionId: string | number,
-  pionPayDetails: any
-) {
-  // 1. Fetch the order
-  const order = await prisma.order.findUnique({
-    where: { orderMerchantId },
-  });
-
-  if (!order) {
-    throw new Error(`Order ${orderMerchantId} not found in database.`);
-  }
-
-  // 2. Double-crediting protection check
+export async function settleOrder(order: Order): Promise<SettlementResult> {
   if (order.status === "APPROVED") {
-    console.log(`ℹ️ Order ${orderMerchantId} was already approved. Skipping credit logic.`);
-    return {
-      success: true,
-      alreadyApproved: true,
-      tokensAdded: order.tokens,
-    };
+    return { state: "APPROVED", alreadyApproved: true, tokensAdded: order.tokens ?? 0 };
+  }
+  if (order.status === "REFUNDED") return { state: "REFUNDED" };
+  if (order.status === "REVIEW") return { state: "REVIEW" };
+  if (!order.orderSystemId) return { state: "PROCESSING" };
+
+  const invoice = await corefyClient.getInvoice(order.orderSystemId);
+  const attributes = invoice?.data?.attributes || {};
+  const invoiceStatus = attributes.status;
+
+  if (invoiceStatus === "processed") {
+    const referenceMatches = !attributes.reference_id || attributes.reference_id === order.orderMerchantId;
+    const currencyMatches = String(attributes.currency || "").toUpperCase() === order.currency;
+    const testAllowed = attributes.test_mode !== true || corefyClient.isTestMode;
+
+    if (!referenceMatches || !currencyMatches || !sameAmount(attributes.amount, order.amount) || !testAllowed) {
+      console.error(
+        `❌ Corefy invoice ${order.orderSystemId} does not match order ${order.orderMerchantId}; holding for review.`,
+        JSON.stringify({ attributes, order: { amount: order.amount, currency: order.currency } })
+      );
+      await prisma.order.updateMany({
+        where: { id: order.id, status: { in: SETTLEABLE_STATUSES } },
+        data: {
+          status: "REVIEW",
+          response: { corefyDetails: invoice, timestamp: new Date().toISOString() },
+        },
+      });
+      return { state: "REVIEW" };
+    }
+
+    return approveAndCreditOrder(order, invoice);
   }
 
-  // 3. Find the associated user
-  const user = await prisma.user.findUnique({
-    where: { email: order.userEmail || "" },
+  if (FAILED_INVOICE_STATUSES.includes(invoiceStatus) || invoiceStatus === "expired") {
+    await prisma.order.updateMany({
+      where: { id: order.id, status: "PROCESSING" },
+      data: {
+        status: invoiceStatus === "expired" ? "EXPIRED" : "DECLINED",
+        response: { corefyDetails: invoice, timestamp: new Date().toISOString() },
+      },
+    });
+    return { state: "DECLINED" };
+  }
+
+  if (invoiceStatus === "refunded") {
+    console.warn(`↩️ Corefy invoice refunded for order ${order.orderMerchantId}; tokens are not reversed automatically.`);
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        status: "REFUNDED",
+        response: { corefyDetails: invoice, timestamp: new Date().toISOString() },
+      },
+    });
+    return { state: "REFUNDED" };
+  }
+
+  return { state: "PROCESSING" };
+}
+
+/**
+ * Marks a verified order as APPROVED, credits the user's token balance and
+ * writes the ledger entry in one transaction, then generates/sends the invoice.
+ */
+async function approveAndCreditOrder(order: Order, corefyDetails: unknown): Promise<SettlementResult> {
+  const orderMerchantId = order.orderMerchantId!;
+  const tokensToAdd = order.tokens ?? 0;
+
+  let userId = order.userId;
+  if (!userId && order.userEmail) {
+    // Orders created before orders were linked to users
+    const legacyUser = await prisma.user.findUnique({ where: { email: order.userEmail } });
+    userId = legacyUser?.id ?? null;
+  }
+  if (!userId) {
+    throw new Error(`No user found for order ${orderMerchantId}.`);
+  }
+
+  const user = await prisma.$transaction(async (tx) => {
+    // Only the request that flips the status gets to credit tokens
+    const { count } = await tx.order.updateMany({
+      where: { id: order.id, status: { in: SETTLEABLE_STATUSES } },
+      data: {
+        status: "APPROVED",
+        userId,
+        response: { corefyDetails: corefyDetails as any, timestamp: new Date().toISOString() },
+      },
+    });
+    if (count === 0) return null;
+
+    const credited = await tx.user.update({
+      where: { id: userId! },
+      data: { tokenBalance: { increment: tokensToAdd } },
+    });
+
+    await tx.ledgerEntry.create({
+      data: {
+        userId: credited.id,
+        type: "Top-up",
+        delta: tokensToAdd,
+        balanceAfter: credited.tokenBalance,
+        currency: order.currency,
+        amount: Math.round(order.amount * 100),
+        receiptUrl: `order:${orderMerchantId}`,
+      },
+    });
+
+    return credited;
   });
 
   if (!user) {
-    throw new Error(`User with email ${order.userEmail} not found.`);
+    console.log(`ℹ️ Order ${orderMerchantId} was already approved. Skipping credit logic.`);
+    return { state: "APPROVED", alreadyApproved: true, tokensAdded: tokensToAdd };
   }
 
-  const tokensToAdd = order.tokens ?? 0;
-  const newBalance = (user.tokenBalance ?? 0) + tokensToAdd;
+  console.log(`✅ Credited +${tokensToAdd} tokens to ${user.email} for order ${orderMerchantId}.`);
 
-  console.log(`💳 Approving payment for order ${orderMerchantId}. Crediting +${tokensToAdd} tokens to ${user.email}.`);
+  const invoice = await sendPurchaseInvoice(order, user, tokensToAdd, user.tokenBalance);
 
-  // 4. Update the user's token balance
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { tokenBalance: newBalance },
-  });
+  return {
+    state: "APPROVED",
+    alreadyApproved: false,
+    tokensAdded: tokensToAdd,
+    newBalance: user.tokenBalance,
+    ...invoice,
+  };
+}
 
-  // 5. Update order details and change status to APPROVED
-  await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      status: "APPROVED",
-      orderSystemId: String(transactionId),
-      response: {
-        pionPayDetails,
-        timestamp: new Date().toISOString(),
-      },
-    },
-  });
-
-  // 6. Record the transaction in the ledger
-  await prisma.ledgerEntry.create({
-    data: {
-      userId: user.id,
-      type: "Top-up",
-      delta: tokensToAdd,
-      balanceAfter: newBalance,
-      currency: order.currency,
-      amount: Math.round(order.amount * 100),
-      receiptUrl: `order:${orderMerchantId}`,
-    },
-  });
-
-  console.log(`✅ Ledger entry created for user: ${user.email}`);
-
-  // 7. Render PDF Invoice and send email
+/** Creates the invoice document and emails it with a PDF attached. Failures are logged, not thrown. */
+async function sendPurchaseInvoice(order: Order, user: User, tokensToAdd: number, newBalance: number) {
+  const orderMerchantId = order.orderMerchantId!;
   let invoiceDocumentId: string | null = null;
   let invoiceSent = false;
 
@@ -208,10 +291,6 @@ export async function approveAndCreditOrder(
   }
 
   return {
-    success: true,
-    alreadyApproved: false,
-    tokensAdded: tokensToAdd,
-    newBalance,
     invoiceCreated: invoiceDocumentId !== null,
     invoiceSent,
   };

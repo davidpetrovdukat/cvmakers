@@ -377,9 +377,12 @@ export async function POST(req: Request) {
     const result = await prisma.$transaction(async (tx) => {
       const userRow = await tx.user.findUnique({ where: { id: userId }, select: { tokenBalance: true } });
       if (!userRow) throw new Error('USER_NOT_FOUND');
-      if (userRow.tokenBalance < charge) throw new Error('INSUFFICIENT_TOKENS');
-
-      const newBalance = userRow.tokenBalance - charge;
+      // Conditional decrement so parallel requests cannot overspend the balance
+      const { count } = await tx.user.updateMany({
+        where: { id: userId, tokenBalance: { gte: charge } },
+        data: { tokenBalance: { decrement: charge } },
+      });
+      if (count === 0) throw new Error('INSUFFICIENT_TOKENS');
 
       const document = await tx.document.create({
         data: {
@@ -397,7 +400,7 @@ export async function POST(req: Request) {
         },
       });
 
-      await tx.user.update({ where: { id: userId }, data: { tokenBalance: newBalance } });
+      const { tokenBalance: newBalance } = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { tokenBalance: true } });
       await tx.ledgerEntry.create({
         data: {
           userId,

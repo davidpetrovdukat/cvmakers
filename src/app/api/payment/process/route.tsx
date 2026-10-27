@@ -1,49 +1,58 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { corefyClient } from "@/lib/corefy";
+import { CheckoutError, resolveCheckoutItem } from "@/lib/checkout";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = (session.user as any).id as string;
 
-    // Validate required fields
-    if (!body.email || !body.amount || !body.currency || !body.tokens) {
-      return NextResponse.json(
-        { ok: false, error: "Missing required fields" },
-        { status: 400 }
-      );
+    const body = await req.json().catch(() => ({}));
+
+    // Price and token count are computed here; amounts sent by the browser are ignored.
+    let item;
+    try {
+      item = await resolveCheckoutItem({
+        planId: body.planId,
+        customAmount: body.customAmount,
+        currency: body.currency,
+      });
+    } catch (err) {
+      if (err instanceof CheckoutError) {
+        return NextResponse.json({ ok: false, error: err.message }, { status: 400 });
+      }
+      throw err;
     }
 
-    // Create unique orderMerchantId
-    const orderMerchantId = `order_${Date.now()}`;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.email) {
+      return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
+    }
+
+    const orderMerchantId = `ord_${randomUUID().replace(/-/g, "")}`;
 
     console.log("💳 Creating order for Corefy HPP payment:", orderMerchantId);
 
-    // Find the user to ensure account exists
-    const user = await prisma.user.findUnique({
-      where: { email: body.email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // Determine target currency format for database schema matching
-    let dbCurrency: "GBP" | "EUR" | "USD" = "GBP";
-    if (body.currency === "EUR") dbCurrency = "EUR";
-    if (body.currency === "USD") dbCurrency = "USD";
-
-    // Create the order in the database with status PROCESSING
     const order = await prisma.order.create({
       data: {
-        userEmail: body.email,
-        amount: body.amount,
-        currency: dbCurrency,
-        description: body.description || `Top-up: ${body.planId || "Payment"}`,
-        tokens: body.tokens ?? 0,
+        userId: user.id,
+        userEmail: user.email,
+        kind: item.kind,
+        productId: item.productId,
+        amount: item.amount,
+        currency: item.currency,
+        description: item.description,
+        tokens: item.tokens,
         orderMerchantId,
         status: "PROCESSING",
         response: {
@@ -68,8 +77,7 @@ export async function POST(req: Request) {
     const customerName =
       [user.firstName, user.lastName].filter(Boolean).join(" ") ||
       user.name ||
-      body.name ||
-      body.email.split("@")[0];
+      user.email.split("@")[0];
 
     const customerAddress =
       user.street || user.city || user.country
@@ -84,9 +92,9 @@ export async function POST(req: Request) {
     // Call Sterling Pay / Corefy API to create Payment Invoice (HPP)
     const invoiceResult = await corefyClient.createPaymentInvoice({
       referenceId: orderMerchantId,
-      amount: Number(body.amount),
-      currency: body.currency,
-      description: body.description || `Top-up: ${body.planId || "Payment"}`,
+      amount: item.amount,
+      currency: item.currency,
+      description: item.description,
       returnUrl: successUrl,
       returnUrls: {
         success: successUrl,
@@ -96,7 +104,7 @@ export async function POST(req: Request) {
       callbackUrl,
       customer: {
         reference_id: `cust_${user.id}`,
-        email: user.email || body.email,
+        email: user.email,
         name: customerName,
         first_name: user.firstName || undefined,
         surname: user.lastName || undefined,
@@ -105,7 +113,7 @@ export async function POST(req: Request) {
       metadata: {
         order_id: orderMerchantId,
         user_id: user.id,
-        tokens: body.tokens,
+        tokens: item.tokens,
       },
     });
 

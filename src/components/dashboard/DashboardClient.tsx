@@ -551,40 +551,6 @@ export default function DashboardClient() {
 
 
 
-  const topUp = async (amount: number) => {
-
-    if (!me) return;
-
-    const res = await fetch('/api/ledger', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'Top-up', amount, currency: me.currency }) });
-
-    if (res.ok) {
-
-      const { tokenBalance } = await res.json();
-
-      setMe({ ...me, tokenBalance });
-
-      try { bcRef.current?.postMessage({ type: 'tokens-updated', tokenBalance }); } catch {}
-
-      const ledRes = await fetch('/api/ledger');
-
-      if (ledRes.ok) {
-
-        const { ledger } = await ledRes.json();
-
-        setLedger(ledger);
-
-      }
-
-    } else {
-
-      alert(copy.topUpFailed);
-
-    }
-
-  };
-
-
-
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
     const file = event.target.files?.[0];
