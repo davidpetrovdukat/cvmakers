@@ -1,98 +1,50 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { corefyClient } from "@/lib/corefy";
-import { approveAndCreditOrder } from "@/lib/payment-utils";
+import { settleOrder } from "@/lib/payment-utils";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Polled by /payment/processing after the customer returns from the payment page.
 export async function POST(req: Request) {
   try {
-    const { orderMerchantId } = await req.json();
-    if (!orderMerchantId) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = (session.user as any).id as string;
+
+    const { orderMerchantId } = await req.json().catch(() => ({}));
+    if (!orderMerchantId || typeof orderMerchantId !== "string") {
       return NextResponse.json({ ok: false, error: "Missing orderMerchantId" }, { status: 400 });
     }
 
-    // 1. Check local order status
-    const order = await prisma.order.findUnique({
-      where: { orderMerchantId },
-    });
-
-    if (!order) {
+    const order = await prisma.order.findUnique({ where: { orderMerchantId } });
+    const ownsOrder =
+      order &&
+      (order.userId === userId ||
+        (!order.userId && !!order.userEmail && order.userEmail === session.user.email));
+    if (!order || !ownsOrder) {
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
     }
 
-    // 2. Return immediately if already approved to prevent duplicate processing
-    if (order.status === "APPROVED") {
+    try {
+      const result = await settleOrder(order);
       return NextResponse.json({
         ok: true,
-        state: "APPROVED",
-        tokensAdded: order.tokens,
+        state: result.state,
+        tokensAdded: result.tokensAdded,
+        tokenBalance: result.newBalance,
+        invoiceCreated: result.invoiceCreated,
+        invoiceSent: result.invoiceSent,
       });
+    } catch (apiError: any) {
+      // Corefy unreachable: keep polling rather than failing immediately
+      console.warn(`⚠️ Could not verify Corefy status for ${orderMerchantId}:`, apiError.message);
+      return NextResponse.json({ ok: true, state: "PROCESSING" });
     }
-
-    if (order.status === "DECLINED" || order.status === "FAILED") {
-      return NextResponse.json({
-        ok: true,
-        state: "DECLINED",
-      });
-    }
-
-    // 3. If order has a Corefy invoice ID (orderSystemId), check status with Corefy
-    if (order.orderSystemId) {
-      try {
-        const corefyData = await corefyClient.getInvoice(order.orderSystemId);
-        const invoiceAttributes = corefyData?.data?.attributes || {};
-        const invoiceStatus = invoiceAttributes.status;
-
-        console.log(`🔍 Corefy invoice status for order ${orderMerchantId}:`, invoiceStatus);
-
-        if (invoiceStatus === "processed") {
-          // Order completed successfully: run credit logic
-          const result = await approveAndCreditOrder(
-            orderMerchantId,
-            order.orderSystemId,
-            corefyData
-          );
-
-          return NextResponse.json({
-            ok: true,
-            state: "APPROVED",
-            tokensAdded: result.tokensAdded,
-            tokenBalance: result.newBalance,
-            invoiceCreated: result.invoiceCreated,
-            invoiceSent: result.invoiceSent,
-          });
-        }
-
-        if (invoiceStatus === "process_failed" || invoiceStatus === "authorize_failed") {
-          console.log(`❌ Corefy rejected payment for order ${orderMerchantId}`);
-
-          await prisma.order.update({
-            where: { id: order.id },
-            data: {
-              status: "DECLINED",
-              response: {
-                corefyDetails: corefyData,
-                timestamp: new Date().toISOString(),
-              },
-            },
-          });
-
-          return NextResponse.json({
-            ok: true,
-            state: "DECLINED",
-          });
-        }
-      } catch (apiError: any) {
-        console.warn(`⚠️ Could not verify Corefy status via API for ${orderMerchantId}:`, apiError.message);
-        // Continue polling rather than failing immediately
-      }
-    }
-
-    // Still processing / waiting for webhook
-    return NextResponse.json({
-      ok: true,
-      state: "PROCESSING",
-    });
-
   } catch (err: any) {
     console.error("❌ Corefy status check error:", err);
     return NextResponse.json(

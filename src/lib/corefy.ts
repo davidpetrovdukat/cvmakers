@@ -138,6 +138,11 @@ export class CorefyClient {
         : process.env.NODE_ENV !== "production";
   }
 
+  /** Whether this deployment creates test-mode invoices (and so may accept test payments). */
+  public get isTestMode(): boolean {
+    return this.defaultTestMode;
+  }
+
   private getAuthHeader(): string {
     const credentials = `${this.commerceAccountId}:${this.privateApiKey}`;
     return `Basic ${Buffer.from(credentials).toString("base64")}`;
@@ -148,8 +153,8 @@ export class CorefyClient {
    */
   public verifySignature(rawBody: string, incomingSig?: string | null): boolean {
     if (!this.signatureKey) {
-      console.warn("⚠️ COREFY_SIGNATURE_API_KEY not configured. Skipping signature check.");
-      return true;
+      console.error("❌ COREFY_SIGNATURE_API_KEY not configured. Rejecting webhook.");
+      return false;
     }
 
     if (!incomingSig) {

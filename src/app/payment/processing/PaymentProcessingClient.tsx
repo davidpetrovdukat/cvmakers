@@ -140,6 +140,10 @@ export default function PaymentProcessingClient() {
         setStatus("failed");
         setMessage(copy.failed);
         localStorage.removeItem("orderMerchantId");
+      } else if (data.state === "REVIEW" || data.state === "REFUNDED") {
+        // Paid but held for a manual check — polling will not change it
+        setStatus("error");
+        setMessage(copy.error);
       } else if (attempt < MAX_ATTEMPTS) {
         // Still processing — retry
         setTimeout(() => pollStatus(id, attempt + 1), 2500);

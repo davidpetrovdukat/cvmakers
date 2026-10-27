@@ -49,6 +49,7 @@ model User {
   invoices  Invoice[]
   ledger    LedgerEntry[]
   documents Document[]
+  orders    Order[]
 
   accounts Account[]
   sessions Session[]
@@ -140,7 +141,11 @@ model InvoiceItem {
 
 model Order {
   id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   userEmail       String?
+  kind            String   @default("TOKENS") // TOKENS | SERVICE
+  productId       String? // plan id, "custom", or service id
   amount          Float
   currency        Currency
   description     String?
@@ -151,6 +156,8 @@ model Order {
   response        Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model LedgerEntry {

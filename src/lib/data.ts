@@ -1,5 +1,7 @@
 import { PricingPlan, Testimonial, Feature, TemplateInfo } from '@/types';
 
+export const CUSTOM_PLAN_ID = 'custom';
+
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-starter',

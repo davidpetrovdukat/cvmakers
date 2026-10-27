@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { corefyClient } from "@/lib/corefy";
-import { approveAndCreditOrder } from "@/lib/payment-utils";
+import { settleOrder } from "@/lib/payment-utils";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -31,14 +34,13 @@ export async function POST(req: Request) {
     const attributes = invoiceData?.attributes || {};
     const invoiceId = invoiceData?.id;
     const referenceId = attributes.reference_id || attributes.metadata?.order_id;
-    const status = attributes.status;
 
     if (!referenceId && !invoiceId) {
       console.warn("⚠️ Webhook received without reference_id or invoice id.");
       return NextResponse.json({ status: "ok" });
     }
 
-    // Find the order
+    // 2. Find the order
     const order = await prisma.order.findFirst({
       where: {
         OR: [
@@ -53,56 +55,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "ok" });
     }
 
-    // Handle statuses
-    if (status === "processed") {
-      console.log(`✅ Corefy confirmed payment for order ${order.orderMerchantId}. Crediting tokens...`);
-      await approveAndCreditOrder(
-        order.orderMerchantId!,
-        invoiceId || `tx_${Date.now()}`,
-        payload
-      );
-    } else if (status === "process_failed" || status === "authorize_failed") {
-      console.log(`❌ Corefy payment failed/rejected for order ${order.orderMerchantId}`);
-      if (order.status !== "APPROVED") {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status: "DECLINED",
-            orderSystemId: invoiceId ? String(invoiceId) : order.orderSystemId,
-            response: {
-              corefyDetails: payload,
-              timestamp: new Date().toISOString(),
-            },
-          },
-        });
-      }
-    } else if (status === "expired") {
-      console.log(`⌛ Corefy invoice expired for order ${order.orderMerchantId}`);
-      if (order.status !== "APPROVED") {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status: "EXPIRED",
-            response: {
-              corefyDetails: payload,
-              timestamp: new Date().toISOString(),
-            },
-          },
-        });
-      }
-    } else if (status === "refunded") {
-      console.log(`↩️ Corefy invoice refunded for order ${order.orderMerchantId}`);
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: "REFUNDED",
-          response: {
-            corefyDetails: payload,
-            timestamp: new Date().toISOString(),
-          },
-        },
-      });
-    }
+    // 3. The webhook only triggers a check: the status comes from the Corefy API
+    const result = await settleOrder(order);
+    console.log(`💳 Corefy webhook settled order ${order.orderMerchantId}: ${result.state}`);
 
     return NextResponse.json({ status: "ok" });
   } catch (err: any) {
