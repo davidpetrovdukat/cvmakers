@@ -7,9 +7,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { THEME } from '@/lib/theme';
-import Segmented from '@/components/ui/Segmented';
 import { useSession, signOut } from 'next-auth/react';
-import { CURRENCY_OPTIONS, Currency, getDefaultCurrencyForLocale, isCurrency } from '@/lib/currency';
 import { getLocaleFromPath, localizePath, stripLocaleFromPath } from '@/i18n/config';
 import { useI18n } from '@/i18n/LocaleProvider';
 
@@ -25,7 +23,6 @@ export default function Header() {
   const isPricing = normalizedPath === '/pricing';
   const isTokenCalc = normalizedPath === '/token-calculator';
   const isDashboard = normalizedPath === '/dashboard';
-  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(activeLocale));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -84,31 +81,12 @@ export default function Header() {
         if (data.type === 'tokens-updated' && typeof data.tokenBalance === 'number') {
           setTokens(data.tokenBalance);
         }
-        if (data.type === 'currency-updated' && isCurrency(data.currency)) {
-          setCurrency(data.currency);
-          try { localStorage.setItem('currency', data.currency); } catch {}
-        }
       };
     } catch {}
     return () => { try { bcRef.current?.close(); } catch {} };
   }, []);
 
-  useEffect(() => {
-    setMounted(true);
-    // Read saved currency client-side to avoid SSR hydration mismatch
-    try {
-      const saved = localStorage.getItem('currency');
-      if (isCurrency(saved)) {
-        setCurrency(saved);
-      }
-    } catch {}
-  }, [activeLocale]);
-
-  const onCurrencyChange = (next: Currency) => {
-    setCurrency(next);
-    try { localStorage.setItem('currency', next); } catch {}
-    try { bcRef.current?.postMessage({ type: 'currency-updated', currency: next }); } catch {}
-  };
+  useEffect(() => { setMounted(true); }, []);
 
   const closeMobile = () => setMobileOpen(false);
   const toggleMobile = () => setMobileOpen((v)=>!v);
@@ -179,13 +157,6 @@ export default function Header() {
         </div>
         
         <div className="hidden sm:flex items-center gap-3">
-          <div className="hidden md:block">
-            <Segmented
-              options={CURRENCY_OPTIONS}
-              value={currency}
-              onChange={(v)=>onCurrencyChange(v as Currency)}
-            />
-          </div>
           {!signedIn ? (
             <>
               <Link
@@ -274,15 +245,6 @@ export default function Header() {
                     <Link href={href('/pricing')} className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isPricing ? 'bg-black/5' : ''}`} onClick={closeMobile}>{t('nav.pricing')}</Link>
                     <Link href={href('/token-calculator')} className={`rounded-xl px-3 py-2 hover:bg-slate-50 ${isTokenCalc ? 'bg-black/5' : ''}`} onClick={closeMobile}>{t('nav.tokenCalculator')}</Link>
                   </nav>
-
-                  <div className="mt-4">
-                    <div className="mb-2 text-xs text-slate-500">{t('common.currency')}</div>
-                    <Segmented
-                      options={CURRENCY_OPTIONS}
-                      value={currency}
-                      onChange={(v)=>onCurrencyChange(v as Currency)}
-                    />
-                  </div>
 
                   <div className="mt-4 grid gap-2">
                     {!signedIn ? (

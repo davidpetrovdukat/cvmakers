@@ -653,7 +653,7 @@ export default function DashboardClient() {
 
   const userName = me?.name || 'User';
 
-  const currency = (me?.currency || 'GBP') as Currency;
+  const currency = (me?.currency === 'EUR' ? me.currency : 'EUR') as Currency;
 
   const tokenBalance = me?.tokenBalance ?? 0;
 
@@ -1112,7 +1112,7 @@ function ModalInvoiceView({ invoice, onClose, onDownload, onSendEmail, onRefresh
     return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toISOString().slice(0, 10);
   })();
   const displayRecipient = invoice.clientMeta || invoiceData.recipient || {};
-  const displayCurrency = invoice.currency || invoiceData.currency || 'GBP';
+  const displayCurrency = 'EUR';
 
   const [form, setForm] = useState<{ client: string; subtotal: number; tax: number; total: number }>({ client: invoice.client, subtotal: invoice.subtotal, tax: invoice.tax, total: invoice.total });
 

@@ -6,7 +6,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-starter',
     name: 'Quick Start',
-    gbpAmount: 5.0,
+    eurAmount: 5.0,
     tokens: 500,
     points: ['Manual token top-up', 'No subscription', 'Preview included'],
     cta: 'Buy Tokens',
@@ -15,7 +15,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-pro',
     name: 'Job Hunter',
-    gbpAmount: 15.0,
+    eurAmount: 15.0,
     tokens: 1500,
     points: ['Manual token top-up', 'Branding options', 'Priority support'],
     cta: 'Buy Tokens',
@@ -24,7 +24,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-business',
     name: 'Career Boost',
-    gbpAmount: 30.0,
+    eurAmount: 30.0,
     tokens: 3000,
     points: ['Manual token top-up', 'Team access', 'Integrations roadmap'],
     cta: 'Buy Tokens',
@@ -33,7 +33,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-annual',
     name: 'Annual Pro',
-    gbpAmount: 500,
+    eurAmount: 500,
     tokens: 50000,
     points: ['50,000 tokens for the year', 'Best value per token', 'Priority support'],
     cta: 'Buy Now',

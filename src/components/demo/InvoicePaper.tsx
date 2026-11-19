@@ -57,7 +57,7 @@ export default function InvoicePaper() {
           >
             <div className="col-span-5 truncate">Service #{i}</div>
             <div className="col-span-2 text-right">1</div>
-            <div className="col-span-3 text-right">£100.00</div>
+            <div className="col-span-3 text-right">€100.00</div>
             <div className="col-span-2 text-right">0%</div>
           </motion.div>
         ))}
@@ -71,15 +71,15 @@ export default function InvoicePaper() {
           <div className="w-64 text-xs space-y-1">
             <div className="flex justify-between items-center">
               <span>Subtotal</span>
-              <span className="font-mono">£200.00</span>
+              <span className="font-mono">€200.00</span>
             </div>
             <div className="flex justify-between items-center">
               <span>VAT</span>
-              <span className="font-mono">£0.00</span>
+              <span className="font-mono">€0.00</span>
             </div>
             <div className="flex justify-between items-center font-semibold border-t border-black/10 pt-1">
               <span>Total</span>
-              <span className="font-mono">£200.00</span>
+              <span className="font-mono">€200.00</span>
             </div>
           </div>
         </motion.div>

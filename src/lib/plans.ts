@@ -1,4 +1,4 @@
-import { convertToTokens, Currency } from './currency';
+import { Currency } from './currency';
 import { PRICING_PLANS } from './data';
 
 export const pricingPlans = PRICING_PLANS;
@@ -6,14 +6,13 @@ export const pricingPlans = PRICING_PLANS;
 export type Plan = (typeof pricingPlans)[0];
 export type { Currency };
 
-// Legacy compatibility - keep old structure for existing components
+// Legacy compatibility - prices are fixed in EUR.
 export const legacyPricingPlans = [
   {
     id: 'plan-starter',
     name: 'Starter',
-    baseGBP: 5.00,
-    baseEUR: convertToTokens(5.00, 'GBP').gbpEquivalent * 1.15, // Convert GBP to EUR
-    tokens: convertToTokens(5.00, 'GBP').tokens,
+    baseEUR: 5.00,
+    tokens: 500,
     popular: false,
     cta: 'Request top-up',
     bullets: [
@@ -25,9 +24,8 @@ export const legacyPricingPlans = [
   {
     id: 'plan-pro',
     name: 'Pro',
-    baseGBP: 15.00,
-    baseEUR: convertToTokens(15.00, 'GBP').gbpEquivalent * 1.15, // Convert GBP to EUR
-    tokens: convertToTokens(15.00, 'GBP').tokens,
+    baseEUR: 15.00,
+    tokens: 1500,
     popular: true,
     cta: 'Request top-up',
     bullets: [
@@ -40,9 +38,8 @@ export const legacyPricingPlans = [
   {
     id: 'plan-business',
     name: 'Business',
-    baseGBP: 30.00,
-    baseEUR: convertToTokens(30.00, 'GBP').gbpEquivalent * 1.15, // Convert GBP to EUR
-    tokens: convertToTokens(30.00, 'GBP').tokens,
+    baseEUR: 30.00,
+    tokens: 3000,
     popular: false,
     cta: 'Request top-up',
     bullets: [

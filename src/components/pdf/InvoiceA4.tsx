@@ -63,7 +63,7 @@ export default function InvoiceA4({
   invoiceNo,
   invoiceDate,
   invoiceDue,
-  currency = 'USD',
+  currency = 'EUR',
   items = [],
   subtotal,
   taxTotal,

@@ -7,13 +7,13 @@ interface PatternProps {
 }
 
 export function CurrencyPatternBG({ className = '' }: PatternProps) {
-  // Subtle repeated £ and € pattern
+  // Subtle repeated euro pattern
   return (
     <svg aria-hidden="true" className={`absolute inset-0 pointer-events-none ${className}`}>
       <defs>
         <pattern id="currencies-pattern" patternUnits="userSpaceOnUse" width="80" height="40">
-          <text x="10" y="20" fontSize="16" fill="currentColor" fillOpacity="0.04">£ €</text>
-          <text x="40" y="35" fontSize="16" fill="currentColor" fillOpacity="0.04">€ £</text>
+          <text x="10" y="20" fontSize="16" fill="currentColor" fillOpacity="0.04">€ €</text>
+          <text x="40" y="35" fontSize="16" fill="currentColor" fillOpacity="0.04">€ €</text>
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#currencies-pattern)" />

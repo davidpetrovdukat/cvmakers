@@ -6,9 +6,8 @@ import {
   isCurrency,
   type Currency,
 } from './currency';
-import { getExchangeRateSnapshot } from './exchange-rates';
 
-export const MAX_CUSTOM_TOPUP_GBP = 1000;
+export const MAX_CUSTOM_TOPUP_EUR = 1000;
 
 /** What the browser is allowed to send: a choice, never a price or a token count. */
 export type CheckoutRequest = {
@@ -38,8 +37,6 @@ export async function resolveCheckoutItem(input: CheckoutRequest): Promise<Check
     throw new CheckoutError('Unsupported currency');
   }
   const currency = input.currency;
-  const snapshot = await getExchangeRateSnapshot();
-
   if (input.planId !== CUSTOM_PLAN_ID) {
     const plan = PRICING_PLANS.find((p) => p.id === input.planId);
     if (!plan) {
@@ -50,7 +47,7 @@ export async function resolveCheckoutItem(input: CheckoutRequest): Promise<Check
       productId: plan.id,
       name: plan.name,
       description: `Top-up: ${plan.name}`,
-      amount: getBundlePrice(plan, currency, snapshot),
+      amount: getBundlePrice(plan, currency),
       currency,
       tokens: plan.tokens,
     };
@@ -62,13 +59,13 @@ export async function resolveCheckoutItem(input: CheckoutRequest): Promise<Check
   }
   const amount = Math.round(raw * 100) / 100;
   // Allow a cent of drift between the rates the browser showed and the server's rates.
-  const min = getMinimumTopUpAmount(currency, snapshot) - 0.01;
-  const max = getBundlePrice({ gbpAmount: MAX_CUSTOM_TOPUP_GBP }, currency, snapshot);
+  const min = getMinimumTopUpAmount(currency) - 0.01;
+  const max = getBundlePrice({ eurAmount: MAX_CUSTOM_TOPUP_EUR }, currency);
   if (amount < min || amount > max) {
     throw new CheckoutError('Amount is outside the allowed range');
   }
 
-  const tokens = convertToTokens(amount, currency, snapshot).tokens;
+  const tokens = convertToTokens(amount, currency).tokens;
   if (tokens <= 0) {
     throw new CheckoutError('Invalid amount');
   }

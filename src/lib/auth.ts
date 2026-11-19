@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.tokenBalance = (user as any).tokenBalance ?? 0;
-        token.currency = (user as any).currency ?? "GBP";
+        token.currency = (user as any).currency ?? "EUR";
       }
       return token;
     },
