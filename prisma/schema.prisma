@@ -9,7 +9,11 @@ datasource db {
 }
 
 enum Currency {
+  // Legacy order and ledger records may retain their original currency so
+  // in-flight Corefy payments can still be verified after EUR-only checkout.
+  GBP
   EUR
+  USD
 }
 
 enum InvoiceStatus {
