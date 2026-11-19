@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Terms & Conditions for using CV Makers services.',
 };
 
-const CURRENCY: Currency = 'GBP';
+const CURRENCY: Currency = 'EUR';
 
 const PAGE_TITLES: Record<Locale, string> = {
   en: 'Terms & Conditions',

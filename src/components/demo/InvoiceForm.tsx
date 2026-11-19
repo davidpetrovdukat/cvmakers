@@ -9,7 +9,7 @@ export default function InvoiceForm() {
         <div className="grid gap-1.5">
           <label className="text-xs text-slate-600 font-medium">Currency</label>
           <div className="rounded-lg border border-black/10 px-2.5 py-2 text-sm bg-slate-50 text-slate-700">
-            GBP
+            EUR
           </div>
         </div>
         <div className="grid gap-1.5">
@@ -87,7 +87,7 @@ export default function InvoiceForm() {
               1
             </div>
             <div className="col-span-3 rounded-lg border border-black/10 px-2 py-1.5 bg-slate-50 text-slate-700">
-              £100.00
+              €100.00
             </div>
             <div className="col-span-2 rounded-lg border border-black/10 px-2 py-1.5 bg-slate-50 text-slate-700">
               0%
@@ -106,7 +106,7 @@ export default function InvoiceForm() {
               1
             </div>
             <div className="col-span-3 rounded-lg border border-black/10 px-2 py-1.5 bg-slate-50 text-slate-700">
-              £100.00
+              €100.00
             </div>
             <div className="col-span-2 rounded-lg border border-black/10 px-2 py-1.5 bg-slate-50 text-slate-700">
               0%

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { CURRENCY_OPTIONS, Currency, getMinimumTopUpAmount, SERVICE_COSTS } from '@/lib/currency';
+import { getMinimumTopUpAmount, SERVICE_COSTS } from '@/lib/currency';
 import { formatInteger } from '@/lib/format';
 import { useLocale } from '@/i18n/LocaleProvider';
 import { localizePath } from '@/i18n/config';
@@ -15,15 +15,9 @@ const TOKENS_PER_DOCUMENT = SERVICE_COSTS.CREATE_DRAFT + SERVICE_COSTS.EXPORT_PD
 const COST_PER_DOCUMENT = (TOKENS_PER_DOCUMENT / TOKENS_PER_CURRENCY_UNIT).toFixed(2);
 
 const TOKEN_PACKAGES = [
-  { amount: 10, currency: 'GBP', tokens: 1000 },
-  { amount: 50, currency: 'GBP', tokens: 5000 },
-  { amount: 100, currency: 'GBP', tokens: 10000 },
   { amount: 10, currency: 'EUR', tokens: 1000 },
   { amount: 50, currency: 'EUR', tokens: 5000 },
   { amount: 100, currency: 'EUR', tokens: 10000 },
-  { amount: 10, currency: 'USD', tokens: 1000 },
-  { amount: 50, currency: 'USD', tokens: 5000 },
-  { amount: 100, currency: 'USD', tokens: 10000 },
 ];
 
 const LEDGER_SAMPLE = [
@@ -42,7 +36,7 @@ const COPY = {
     subtitle: 'Understand our pay-as-you-go model, token pricing, and billing system.',
     howItWorks: 'How it works',
     modelCards: [
-      { icon: '£', title: 'Pay-as-you-go', desc: 'No subscriptions or monthly fees', bg: 'bg-emerald-100' },
+      { icon: '€', title: 'Pay-as-you-go', desc: 'No subscriptions or monthly fees', bg: 'bg-emerald-100' },
       { icon: 'T', title: '1 {currency} = 100 tokens', desc: 'Simple conversion rate', bg: 'bg-indigo-100' },
       { icon: 'PDF', title: `1 document = ${TOKENS_PER_DOCUMENT} tokens`, desc: 'Fixed cost per document', bg: 'bg-purple-100' },
     ],
@@ -94,7 +88,7 @@ const COPY = {
     subtitle: 'Kullandıkça öde modelimizi, token fiyatlandırmasını ve faturalandırma sistemini anlayın.',
     howItWorks: 'Nasıl çalışır',
     modelCards: [
-      { icon: '£', title: 'Kullandıkça öde', desc: 'Abonelik veya aylık ücret yok', bg: 'bg-emerald-100' },
+      { icon: '€', title: 'Kullandıkça öde', desc: 'Abonelik veya aylık ücret yok', bg: 'bg-emerald-100' },
       { icon: 'T', title: '1 {currency} = 100 token', desc: 'Basit dönüşüm oranı', bg: 'bg-indigo-100' },
       { icon: 'PDF', title: `1 belge = ${TOKENS_PER_DOCUMENT} token`, desc: 'Belge başına sabit maliyet', bg: 'bg-purple-100' },
     ],
@@ -146,7 +140,7 @@ const COPY = {
     subtitle: '従量課金モデル、トークン料金、請求システムについてご説明します。',
     howItWorks: '仕組み',
     modelCards: [
-      { icon: '£', title: '従量課金', desc: 'サブスクリプションや月額料金はありません', bg: 'bg-emerald-100' },
+      { icon: '€', title: '従量課金', desc: 'サブスクリプションや月額料金はありません', bg: 'bg-emerald-100' },
       { icon: 'T', title: '1 {currency} = 100トークン', desc: 'シンプルな換算レート', bg: 'bg-indigo-100' },
       { icon: 'PDF', title: `1件のドキュメント = ${TOKENS_PER_DOCUMENT}トークン`, desc: 'ドキュメントあたりの固定コスト', bg: 'bg-purple-100' },
     ],
@@ -198,7 +192,7 @@ const COPY = {
 export default function BillingTokensPage() {
   const locale = useLocale();
   const copy = COPY[locale];
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>('GBP');
+  const selectedCurrency = 'EUR';
   const [customAmount, setCustomAmount] = useState<number>(10);
 
   useEffect(() => {
@@ -283,17 +277,7 @@ export default function BillingTokensPage() {
                       onChange={(e) => setCustomAmount(Number(e.target.value))}
                       className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     />
-                    <select
-                      value={selectedCurrency}
-                      onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-                      className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    >
-                      {CURRENCY_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                    <span className="px-3 py-2 border border-slate-300 rounded-lg bg-slate-50">EUR</span>
                   </div>
                 </div>
                 <div className="space-y-3">

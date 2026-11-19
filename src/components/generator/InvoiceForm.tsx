@@ -23,7 +23,7 @@ export default function InvoiceForm({ signedIn }: InvoiceFormProps) {
   // Region/country/currency/tax
   const [region, setRegion] = useState('UK');
   const [country, setCountry] = useState('United Kingdom');
-  const [currency, setCurrency] = useState(CURRENCY_BY_COUNTRY['United Kingdom'] || 'GBP');
+  const [currency, setCurrency] = useState('EUR');
   const [taxMode, setTaxMode] = useState<TaxMode>('domestic');
 
   const countryCode = CC[country] || 'UK';
@@ -87,7 +87,7 @@ export default function InvoiceForm({ signedIn }: InvoiceFormProps) {
   const onRegionChange = (r: string) => {
     setRegion(r);
     const nextCountry = r === 'UK' ? 'United Kingdom' : 'Germany';
-    const nextCurrency = CURRENCY_BY_COUNTRY[nextCountry] || (r === 'UK' ? 'GBP' : 'EUR');
+    const nextCurrency = 'EUR';
     const nextCode = CC[nextCountry] || (r === 'UK' ? 'UK' : 'DE');
     const nextRates = VAT_RATES[nextCode] || [0, 20];
     const nextStandard = nextRates[nextRates.length - 1] || 20;
@@ -191,7 +191,7 @@ export default function InvoiceForm({ signedIn }: InvoiceFormProps) {
           }));
           if (company.country && CURRENCY_BY_COUNTRY[company.country]) setCountry(company.country);
         }
-        if ((user as any)?.currency) setCurrency((user as any).currency);
+        if ((user as any)?.currency === 'EUR') setCurrency('EUR');
         if (typeof (user as any)?.tokenBalance === 'number') setTokenBalance((user as any).tokenBalance);
       } catch {
         // ignore
@@ -443,13 +443,7 @@ const sendEmail = async () => {
               ))}
           </select>
           <span className="font-medium ml-3">Currency:</span>
-          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="rounded-lg border border-black/10 bg-white px-2.5 py-2">
-            {Array.from(new Set(Object.values(CURRENCY_BY_COUNTRY)))
-              .sort()
-              .map((code) => (
-                <option key={code}>{code}</option>
-              ))}
-          </select>
+          <span className="px-2 py-1 rounded-lg border border-black/10 bg-white">EUR</span>
           <span className="font-medium ml-3">Invoice language:</span>
           <span className="px-2 py-1 rounded-lg border border-black/10 bg-white">EN</span>
         </div>

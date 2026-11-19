@@ -20,7 +20,7 @@ export interface Theme {
 export interface PricingPlan {
   id: string;
   name: string;
-  gbpAmount: number;
+  eurAmount: number;
   tokens: number;
   points: string[];
   cta: string;

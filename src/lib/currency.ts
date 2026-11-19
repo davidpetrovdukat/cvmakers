@@ -1,143 +1,92 @@
-export const SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'USD'] as const;
+export const SUPPORTED_CURRENCIES = ['EUR'] as const;
 
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
 export const ZERO_DECIMAL_CURRENCIES = [] as const;
 export type ZeroDecimalCurrency = (typeof ZERO_DECIMAL_CURRENCIES)[number];
 
-export const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((currency) => ({
-  label: currency,
-  value: currency,
-}));
+export const CURRENCY_OPTIONS = [{ label: 'EUR', value: 'EUR' }] as const;
 
-export function isCurrency(value: unknown): value is Currency {
-  return typeof value === 'string' && SUPPORTED_CURRENCIES.includes(value as Currency);
-}
+export function isCurrency(value: unknown): value is Currency { return value === 'EUR'; }
 
-/** SSR-safe default before localStorage is read on the client. */
-export function getDefaultCurrencyForLocale(_locale: string): Currency {
-  return 'GBP';
-}
+/** EUR is the only supported purchase and invoice currency. */
+export function getDefaultCurrencyForLocale(_locale: string): Currency { return 'EUR'; }
 
-export function isZeroDecimalCurrency(currency: Currency): currency is ZeroDecimalCurrency {
-  return (ZERO_DECIMAL_CURRENCIES as readonly string[]).includes(currency);
-}
+export function isZeroDecimalCurrency(_currency: Currency): _currency is ZeroDecimalCurrency { return false; }
 
-export const TOKENS_PER_GBP = 100;
+export const TOKENS_PER_EUR = 100;
 
 export type ExchangeRateSnapshot = {
   base: 'EUR';
   rates: Record<Currency, number>;
   asOf: string;
   fetchedAt: string;
-  source: 'ecb' | 'fallback';
+  source: 'fixed';
 };
 
 export const DEFAULT_EXCHANGE_RATE_SNAPSHOT: ExchangeRateSnapshot = {
   base: 'EUR',
-  rates: {
-    EUR: 1,
-    GBP: 0.86438,
-    USD: 1.1555,
-  },
-  asOf: '2026-05-25',
-  fetchedAt: '2026-05-25T06:00:00.000Z',
-  source: 'fallback',
+  rates: { EUR: 1 },
+  asOf: 'fixed',
+  fetchedAt: '2026-11-19T00:00:00.000Z',
+  source: 'fixed',
 };
 
 export interface CurrencyConversion {
   amount: number;
   currency: Currency;
   tokens: number;
-  gbpEquivalent: number;
-}
-
-function getSnapshot(snapshot?: ExchangeRateSnapshot): ExchangeRateSnapshot {
-  return snapshot ?? DEFAULT_EXCHANGE_RATE_SNAPSHOT;
+  eurEquivalent: number;
 }
 
 export function convertCurrency(
   amount: number,
   from: Currency,
   to: Currency,
-  snapshot?: ExchangeRateSnapshot,
+  _snapshot?: ExchangeRateSnapshot,
 ): number {
-  if (!Number.isFinite(amount)) return 0;
-  if (from === to) return amount;
-
-  const activeSnapshot = getSnapshot(snapshot);
-  const fromRate = activeSnapshot.rates[from];
-  const toRate = activeSnapshot.rates[to];
-
-  if (!Number.isFinite(fromRate) || !Number.isFinite(toRate) || fromRate <= 0 || toRate <= 0) {
-    return 0;
-  }
-
-  const amountInEur = amount / fromRate;
-  return amountInEur * toRate;
+  return Number.isFinite(amount) && from === 'EUR' && to === 'EUR' ? amount : 0;
 }
 
 export function convertToTokens(
   amount: number,
   currency: Currency,
-  snapshot?: ExchangeRateSnapshot,
+  _snapshot?: ExchangeRateSnapshot,
 ): CurrencyConversion {
-  const gbpAmount = convertCurrency(amount, currency, 'GBP', snapshot);
-  const tokens = Math.floor(gbpAmount * TOKENS_PER_GBP);
+  const eurAmount = convertCurrency(amount, currency, 'EUR');
+  const tokens = Math.floor(eurAmount * TOKENS_PER_EUR);
 
   return {
     amount,
     currency,
     tokens,
-    gbpEquivalent: gbpAmount,
+    eurEquivalent: eurAmount,
   };
 }
 
 export function convertTokensToCurrency(
   tokens: number,
   currency: Currency,
-  snapshot?: ExchangeRateSnapshot,
+  _snapshot?: ExchangeRateSnapshot,
 ): number {
-  const gbpAmount = tokens / TOKENS_PER_GBP;
-  return convertCurrency(gbpAmount, 'GBP', currency, snapshot);
-}
-
-function getCurrencyLocale(currency: Currency): string {
-  switch (currency) {
-    case 'GBP':
-      return 'en-GB';
-    case 'EUR':
-      return 'en-IE';
-    default:
-      return 'en-US';
-  }
+  return currency === 'EUR' ? tokens / TOKENS_PER_EUR : 0;
 }
 
 export function formatCurrency(amount: number, currency: Currency): string {
-  const zeroDecimal = isZeroDecimalCurrency(currency);
-  return new Intl.NumberFormat(getCurrencyLocale(currency), {
+  return new Intl.NumberFormat('en-IE', {
     style: 'currency',
     currency,
-    minimumFractionDigits: zeroDecimal ? 0 : 2,
-    maximumFractionDigits: zeroDecimal ? 0 : 2,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
-export function getCurrencySymbol(currency: Currency): string {
-  switch (currency) {
-    case 'GBP':
-      return '£';
-    case 'EUR':
-      return '€';
-    case 'USD':
-      return '$';
-  }
-}
+export function getCurrencySymbol(_currency: Currency): string { return '€'; }
 
 export type TokenBundle = {
   id: string;
   name: string;
-  gbpAmount: number;
+  eurAmount: number;
   tokens: number;
   popular: boolean;
   cta: string;
@@ -148,7 +97,7 @@ export const TOKEN_BUNDLES: TokenBundle[] = [
   {
     id: 'plan-starter',
     name: 'Starter',
-    gbpAmount: 5.0,
+    eurAmount: 5.0,
     tokens: 500,
     popular: false,
     cta: 'Buy Tokens',
@@ -161,7 +110,7 @@ export const TOKEN_BUNDLES: TokenBundle[] = [
   {
     id: 'plan-pro',
     name: 'Pro',
-    gbpAmount: 15.0,
+    eurAmount: 15.0,
     tokens: 1500,
     popular: true,
     cta: 'Buy Tokens',
@@ -175,7 +124,7 @@ export const TOKEN_BUNDLES: TokenBundle[] = [
   {
     id: 'plan-business',
     name: 'Business',
-    gbpAmount: 30.0,
+    eurAmount: 30.0,
     tokens: 3000,
     popular: false,
     cta: 'Buy Tokens',
@@ -191,25 +140,19 @@ export const TOKEN_BUNDLES: TokenBundle[] = [
 export type Plan = (typeof TOKEN_BUNDLES)[0];
 
 export function getBundlePrice(
-  bundle: { gbpAmount: number },
+  bundle: { eurAmount: number },
   currency: Currency,
-  snapshot?: ExchangeRateSnapshot,
+  _snapshot?: ExchangeRateSnapshot,
 ): number {
-  const converted = convertCurrency(bundle.gbpAmount, 'GBP', currency, snapshot);
-  if (isZeroDecimalCurrency(currency)) {
-    return Math.round(converted);
-  }
-  return Math.round(converted * 100) / 100;
+  return currency === 'EUR' ? Math.round(bundle.eurAmount * 100) / 100 : 0;
 }
 
-export function getMinimumTopUpAmount(currency: Currency, snapshot?: ExchangeRateSnapshot): number {
-  const gbpMin = 5;
-  const converted = getBundlePrice({ gbpAmount: gbpMin }, currency, snapshot);
-  return isZeroDecimalCurrency(currency) ? Math.ceil(converted) : converted;
+export function getMinimumTopUpAmount(currency: Currency, _snapshot?: ExchangeRateSnapshot): number {
+  return getBundlePrice({ eurAmount: 5 }, currency);
 }
 
-export function toStoredAmount(amount: number, currency: Currency): number {
-  return isZeroDecimalCurrency(currency) ? Math.round(amount) : Math.round(amount * 100);
+export function toStoredAmount(amount: number, _currency: Currency): number {
+  return Math.round(amount * 100);
 }
 
 export const SERVICE_COSTS = {

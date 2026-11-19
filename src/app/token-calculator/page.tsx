@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
-import Segmented from '@/components/ui/Segmented';
-import { convertTokensToCurrency, formatCurrency as formatCurrencyLib, Currency, SERVICE_COSTS, CURRENCY_OPTIONS, isCurrency } from '@/lib/currency';
+import { convertTokensToCurrency, formatCurrency as formatCurrencyLib, type Currency, SERVICE_COSTS, TOKENS_PER_EUR } from '@/lib/currency';
 import { formatInteger } from '@/lib/format';
 import { useLocale } from '@/i18n/LocaleProvider';
 import { localizePath } from '@/i18n/config';
 
-const TOKENS_PER_GBP = 100;
+const TOKENS_PER_CURRENCY_UNIT = TOKENS_PER_EUR;
 const MIN_TOP_UP = 0.01;
 
 type ActionKey = 'draft' | 'pdf' | 'docx' | 'ai' | 'manager';
@@ -262,8 +261,7 @@ const COPY = {
 export default function TokenCalculatorPage() {
   const locale = useLocale();
   const copy = COPY[locale];
-  const bcRef = useRef<BroadcastChannel | null>(null);
-  const [currency, setCurrency] = useState<Currency>('GBP');
+  const currency: Currency = 'EUR';
   const actions = useMemo<ActionConfig[]>(
     () =>
       (Object.keys(ACTION_COSTS) as ActionKey[]).map((id) => ({
@@ -281,32 +279,13 @@ export default function TokenCalculatorPage() {
     }, {} as Record<ActionKey, number>),
   );
 
-  useEffect(() => {
-    try {
-      bcRef.current = new BroadcastChannel('app-events');
-      bcRef.current.onmessage = (event: MessageEvent) => {
-        const data: any = event.data;
-        if (data?.type === 'currency-updated' && isCurrency(data.currency)) {
-          setCurrency(data.currency);
-        }
-      };
-    } catch {
-      bcRef.current = null;
-    }
-    return () => {
-      try {
-        bcRef.current?.close();
-      } catch {}
-    };
-  }, []);
-
   const totalTokens = useMemo(() => {
     return actions.reduce((sum, action) => sum + counts[action.id] * action.tokens, 0);
   }, [actions, counts]);
 
   const estimatedCost = convertTokensToCurrency(totalTokens, currency);
   const recommendedTopUp = Math.max(MIN_TOP_UP, Math.ceil(estimatedCost * 100) / 100);
-  const tokensPerUnitLabel = formatCurrencyLib(convertTokensToCurrency(TOKENS_PER_GBP, currency), currency);
+  const tokensPerUnitLabel = formatCurrencyLib(convertTokensToCurrency(TOKENS_PER_CURRENCY_UNIT, currency), currency);
 
   const handleCountChange = (action: ActionKey, value: string) => {
     const parsed = Math.max(0, Math.floor(Number(value) || 0));
@@ -336,13 +315,6 @@ export default function TokenCalculatorPage() {
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">{copy.title}</h1>
           <p className="mt-2 text-slate-600">{copy.subtitle}</p>
-          <div className="mt-6 flex justify-center">
-            <Segmented
-              options={CURRENCY_OPTIONS}
-              value={currency}
-              onChange={(value) => setCurrency(value as Currency)}
-            />
-          </div>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -359,7 +331,7 @@ export default function TokenCalculatorPage() {
                     </div>
                     <div className="text-right text-sm text-slate-500">
                       <div className="font-semibold text-slate-900">{action.tokens} {copy.tokens}</div>
-                      <div>{formatCurrencyLib(action.tokens / TOKENS_PER_GBP, currency)}</div>
+                      <div>{formatCurrencyLib(action.tokens / TOKENS_PER_CURRENCY_UNIT, currency)}</div>
                     </div>
                   </div>
                   <div className="mt-4 flex items-center gap-3">

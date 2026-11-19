@@ -2,15 +2,12 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Section from "@/components/layout/Section";
-import Segmented from "@/components/ui/Segmented";
-import { CURRENCY_OPTIONS, Currency, getBundlePrice, getDefaultCurrencyForLocale, isCurrency } from "@/lib/currency";
+import { Currency, getBundlePrice } from "@/lib/currency";
 import { CUSTOM_PLAN_ID, PRICING_PLANS } from "@/lib/data";
 import PlanCard from "@/components/pricing/PlanCard";
 import CustomPlanCard from "@/components/pricing/CustomPlanCard";
-import { useExchangeRates } from "@/lib/useExchangeRates";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { localizePath } from "@/i18n/config";
 
@@ -106,51 +103,10 @@ const COPY = {
 export default function PricingClient() {
   const locale = useLocale();
   const copy = COPY[locale];
-  const bcRef = useRef<BroadcastChannel | null>(null);
-  const { snapshot: exchangeRates } = useExchangeRates();
-  const [currency, setCurrency] = useState<Currency>(() => getDefaultCurrencyForLocale(locale));
+  const currency: Currency = 'EUR';
   const { status } = useSession();
   const router = useRouter();
   const signedIn = status === "authenticated";
-
-  const handleCurrencyChange = (next: Currency) => {
-    setCurrency(next);
-    try {
-      localStorage.setItem("currency", next);
-    } catch {}
-    try {
-      bcRef.current?.postMessage({ type: "currency-updated", currency: next });
-    } catch {}
-  };
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("currency");
-      if (isCurrency(saved)) setCurrency(saved);
-    } catch {}
-
-    try {
-      bcRef.current = new BroadcastChannel("app-events");
-      bcRef.current.onmessage = (ev: MessageEvent) => {
-        const data: any = (ev as any)?.data || {};
-        if (
-          data.type === "currency-updated" &&
-          isCurrency(data.currency)
-        ) {
-          setCurrency(data.currency);
-          try {
-            localStorage.setItem("currency", data.currency);
-          } catch {}
-        }
-      };
-    } catch {}
-
-    return () => {
-      try {
-        bcRef.current?.close();
-      } catch {}
-    };
-  }, []);
 
   const handlePlanRequest = (plan: CheckoutPayload) => {
     if (!signedIn) {
@@ -175,18 +131,6 @@ export default function PricingClient() {
           <h1 className="mt-4 text-3xl font-bold sm:text-4xl">{copy.title}</h1>
           <p className="mt-2 text-slate-600">{copy.subtitle}</p>
 
-          <motion.div
-            className="mt-6 flex flex-wrap items-center justify-center gap-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-          >
-            <Segmented
-              options={CURRENCY_OPTIONS}
-              value={currency}
-              onChange={(v) => handleCurrencyChange(v as Currency)}
-            />
-          </motion.div>
         </motion.div>
 
         <motion.div
@@ -210,7 +154,7 @@ export default function PricingClient() {
                 badgeText={plan.popular ? copy.popular : undefined}
                 bullets={localized?.points ?? plan.points}
                 cta={localized?.cta ?? plan.cta}
-                amount={getBundlePrice(plan, currency, exchangeRates)}
+                amount={getBundlePrice(plan, currency)}
                 currency={currency}
                 tokens={plan.tokens}
                 tokenLabel={copy.tokenLabel}
@@ -230,7 +174,6 @@ export default function PricingClient() {
           >
             <CustomPlanCard
               currency={currency}
-              exchangeRates={exchangeRates}
               labels={{ ...copy.custom, termsHref: localizePath(copy.custom.termsHref, locale) }}
               onRequest={({ name, price, currency: selectedCurrency }) =>
                 handlePlanRequest({ planId: CUSTOM_PLAN_ID, name, currency: selectedCurrency, customAmount: price })

@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Refund and cancellation terms for CV Makers token purchases and services.',
 };
 
-const CURRENCY: Currency = 'GBP';
+const CURRENCY: Currency = 'EUR';
 
 const PAGE_TITLES: Record<Locale, string> = {
   en: 'Refund & Cancellation Policy',

@@ -9,9 +9,7 @@ datasource db {
 }
 
 enum Currency {
-  GBP
   EUR
-  USD
 }
 
 enum InvoiceStatus {
@@ -34,7 +32,7 @@ model User {
 
   // App-specific fields
   tokenBalance Int      @default(0)
-  currency     Currency @default(GBP)
+  currency     Currency @default(EUR)
 
   // Registration fields
   firstName    String?
